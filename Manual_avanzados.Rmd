@@ -3,9 +3,12 @@ title: "Manual para el curso Modelos Lineales Avanzados (XS-0125) Primer Examen"
 author: "Anderson Martínez, Sebastián Calvo, Justin Zhu"
 output:
   pdf_document:
-    toc: true          # Esto activa el índice
-    toc_depth: 3       # Indica hasta qué nivel de títulos mostrar (H1, H2, H3)
-    number_sections: true # Opcional: enumera automáticamente tus secciones (1, 1.1, etc.)
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  word_document:
+    toc: true
+    toc_depth: '3'
 ---
 
 
@@ -226,6 +229,9 @@ $$Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$$
 4. La variancia total de la respuesta es la suma de la variancia de los componentes aleatorios más la variancia del error:
 
 $$V(Y) = \sigma_\delta^2+\sigma^2_\varepsilon$$
+
+*Nota*: Esta suma nos sirve para ver en terminos relativos (%), la variabilidad, normalmente se usa para dar conclusiones. De tal manera que podemos tener estos dos casos $\sigma_\delta^2 <\sigma^2_\varepsilon$ ó $\sigma_\delta^2 > \sigma^2_\varepsilon$. En palabras simples, nos sirve para buscar quien es el culpable de generar mayor variabilidad. *Ver en el índice el ICC*
+
 **A continuación se representan las distribuciones por medio de una figura **
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5.5}
@@ -322,8 +328,125 @@ legend("topright",
        col=c("red", "blue", "black"), lwd=2, bty="n")
 ```
 
+## Componentes de la varianza
+
++ El modelo tiene solo un coeficiente **fijo** que es el **intercepto** o media general, y tiene un componente aleatorio que son los efectos de las unidades del segundo nivel. 
+
++ Interesa determinar si hay efecto de las unidades del segundo nivel, pero no interesa estimar la magnitud de los mismos ya que son solo una muestra de una población mayor de unidades infinitas.
+
++ La variancia de cualquier observación se obtiene a partir de dos fuentes: la de unidad de nivel 2 a unidad de nivel 2 (inter sujeto) y la residual (intra sujeto).
 
 
++ Si realmente hay un efecto de la unidad del nivel 2, la variancia entre unidades del nivel 2 será mayor a cero. Como se denota a continuación:
+
+
+$$H_0: \sigma_i = 0 \\
+H_1: \sigma_i > 0 $$
+
+## Coeficiente de correlación intraclase (ICC)
+
+
++ Es una medida que relaciona la variabilidad entre los grupos con la variabilidad dentro de los grupos.
+
++ Es la proporción de la variación en la variable respuesta que ocurre entre grupos con respecto a la variación total.
+
++ Formalmente: Siendo $\sigma^2_\varepsilon$ la varianza dentro de los grupos, y siendo $\sigma_\delta^2$ la varianza entre los grupos, el coeficiente de correlación intraclase $(\rho_I)$ es:
+
+$$\rho_I = \frac{\sigma_\delta^2}{\sigma_\delta^2+\sigma^2_\varepsilon}$$
+Esto nos dice que porcentaje de varibilidad se debe a las unidades del nivel 2. Si hay **baja** variabilidad intra clase $\rho_I \to 0$, quiere decir que las unidades del segundo nivel son muy similares, por el contraRio si $\rho_I \to 1$, nos esta diciendo que son muy difentes.
+
+
+
+# Modelo con Interacción
+
+Una inconsistencia en el factor del nivel 2, es lo que nos sospecha que haya interacción
+
+El efecto de la i-ésimo del factor del nivel 2 se denota con: $\tau_i$  
+
+El efecto del j-ésima unidad de nivel 2 se denota con: $\delta_j$
+
+El efecto de interacción para la i-ésimo factor en la  j-ésima unidad de nivel 2 se denota con: 
+
+*Notas:* 
+
++ $\delta_j = \mu_j-\mu$, es decir la media de la unidad de nivel 2 menos la media general (media de las medias).
+
++ Los efectos de interacción son infinitos, por lo que son aleatorios.
+ 
++ $\tau_i$ es fijo, ya que este depende de la restricción que elijamos (suma nula o referencia)
+
+
+La k-ésima muestra dentro del j-ésimo día, para la i-ésima máquina se puede expresar como:
+
+
+
+
+
+$$y_{ijk}=\beta_0+\tau_i+\delta_j+(\tau \delta)_{ij}+\varepsilon_{ijk}$$ 
+
+La esperanza condicional dado la unidad de nivel 2 y el factor del mismo nivel, se denota de laa siguiente manera:
+
+$$E[Y|ij] = \mu_{ij} = \beta_0+\tau_i+\delta_i+(\tau\delta)_{ij}$$
+
+*A continuación se le presenta un ejemplo de como se ve gráficamente un modelo con y sin interacción*
+
+
+```{r, fig.width=13, fig.height=6, echo=FALSE}
+library(lattice)
+
+# 1. Simulación de datos
+set.seed(42)
+datos <- expand.grid(Rep = 1:2, 
+                     Dia = factor(paste("D", 1:4)), 
+                     Maquina = factor(paste("M", 1:4)))
+
+# Escenario SIN INTERACCIÓN (Efectos aditivos paralelos)
+datos$Trig_NoInt <- 150 + as.numeric(datos$Maquina)*3 + as.numeric(datos$Dia)*6 + rnorm(32, 0, 2)
+
+# Escenario CON INTERACCIÓN (Cruces o cambios de tendencia)
+# Aquí forzamos que en el Día 4, la Máquina 1 tenga un bajón atípico
+datos$Trig_Int <- 150 + as.numeric(datos$Maquina)*30 + as.numeric(datos$Dia)*6 + 
+                  ifelse(datos$Maquina == "M1" & datos$Dia == "D 4", -45, 0) + rnorm(32, 0, 2)
+
+# 2. Crear los objetos de gráfico
+p1 <- xyplot(Trig_NoInt ~ Maquina, groups = Dia, data = datos,
+             type = c("p", "a"), lwd=2,
+             auto.key = list(columns = 4, title = "Día", cex=0.8),
+             main = "Escenario A: CON INTERACCIÓN\n(Tendencias Cruzadas)",
+             ylab = "Triglicéridos (mg/dl)", xlab = "Máquina")
+
+p2 <- xyplot(Trig_Int ~ Maquina, groups = Dia, data = datos,
+             type = c("p", "a"), lwd=2,
+             auto.key = list(columns = 4, title = "Día", cex=0.8),
+             main = "Escenario B: SIN INTERACCIÓN\n(Tendencias Paralelas)",
+             ylab = "Triglicéridos (mg/dl)", xlab = "Máquina")
+
+# 3. Dibujar en mosaico (1 fila, 2 columnas)
+print(p1, position = c(0, 0, 0.5, 1), more = TRUE)
+print(p2, position = c(0.5, 0, 1, 1))
+```
+
+## Esperanza marginal del factor de la unidad de nivel 2
+
+En un modelo sin interacción podemos tener la siguiente esperanza:
+
+$$E[E[Y|ij]] = \mu_{i*} = \beta_0+\tau_i$$
+
+## Componenetes de la varianza 
+
+
+Se consideran tres fuentes de variabilidad:
+
+
++ La variación entre unidades de nivel 2 (inter sujeto): $\sigma_\delta^2$
+
++ La variación entre los datos dentro de una misma unidad de nivel 2 dentro del mismo factor (intra sujeto): $\sigma_\varepsilon^2$
+
++ La variación de interacción: $\sigma_{\tau\delta}^2$
+
+Como el intercepto $\beta_0$ y el efecto del factor $\tau_i$ es fijo esto nos lleva a que:
+
+$$V(Y|i) = \sigma_i^2 = \sigma_{\delta}^2+ \sigma_{\tau\delta}^2+\sigma_\varepsilon^2$$
 
 ```{r, eval=FALSE}
 # Este código se verá bonito en el manual, pero R NO lo ejecutará.
