@@ -31,9 +31,11 @@ output:
 
 + Los efectos de los niveles escogidos son aleatorios en el sentido de que son una muestra de esa distribución de efectos.
 
+## Ejemplo de las escuelas 
+
 **ATENCIÓN AL SIGUIENTE EJEMPLO EXPUESTO EN CLASE**
 
-Ejemplo: la escuela es analizada como un factor que puede influir sobre el nivel de aprendizaje y se han considerado en el experimento solo 10 de las muchas escuelas posibles. La escuela es un factor aleatorio en el experimento y sus efectos provienen de una distribución.Además se toma en cuenta otro factor sobre si la escuela es privada o pública.
+Ejemplo: La escuela es analizada como un factor que puede influir sobre el nivel de aprendizaje y se han considerado en el experimento solo 10 de las muchas escuelas posibles. La escuela es un factor aleatorio en el experimento y sus efectos provienen de una distribución.Además se toma en cuenta otro factor sobre si la escuela es privada o pública.
 
 ```{r, echo=FALSE}
 # 1. Configurar el lienzo para tener 2 gráficos (1 fila, 2 columnas)
@@ -83,7 +85,7 @@ par(mfrow = c(1, 1))
 
 *Unidades del nivel 1*
 
-Son los grupos de las escuelas, las distribuciones de este nivel son las de  color  **Negro** y **Azul**. Es decir cada distrobución corresponde a una escuela.
+Son los grupos de las escuelas, las distribuciones de este nivel son las de  color  **Negro** y **Azul**. Es decir cada distribución corresponde a una escuela.
 
 + La variable respuesta $(Y)$ se mide en el nivel 1,la distribución es la siguiente $f(Y|\text{Escuela})$
 
@@ -168,7 +170,7 @@ Los modelos mixtos permiten manejar estructuras de variabilidad que no son homog
 
 En un caso extremo donde los datos se comporten de una forma muy extraña, lo que podemos hacer es convertir la variable continua en una forma categórica, de manera que se parte la variable continua y se forman las categorías con dichos intervalos. Además para los modelos mixtos el hecho de que las variables predictoras no estén correlacionadas, lo que conocemos en otros cursos como el supuesto de no multicolinealidad, para que así los errores estándar no se inflen y las variables puedan explicar adecuadamente el modelo.
 
-Hay algunos modelos que no tienen una distribución normal, por lo que se usa una distribución conocida con la que se realiza dicho modelo, debido a que es muy díficil realizar las estimaciones por medio de una distribución normal. Por ejemplo un conteo de autos durante cada hora, el cual normalmente se modela con una Poisson. A esto se le llama Modelos Lineales Gneralizados, los mismo se utlizan cuando la respuesta no es normal, este tema se abordará más adelante en enl curso.Por último sino se cumple la independencia de la unidades de la resuesta y esa la variable $Y$ nos se comporta como una normal, pasamos a los *Modelos Lineales Mixtos Generalizados*.
+Hay algunos modelos que no tienen una distribución normal, por lo que se usa una distribución conocida con la que se realiza dicho modelo, debido a que es muy díficil realizar las estimaciones por medio de una distribución normal. Por ejemplo un conteo de autos durante cada hora, el cual normalmente se modela con una Poisson. A esto se le llama Modelos Lineales Gneralizados, los mismo se utlizan cuando la respuesta no es normal, este tema se abordará más adelante en el curso.Por último sino se cumple la independencia de la unidades de la respuesta y esa la variable $Y$ no se comporta como una normal, pasamos a los *Modelos Lineales Mixtos Generalizados*.
 
 *Nota:* En un experimento la multicolinealidad automáticamente se cumple.
 
@@ -207,7 +209,7 @@ $$V(Y|\text{escuela}) = V(error)$$
 
 + Los errores se distribuyen como $\varepsilon \sim N(0,\sigma_\varepsilon)$
 
-+ Debido a que hay homocesticidad yo los puedo juntar a todos los errores. La función de unir todos los errores es para observar la normalidad.
++ Debido a que hay homocesticidad podemos juntar a todos los errores. La función de unir todos los errores nos ayuda a observar la normalidad.
 
 ### Distribuciones de cada nivel
 
@@ -230,7 +232,7 @@ $$Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$$
 
 $$V(Y) = \sigma_\delta^2+\sigma^2_\varepsilon$$
 
-*Nota*: Esta suma nos sirve para ver en terminos relativos (%), la variabilidad, normalmente se usa para dar conclusiones. De tal manera que podemos tener estos dos casos $\sigma_\delta^2 <\sigma^2_\varepsilon$ ó $\sigma_\delta^2 > \sigma^2_\varepsilon$. En palabras simples, nos sirve para buscar quien es el culpable de generar mayor variabilidad. *Ver en el índice el ICC*
+*Nota*: Esta suma nos sirve para ver en terminos relativos (%), la variabilidad, normalmente se usa para dar conclusiones. De tal manera que podemos tener estos dos casos $\sigma_\delta^2 <\sigma^2_\varepsilon$ ó $\sigma_\delta^2 > \sigma^2_\varepsilon$. En palabras simples, nos sirve para buscar quien es el culpable de generar mayor variabilidad. *Ver en el índice el ICC sección 7.3*
 
 **A continuación se representan las distribuciones por medio de una figura **
 
@@ -270,7 +272,7 @@ lines(x, dnorm(x, mean=gran_media, sd=sd_total),
 
 donde: 
 
-+ **Curvas azules* *corresponden a $Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$
++ **Curvas azules** corresponden a $Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$
 
 + **Curva Roja** corresponde a $\mu_i \sim N (\mu, \sigma^2)$, sin embargo se quiere calcular el efecto que este es $\delta = \mu_i-\mu$, el cual se distribuye como $\delta \sim N(0,\sigma^2_\delta)$.
 
@@ -340,8 +342,8 @@ legend("topright",
 + Si realmente hay un efecto de la unidad del nivel 2, la variancia entre unidades del nivel 2 será mayor a cero. Como se denota a continuación:
 
 
-$$H_0: \sigma_i = 0 \\
-H_1: \sigma_i > 0 $$
+$$H_0: \sigma_i = 0$$
+$$H_1: \sigma_i > 0 $$
 
 ## Coeficiente de correlación intraclase (ICC)
 
@@ -353,7 +355,7 @@ H_1: \sigma_i > 0 $$
 + Formalmente: Siendo $\sigma^2_\varepsilon$ la varianza dentro de los grupos, y siendo $\sigma_\delta^2$ la varianza entre los grupos, el coeficiente de correlación intraclase $(\rho_I)$ es:
 
 $$\rho_I = \frac{\sigma_\delta^2}{\sigma_\delta^2+\sigma^2_\varepsilon}$$
-Esto nos dice que porcentaje de varibilidad se debe a las unidades del nivel 2. Si hay **baja** variabilidad intra clase $\rho_I \to 0$, quiere decir que las unidades del segundo nivel son muy similares, por el contraRio si $\rho_I \to 1$, nos esta diciendo que son muy difentes.
+Esto nos dice que porcentaje de varibilidad se debe a las unidades del nivel 2. Si hay **baja** variabilidad intra clase $\rho_I \to 0$, quiere decir que las unidades del segundo nivel son muy similares, por el contrario si $\rho_I \to 1$, nos esta diciendo que son muy difentes.
 
 
 
@@ -367,13 +369,7 @@ El efecto del j-ésima unidad de nivel 2 se denota con: $\delta_j$
 
 El efecto de interacción para la i-ésimo factor en la  j-ésima unidad de nivel 2 se denota con: 
 
-*Notas:* 
-
-+ $\delta_j = \mu_j-\mu$, es decir la media de la unidad de nivel 2 menos la media general (media de las medias).
-
-+ Los efectos de interacción son infinitos, por lo que son aleatorios.
- 
-+ $\tau_i$ es fijo, ya que este depende de la restricción que elijamos (suma nula o referencia)
+*A continuación el modelo es explicado, basandosé en el ejemplo de las máquinas vistas en clase*
 
 
 La k-ésima muestra dentro del j-ésimo día, para la i-ésima máquina se puede expresar como:
@@ -384,11 +380,21 @@ La k-ésima muestra dentro del j-ésimo día, para la i-ésima máquina se puede
 
 $$y_{ijk}=\beta_0+\tau_i+\delta_j+(\tau \delta)_{ij}+\varepsilon_{ijk}$$ 
 
-La esperanza condicional dado la unidad de nivel 2 y el factor del mismo nivel, se denota de laa siguiente manera:
+La esperanza condicional dado la unidad de nivel 2 y el factor del mismo nivel, se denota de la siguiente manera:
 
 $$E[Y|ij] = \mu_{ij} = \beta_0+\tau_i+\delta_i+(\tau\delta)_{ij}$$
 
-*A continuación se le presenta un ejemplo de como se ve gráficamente un modelo con y sin interacción*
+*Notas:* 
+
++ $\delta_j = \mu_j-\mu$, es decir la media de la unidad de nivel 2 menos la media general (media de las medias).
+
++ Los efectos de interacción son infinitos, por lo que son aleatorios.
+ 
++ $\tau_i$ es fijo, ya que este depende de la restricción que elijamos (suma nula o referencia)
+
+
+
+*A continuación se le presenta un ejemplo de como se ve gráficamente un modelo con / sin interacción*
 
 
 ```{r, fig.width=13, fig.height=6, echo=FALSE}
@@ -444,7 +450,7 @@ Se consideran tres fuentes de variabilidad:
 
 + La variación de interacción: $\sigma_{\tau\delta}^2$
 
-Como el intercepto $\beta_0$ y el efecto del factor $\tau_i$ es fijo esto nos lleva a que:
+Como el intercepto $\beta_0$ y el efecto del factor $\tau_i$ es fijo esto nos lleva a que la varianza total es:
 
 $$V(Y|i) = \sigma_i^2 = \sigma_{\delta}^2+ \sigma_{\tau\delta}^2+\sigma_\varepsilon^2$$
 
