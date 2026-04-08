@@ -454,6 +454,95 @@ Como el intercepto $\beta_0$ y el efecto del factor $\tau_i$ es fijo esto nos ll
 
 $$V(Y|i) = \sigma_i^2 = \sigma_{\delta}^2+ \sigma_{\tau\delta}^2+\sigma_\varepsilon^2$$
 
+
+## Prueba de razón de verosimilitud 
+
+Definición de la verosimilitud creada en la clase: *La verosimilitud es que tan creíble la estimación de un parámetro, basado en los datos de la muestra. Con el objetivo de dar una medida de la credibilidad de la estimación.*
+
+Esta nos sirve para probar la hipótesis relativa a la variancia del componente aleatorio de interacción: 
+$H_0:\sigma_{\delta}^2 = 0$ contra la alternativa: $H_1:\sigma_{\delta}^2 > 0$.
+
+Aunque la hipótesis se plantea en términos de una restricción para el parámetro, hay que tener presente que lo que se compara es la calidad del ajuste obtenido con **dos modelos anidados**.
+La prueba de la razón de verosimilitud (LRT) equivale a la diferencia de las devianzas de los dos modelos que se comparan (la fórmula está más abajo). 
+
+El estadístico LRT usa como distribución de referencia aproximada una chi-cuadrado con grados de libertad equivalente a la diferencia en el número de parámetros de ambos modelos.
+
+*A continuación se le presenta la fórmula*
+
+$$\begin{aligned}
+\chi^2_{(\nu)} &= D_{\omega} - D_{\Omega} \\
+&= -2\log(\mathcal{L}_{\omega}) - (-2\log(\mathcal{L}_{\Omega})) \\
+&= -2 \log \left( \frac{\mathcal{L}_{\omega}}{\mathcal{L}_{\Omega}} \right)
+\end{aligned}$$
+
+donde:
+
++ Los $\nu$ es la diferencia del número de parámetros de los dos modelos
+
++ $D_{\omega}$: devianzia del modelo pequeño
+
++ $D_{\Omega}$: devianzia del modelo grande
+
++ $\mathcal{L}_{\omega}$: valor de la máxima verosimilitud del modelo $\omega$ con los parámetros que la maximizan.Lo mismo para $\mathcal{L}_{\Omega}$
+
++ $\frac{\mathcal{L}_{\omega}}{\mathcal{L}_{\Omega}}$ es la razón de las verosimilitudes **Esto es el LRT**
+
+
+En este caso el valor-p obtenido debe tomarse con cautela ya que el parámetro que se prueba está en el borde del dominio de posibles valores para el parámetro.
+
+El valor-p será conservador en el sentido de que será mayor que el valor-p que se obtendría en simulaciones.
+En el peor de los casos el valor-p será el doble de lo que debería ser. **PREGUNTARRRR**
+
+
+**Ejemplo:**
+
+Tenemos los siguientes modelos:
+
+**Modelo 1:**
+
+$y_{ij} = \beta_0+ \beta_1X_1+\delta_i+\varepsilon_{ij}$
+
+*Modelo 2:*
+
+$y_{ijk} = \beta_0+ \beta_1X_1+\tau_k+\delta_i+\varepsilon_{ijk}$
+
+donde: $\tau$ es un factor con tres niveles
+
+
+Para el **modelo 1**:
+
++ 2 parámetros fijos($\beta_0,\beta_1)$
+
++ 2 parámetros aleatorios ($\sigma^2_\delta,\sigma^2_\varepsilon$)
+
+Para el **modelo 2**:
+
++ 4 parámetros fijos($\beta_0,\beta_1,\tau_1,\tau_2)$
+
++ 2 parámetros aleatorios ($\sigma^2_\delta,\sigma^2_\varepsilon$)
+
+*Note que para el modelo 2 se usa suma nula*. Por lo que $\sum\tau_i = 0$
+
+Si se comparan estos dos modelos sería con la siguiente fórmula:
+
+
+
+$$\chi^2_{(\nu)} = D_{\omega} - D_{\Omega}\sim\chi^2_{(2)}$$
+
+Con esto podemos probar la siguientes hipótesis: 
+
+$$\begin{cases} 
+H_0: \tau_1 = \tau_2 = 0 \\
+H_1: \text{Al menos un } \tau_i \neq 0 
+\end{cases}$$
+
+Con esto podemos concluir que las medias condicionales son iguales para los dos niveles del factor de los $\tau$.Esto nos sirve para ver si las medias son iguales o distintas de dos modelos.
+
+
+Si yo quiero probar el coeficiente $\delta_j$, para ver si es importante que se encuentre en el modelo no lo puedo hacer con la función `drop1()`, así como se puede hacer con el factor del ejemplo anterior. Por ello para probar la hipótesis al inicio de esta sección se necesita el LRT. Normalmente este caso en específico se usa para observar si es necesario realizar o utilizar bloques en un experimento.
+
+
+
 ```{r, eval=FALSE}
 # Este código se verá bonito en el manual, pero R NO lo ejecutará.
 modelo_complejo <- lm(y ~ x1 + x2, data = mis_datos)
