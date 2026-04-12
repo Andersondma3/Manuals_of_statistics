@@ -222,11 +222,11 @@ $V(\mu|\text{Tipo de escuela}):$ Hay dos una para la escuela pública y otra par
 2. Los efectos de las unidades del nivel 2 son aleatorias y se obtienen de una distribución normal con media cero:
 
 
-$$\delta \sim N(0,\sigma^2_\delta)$$
+$$\delta \sim \mathcal{N}(0,\sigma^2_\delta)$$
 
 3. La distribución condicional de la respuesta dado la unidad del nivel 2 también es normal:
 
-$$Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$$
+$$Y|i\sim \mathcal{N}(\mu_i,\sigma^2_\varepsilon)$$
 
 4. La variancia total de la respuesta es la suma de la variancia de los componentes aleatorios más la variancia del error:
 
@@ -357,7 +357,16 @@ $$H_1: \sigma_i > 0 $$
 $$\rho_I = \frac{\sigma_\delta^2}{\sigma_\delta^2+\sigma^2_\varepsilon}$$
 Esto nos dice que porcentaje de varibilidad se debe a las unidades del nivel 2. Si hay **baja** variabilidad intra clase $\rho_I \to 0$, quiere decir que las unidades del segundo nivel son muy similares, por el contrario si $\rho_I \to 1$, nos esta diciendo que son muy difentes.
 
+*A continuación se le presenta un ejemplo sobre un cálculo en r*
 
+```{r}
+sigma_delta = 1764
+sigma_epsilon = 2451
+sigma_delta/(sigma_delta+sigma_epsilon)*100
+```
+**Respuesta:** El 41.8% de la variabilidad es debida a las unidades del nivel 2.
+
+Si se requiere sacar un intervalo de confianza para las varianzas, se recomienda utilizar estadística Bayesiana.
 
 # Modelo con Interacción
 
@@ -455,7 +464,7 @@ Como el intercepto $\beta_0$ y el efecto del factor $\tau_i$ es fijo esto nos ll
 $$V(Y|i) = \sigma_i^2 = \sigma_{\delta}^2+ \sigma_{\tau\delta}^2+\sigma_\varepsilon^2$$
 
 
-## Prueba de razón de verosimilitud 
+# Prueba de razón de verosimilitud 
 
 Definición de la verosimilitud creada en la clase: *La verosimilitud es que tan creíble la estimación de un parámetro, basado en los datos de la muestra. Con el objetivo de dar una medida de la credibilidad de la estimación.*
 
@@ -491,7 +500,8 @@ donde:
 En este caso el valor-p obtenido debe tomarse con cautela ya que el parámetro que se prueba está en el borde del dominio de posibles valores para el parámetro.
 
 El valor-p será conservador en el sentido de que será mayor que el valor-p que se obtendría en simulaciones.
-En el peor de los casos el valor-p será el doble de lo que debería ser. **PREGUNTARRRR**
+
+En el peor de los casos el valor-p será el doble de lo que debería ser. 
 
 
 **Ejemplo:**
@@ -502,7 +512,7 @@ Tenemos los siguientes modelos:
 
 $y_{ij} = \beta_0+ \beta_1X_1+\delta_i+\varepsilon_{ij}$
 
-*Modelo 2:*
+**Modelo 2:**
 
 $y_{ijk} = \beta_0+ \beta_1X_1+\tau_k+\delta_i+\varepsilon_{ijk}$
 
@@ -539,10 +549,80 @@ H_1: \text{Al menos un } \tau_i \neq 0
 Con esto podemos concluir que las medias condicionales son iguales para los dos niveles del factor de los $\tau$.Esto nos sirve para ver si las medias son iguales o distintas de dos modelos.
 
 
-Si yo quiero probar el coeficiente $\delta_j$, para ver si es importante que se encuentre en el modelo no lo puedo hacer con la función `drop1()`, así como se puede hacer con el factor del ejemplo anterior. Por ello para probar la hipótesis al inicio de esta sección se necesita el LRT. Normalmente este caso en específico se usa para observar si es necesario realizar o utilizar bloques en un experimento.
+Si yo quiero probar el coeficiente $\delta_j$, para ver si es importante que se encuentre en el modelo no lo puedo hacer con la función `drop1()`, así como se puede hacer con el factor del ejemplo anterior. Por ello para probar la hipótesis al inicio de esta sección se necesita el LRT. Normalmente este caso en específico se usa para observar si es necesario realizar o utilizar
+bloques en un experimento.
 
+# Estimación de modelos mixtos en r  
+
+```{r, eval=FALSE}
+library(lme4)
+mod1=lmer(prod~(1|lote),data=base)
+```
+
+```{r, eval=FALSE}
+mod1.2=lmer(prod~(1|lote),data=base, REML = F) #Modelo con la  máxima verosimilitud no restringida
+```
+
+*Notas:* El `REML` *Máxima Verosimilitud Restringida*. Además al ser un modelo sencillo el $\beta_0$  es igual a la media observada.
+
+
+Con respecto al modelo `REML`, debido a que en los modelos mixtos se utlilizan muchos parámetros para la estimación de máxima verosimilitud, lo que se realiza es fijar uno de los parámetros, para maximizar todos, para así de esa manera ir realizando combinaciones y como resultado se obtiene la máximización de todos. Puede ser que por este método de lo mismo que cuando se máximizan todos los paramétros al mismo tiempo.
+
+## Estimaciones manuales mediante un modelo lineal 
+
+Para poder explicar este tema se usa el siguiente caso de **Colorantes** en donde se tiene un solo factor aleatorio que son lotes de producción, y se quiere verificar si la variabiliad existente entre los promedios de los lotes es mucho mayor que la variabilidad del error.
+
+```{r, eval=FALSE}
+mod2=lm(prod~lote,data=base)
+anova(mod2)
+```
+
+
+**Primero se debe tener claro este concepto:**
+
+
+$$\begin{aligned}
+&V[\mu_i] = V[\mu + \delta_i] \\
+&V[\mu_i] = V[\mu] + V[\delta_i] \quad \text{donde } V[\mu] = 0 \\
+&V[\mu_i] = \sigma^2_{\delta}
+\end{aligned}$$
+
+**Se parte de las esperanzas de los cuadrados medios:**
+
+$$\begin{aligned}
+&E[CMLote] = \sigma^2_{\varepsilon} + n\sigma^2_\delta 
+\end{aligned}$$
+
+$$\begin{aligned}
+&E[CMRes] = \sigma^2_{\varepsilon}
+\end{aligned}$$
+
+**Se empieza estimando $\sigma^2_epsilon$ con el CMRes y se sustituye en la primera ecuación:**
+
+$$\begin{aligned}
+&CMLote = CMRes+n\sigma^2_\delta
+\end{aligned}$$
+
+**Por lo tanto:**
+
+$$\begin{aligned}
+&\hat{\sigma^2_\delta}=\frac{CMLote-CMRes}{n}
+\end{aligned}$$
+
+## Intervalos de confianza para los modelos 
+
+```{r. eval = False}
+confint(mod1)
+```
+
+*Nota:* Se le llama `sigma` a la desviación estándar del error, `sig01` es la del lote. Para obtener la varianza recuerde elevar al cuadrado los resultados. Además note que los intervalos no son simétricos, debido  a que el $\pm$ en el intervalo de confianza de varianzas no se utliza. Si el limite inferior da cero quiere decir que el interavlo no se tuvo que haber realizado, debido a que la varianza puede ser cero.
 
 
 ```{r, eval=FALSE}
 # Este código se verá bonito en el manual, pero R NO lo ejecutará.
 modelo_complejo <- lm(y ~ x1 + x2, data = mis_datos)
+```
+
+
+
+
