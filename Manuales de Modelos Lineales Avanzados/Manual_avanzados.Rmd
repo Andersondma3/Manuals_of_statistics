@@ -156,15 +156,18 @@ Cuando el diseño es de dos niveles con un factor en cada nivel, al mismo se le 
 + Los Modelos Lineales Mixtos Generalizados (GLMM) incluyen técnicas de modelación no solo para variables continuas, sino también nominales, ordinales, conteos, respuestas asimétricas, entre otras.
 
 
+
 # Modelos lineales mixtos
 
 Modelos para variables continuas en los que los residuos se distribuyen normalmente, pero podrían no ser independientes o no tener varianza constante.
 
 El término “lineal” proviene del hecho de que estos modelos son lineales en los parámetros.
 
-El término “mixto” es debido a que las covariables pueden incluir un “mix” de efectos fijos y efectos aleatorios.
+El término “mixto” es debido a que las covariables pueden incluir un “mix” de efectos fijos y efectos aleatorios
 
-## Sobre los supuestos 
+
+## Sobre los supuestos
+
 
 Los modelos mixtos permiten manejar estructuras de variabilidad que no son homogéneas, por lo que se pueden usar cuando hay homocedasticidad. En un ANOVA no se necesita linealidad, en cambio cuando hay covaribales, variables numéricas como en regresión, en los modelos mixtos necesitamos linealidad. Si sucede el caso de que esta última no se da, debemos realizar una transformación. 
 
@@ -460,7 +463,7 @@ En este experimento se tiene un estudio con 2 niveles con un factor en el nivel 
 
 Tenenos dos varianzas: $\sigma_{\varepsilon}$ varianza del error la cual corresponde, a la de muestra a muestra dentro de un día y una muestra. Por otro lado $\sigma_{\delta}$ varianza de los efectos del día.
 
-**En ambos gráficos podemos observar que las maquinas no son consistentes (cuando hay interacción), debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción que las maquinas son bastante consistentes**
+**En ambos gráficos podemos observar que las maquinas no son consistentes (cuando hay interacción), debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción que las maquinas son bastante consistentes.**
 
 ```{r, echo=FALSE}
 p1 <- dotplot(Trig_NoInt ~ Maquina, groups = Dia, data = datos,
@@ -498,13 +501,13 @@ maq=factor(rep(c("A","B","C","D"),4,each=2))
 ```
 
 
-```{r}
+```{r, warning=FALSE}
 library(lme4)
 mod1=lmer(trigli~1+maq+(1|dia)) #Código de modelo sin interacción
 mod1_int=lmer(trigli~1+maq+(1|dia)+(1|dia:maq))
 ```
 
-Observe que la interacción se coloca con `:`, de manera que se coloca con esta indicación `(1|dia:maq)`. Recuerde que los factores aletorios se colocan así `(1|factor)`.
+Observe que la interacción se coloca con `:` de manera que se coloca con esta indicación `(1|dia:maq)`. Recuerde que los factores aletorios se colocan así `(1|factor)`.
 
 ## Comparación de modelos con y sin interacción
 
@@ -704,7 +707,7 @@ $$\begin{aligned}
 
 ## Intervalos de confianza para las varianzas 
 
-```{r. eval = False}
+```{r, eval=FALSE}
 confint(mod1)
 ```
 
@@ -802,11 +805,17 @@ print(c("El promedio del ancho es",round(promedio_ancho,3)))
 ```
 
 
-## Intervalos de confianza para las diferencias de diferentes categorías
+# Intervalos de confianza para las diferencias de diferentes categorías
 
-Estos intervalos los podremos realizar, siempre y cuando el modelo que estemos analizando no posea interacción, ya que si la tiene el analisis es distintos, debido a que en estos modelos podemos tener unidades inifinitas dependiendo del factor que se este analizand.
+Para las siguientes secciones se utlizará el siguiente ejemplo:
 
-Para este tema usaremos el modelo **sin interacción** presentado en la sección de [Modelo con interacción en r](##lm_int)
+*Se está desarrollando un nuevo modelo de espectrofotómetro para uso en laboratorios clínicos con el objetivo de cuantificar sustancias y microorganismos. Se quiere evaluar  el funcionamiento de estos instrumentos sabiendo que un componente crítico del desempeño es la consistencia de las mediciones de un día a otro, y de una máquina a otra. Se quiere saber si la variabilidad de las mediciones entre las máquinas operadas durante varios días está dentro de los estándares aceptables.*
+
+*Se cuenta con 4 máquinas etiquetadas como A, B, C y D. Cada día se preparan 8 replicaciones de muestras de suero en sangre. Dos muestras de suero se asignan aleatoriamente a cada una de las 4 máquinas en cada uno de los 4 días para un diseño completamente al azar con 2 repeticiones de cada tratamiento. En todas las muestras se usó el mismo lote de reactivos.Se miden los niveles de triglicéridos (mg/dl) en las muestras de suero. *
+
+Estos intervalos los podremos realizar, siempre y cuando el modelo que estemos analizando no posea interacción, ya que si la tiene el analisis es distintos, debido a que en estos modelos podemos tener unidades inifinitas dependiendo del factor que se este analizando.
+
+Para este tema usaremos el modelo **sin interacción** presentado en la sección de Modelo con interacción en r
 
 ```{r}
 summary(mod1)
@@ -819,7 +828,7 @@ confint(mod1)
 
 **Al observar el intervalo de 95% de confianza se tiene que la desviación estándar de día a día está entre 2.9 y 15.7. Esto confirma que esta fuente de variabilidad es importante. Por lo tanto, hay evidencia que hay fuentes de variabilidad que deben revisarse para que este modelo de espectofotómetro funcione mejor. Se esperaría mayor consitencia de uno a otro día.**
 
-### Hipótesis sobre la diferencias entre categorías
+## Hipótesis sobre la diferencias entre categorías
 
 Basado en el mismo ejemplo de la sección anterior queremos probar lo siguiente:
 
@@ -845,7 +854,7 @@ Restamos las devianzas de los modelos y ese valor lo colocamos en el siguiente c
 
 
 
-### Intervalos de confianza mediante la función emmeans
+## Intervalos de confianza mediante la función emmeans
 
 **Correción de Bomferroni**: El profesor recomienda realizar este ya que es más seguro, debido a que se trata de un modelo mixto
 
@@ -865,12 +874,12 @@ El `p-value` se compara contra $\alpha$, ya que la función hace la correción d
 em.mod2=emmeans(mod1,pairwise~maq) #Realizados mediante prueba tuckey
 ```
 
-### Comparaciones para el nivel de significancia $\alpha$ cuando se usa emmeans (Bonferroni)
+## Comparaciones para el nivel de significancia $\alpha$ cuando se usa emmeans (Bonferroni)
 
 
 | Tipo de Prueba | Emmeans | A pie (Manual) |
 | :--- | :---: | :---: |
-| **Una cola** | $\frac{p}{2} < \alpha$ | $p < \frac{\alpha}{d}$ |
+| **Una cola** | $\frac{p}{2} < \alpha$ ó $p < 2\cdot\alpha$ | $p < \frac{\alpha}{d}$ |
 | **Dos colas** | $p < \alpha$ | $p < \frac{\alpha}{2d}$ |
 
 
@@ -896,27 +905,161 @@ mod1=lmer(trigli~1+maq+(1|dia))
 ```{r}
 A=c(0,0,0,0)
 B=c(0,1,0,0)
-AB=A-B
-ee = as.numeric(sqrt(t(AB)%*%vcov(mod1)%*%AB))
-coef = fixef(mod1)
-t = t(AB)%*%coef
-t_calculado = as.numeric(t / ee)
-n = nrow(datos)
-p = length(coef)
-gl = n-p
-p_valor = 2 * pt(abs(t_calculado), df =gl, lower.tail = FALSE)
-cat("Estimación:", t, "\nSE:", ee, "\nt-stat:", t_calculado, "\np-val:", p_valor)
-```
-
-```{r}
 C=c(0,0,1,0)
 D=c(0,0,0,1)
+AB=A-B
 CD=C-D
-sqrt(t(CD)%*%vcov(mod1)%*%CD)
+AD =A-D
+AC = A-C
+BC = B-C
+BD = B-D
+h =cbind(AB, AC, AD, BC, BD, CD)
+coef = fixef(mod1)
+L = t(h)%*%coef
+ee = sqrt(diag(t(h)%*%vcov(mod1)%*%h))
+q = abs(L)/ee
+p = pt(q,25,lower.tail = F) 
+round(p*12,3) # Estas son las probabilidad que tira el emmeans
+# round(p*6,3) probabilidades de una cola
 ```
 
-Observe que el error estándar es igual al obtenido en la función `emmeans`.
+*Comparaciones*
 
+```{r}
+# Recuerde que el número de diferencias es 6 en este caso
+print("Comparación de dos colas")
+print(p < 0.05/12)
+print("Comparación de una colaa")
+print(p < 0.05/6)
+```
+
+
+
+
+**Podemos extraer los valores estimados de la función `emmeans`, para mejorar los intervalos de confianza**
+
+Podemos mejorar los intervalos, debido a que la función `mmeans`, toma en cuenta todas las diferencias posibles. Sin emabargo no todas las diferencias son significativas, por lo que se necesita aplicar el siguiente proceso para mejor su precisión.
+
+
+```{r}
+d = confint(em.mod1)$contrasts[3:5,2] #Extraemos las que fueron significativas
+ee = confint(em.mod1)$contrasts[3:5,3] #Extraemos sus errores estándar
+gl = 25 #Esto lo podemos obtener del emmeans
+t = qt(1-0.05/2*length(d),gl)
+ic = cbind(d-t*ee,d+t*ee)
+round(ic,3)
+```
+
+
+
+# Simulación del experimento de las maquinas
+
+Esta simulación se realizó con el ejemplo de las maquinas vistó en clase
+
+## Simulación de los efectos
+
+```{r}
+sd.dia=7.1 # desviación estándar del día
+n=4 #número de días
+ef.dia=rnorm(n,0,sd.dia)
+med=147
+muj=med+ef.dia
+mean(muj)
+```
+## Simulación de la respuesta con las medias
+
+
+
+```{r}
+sd.res = 6.55 #desviación estándar observada de la respuesta
+n = 4 #número de observaciones
+r = 8 #número de replicas por día
+mujs = rep(muj,each=r) #simulamos la medias de cada uno de los días 
+y = rnorm(n*r,mujs,sd.res) # simulación de la respuesta 
+Dia = factor(rep(1:n, each = r)) # creamos la nueva variable día 
+tapply(y,Dia, mean) # cálculo de medias por día 
+```
+*Nota:* Conforme que `n` aumenta la media será más parecida a la que colocamos, en este caso usted puede colocar `n = 60` y lo que sucederá es que la media de los `mujs`, será casi igual a la que usted proporcionó.
+
+##  Simulación de la respuesta con los efectos
+
+```{r}
+n = 6 #número de días
+k = 4 # número de máquinas
+r = 16 #número de replicas por día, este debe ser múltiplo de k
+alfa=c(0,-7.5,7.5,0) #efectos observados 
+alfai=rep(alfa,each=r/k,n) #Número de observaciones entre 4 días, n es el número de días
+```
+
+**Luego de simular los efectos de cada día, simulamos la respuesta y le sumamos los efectos.**
+
+
+```{r}
+y = rnorm(n*r,mujs,sd.res) #simulación de la respuesta 
+y1 = y+alfai # respuesta más el efecto simulado
+```
+
+**Creamos una nueva variable día y una nueva variable maquina**
+
+```{r}
+maquina = factor(rep(1:k,each = r/k,n)) #Creación de la variable máquina
+Dia = factor(rep(1:n, each = r))# Creación de la variable Día 
+```
+
+**Se calculan la medias por maquina en cada día**
+
+```{r}
+tabla = tapply(y1, list(Día = Dia, Máquina = maquina), mean)
+print(tabla)
+```
+
+
+**Realizados un nuevo modelo con las variables creadas anteriormente**
+
+```{r}
+mod2 = lmer(y1~maquina+(1|Dia))
+```
+
+
+```{r}
+summary(mod2)
+```
+```{r, echo=FALSE}
+trigli=c(142.3, 144.0, 148.6, 146.9, 142.9, 147.4, 133.8,
+133.2, 134.9, 146.3, 145.2, 146.3, 125.9, 127.6,
+108.9, 107.5, 148.6, 156.5, 148.6, 153.1, 135.5,
+138.9, 132.1, 149.7, 152.0, 151.4, 149.7, 152.0,
+142.9, 142.3, 141.7, 141.2)
+dia=factor(rep(1:4,each=8))
+maq=factor(rep(c("A","B","C","D"),4,each=2))
+sd.res = 6.55
+n = 4
+r = 8
+mujs = rep(muj,each=r)
+y = rnorm(n*r,mujs,sd.res)
+Dia = factor(rep(1:n, each = r))
+alfa=c(0,-7.5,7.5,0)
+(alfai=rep(alfa,each=r/4,n))
+y1 = y+alfai
+tapply(y,Dia, mean)
+```
+## Gráfico para comparar la respuesta observada y simulada 
+
+```{r, warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+p1 = qplot(maq,trigli,geom="boxplot",ylab="respuesta observada",
+xlab="máquina", ylim=c(100,170))
+trigli2= trigli-lm(trigli~dia)$fit+mean(trigli) #Centramos trigli por día
+p2 = qplot(maq,trigli2,geom="boxplot",ylab="respuesta observada\ncentrada",
+xlab="máquina", ylim=c(100,170))
+p3 = qplot(maq,y1,geom="boxplot",ylab="respuesta simulada",
+xlab="máquina", ylim=c(100,170))
+y2 = y1-lm(y1~dia)$fit+mean(y1)
+p4 = qplot(maq,y2,geom="boxplot",ylab="respuesta simulada\ncentrada",
+xlab="máquina", ylim=c(100,170))
+grid.arrange(p1,p2, p3,p4,ncol=2,nrow=2)
+```
 ```{r, eval=FALSE}
 # Este código se verá bonito en el manual, pero R NO lo ejecutará.
 modelo_complejo <- lm(y ~ x1 + x2, data = mis_datos)
