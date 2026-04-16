@@ -896,16 +896,26 @@ mod1=lmer(trigli~1+maq+(1|dia))
 ```{r}
 A=c(0,0,0,0)
 B=c(0,1,0,0)
+C=c(0,0,1,0)
+D=c(0,0,0,1)
 AB=A-B
-ee = as.numeric(sqrt(t(AB)%*%vcov(mod1)%*%AB))
+CD=C-D
+AD =A-D
+AC = A-C
+BC = B-C
+BD = B-D
+h =cbind(AB, AC, AD, BC, BD, CD)
 coef = fixef(mod1)
-t = t(AB)%*%coef
-t_calculado = as.numeric(t / ee)
-n = nrow(datos)
-p = length(coef)
-gl = n-p
-p_valor = 2 * pt(abs(t_calculado), df =gl, lower.tail = FALSE)
-cat("Estimación:", t, "\nSE:", ee, "\nt-stat:", t_calculado, "\np-val:", p_valor)
+L = t(h)%*%coef
+ee = sqrt(diag(t(h)%*%vcov(mod1)%*%h))
+q = abs(L)/ee
+p = pt(q,25,lower.tail = F) 
+round(p,3)
+p < 0.05/12 #  comparación de dos colas
+p < 0.05/6 # comparación de una cola
+round(p*12,3)
+
+round(p*6,3)
 ```
 
 ```{r}
