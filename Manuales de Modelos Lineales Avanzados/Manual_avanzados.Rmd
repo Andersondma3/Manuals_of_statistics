@@ -156,15 +156,18 @@ Cuando el diseño es de dos niveles con un factor en cada nivel, al mismo se le 
 + Los Modelos Lineales Mixtos Generalizados (GLMM) incluyen técnicas de modelación no solo para variables continuas, sino también nominales, ordinales, conteos, respuestas asimétricas, entre otras.
 
 
+
 # Modelos lineales mixtos
 
 Modelos para variables continuas en los que los residuos se distribuyen normalmente, pero podrían no ser independientes o no tener varianza constante.
 
 El término “lineal” proviene del hecho de que estos modelos son lineales en los parámetros.
 
-El término “mixto” es debido a que las covariables pueden incluir un “mix” de efectos fijos y efectos aleatorios.
+El término “mixto” es debido a que las covariables pueden incluir un “mix” de efectos fijos y efectos aleatorios
 
-## Sobre los supuestos 
+
+## Sobre los supuestos
+
 
 Los modelos mixtos permiten manejar estructuras de variabilidad que no son homogéneas, por lo que se pueden usar cuando hay homocedasticidad. En un ANOVA no se necesita linealidad, en cambio cuando hay covaribales, variables numéricas como en regresión, en los modelos mixtos necesitamos linealidad. Si sucede el caso de que esta última no se da, debemos realizar una transformación. 
 
@@ -460,7 +463,7 @@ En este experimento se tiene un estudio con 2 niveles con un factor en el nivel 
 
 Tenenos dos varianzas: $\sigma_{\varepsilon}$ varianza del error la cual corresponde, a la de muestra a muestra dentro de un día y una muestra. Por otro lado $\sigma_{\delta}$ varianza de los efectos del día.
 
-**En ambos gráficos podemos observar que las maquinas no son consistentes (cuando hay interacción), debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción que las maquinas son bastante consistentes**
+**En ambos gráficos podemos observar que las maquinas no son consistentes (cuando hay interacción), debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción que las maquinas son bastante consistentes.**
 
 ```{r, echo=FALSE}
 p1 <- dotplot(Trig_NoInt ~ Maquina, groups = Dia, data = datos,
@@ -498,13 +501,13 @@ maq=factor(rep(c("A","B","C","D"),4,each=2))
 ```
 
 
-```{r}
+```{r, warning=FALSE}
 library(lme4)
 mod1=lmer(trigli~1+maq+(1|dia)) #Código de modelo sin interacción
 mod1_int=lmer(trigli~1+maq+(1|dia)+(1|dia:maq))
 ```
 
-Observe que la interacción se coloca con `:`, de manera que se coloca con esta indicación `(1|dia:maq)`. Recuerde que los factores aletorios se colocan así `(1|factor)`.
+Observe que la interacción se coloca con `:` de manera que se coloca con esta indicación `(1|dia:maq)`. Recuerde que los factores aletorios se colocan así `(1|factor)`.
 
 ## Comparación de modelos con y sin interacción
 
@@ -704,7 +707,7 @@ $$\begin{aligned}
 
 ## Intervalos de confianza para las varianzas 
 
-```{r. eval = False}
+```{r, eval=FALSE}
 confint(mod1)
 ```
 
@@ -802,11 +805,17 @@ print(c("El promedio del ancho es",round(promedio_ancho,3)))
 ```
 
 
-## Intervalos de confianza para las diferencias de diferentes categorías
+# Intervalos de confianza para las diferencias de diferentes categorías
 
-Estos intervalos los podremos realizar, siempre y cuando el modelo que estemos analizando no posea interacción, ya que si la tiene el analisis es distintos, debido a que en estos modelos podemos tener unidades inifinitas dependiendo del factor que se este analizand.
+Para las siguientes secciones se utlizará el siguiente ejemplo:
 
-Para este tema usaremos el modelo **sin interacción** presentado en la sección de [Modelo con interacción en r](##lm_int)
+*Se está desarrollando un nuevo modelo de espectrofotómetro para uso en laboratorios clínicos con el objetivo de cuantificar sustancias y microorganismos. Se quiere evaluar  el funcionamiento de estos instrumentos sabiendo que un componente crítico del desempeño es la consistencia de las mediciones de un día a otro, y de una máquina a otra. Se quiere saber si la variabilidad de las mediciones entre las máquinas operadas durante varios días está dentro de los estándares aceptables.*
+
+*Se cuenta con 4 máquinas etiquetadas como A, B, C y D. Cada día se preparan 8 replicaciones de muestras de suero en sangre. Dos muestras de suero se asignan aleatoriamente a cada una de las 4 máquinas en cada uno de los 4 días para un diseño completamente al azar con 2 repeticiones de cada tratamiento. En todas las muestras se usó el mismo lote de reactivos.Se miden los niveles de triglicéridos (mg/dl) en las muestras de suero. *
+
+Estos intervalos los podremos realizar, siempre y cuando el modelo que estemos analizando no posea interacción, ya que si la tiene el analisis es distintos, debido a que en estos modelos podemos tener unidades inifinitas dependiendo del factor que se este analizando.
+
+Para este tema usaremos el modelo **sin interacción** presentado en la sección de Modelo con interacción en r
 
 ```{r}
 summary(mod1)
@@ -819,7 +828,7 @@ confint(mod1)
 
 **Al observar el intervalo de 95% de confianza se tiene que la desviación estándar de día a día está entre 2.9 y 15.7. Esto confirma que esta fuente de variabilidad es importante. Por lo tanto, hay evidencia que hay fuentes de variabilidad que deben revisarse para que este modelo de espectofotómetro funcione mejor. Se esperaría mayor consitencia de uno a otro día.**
 
-### Hipótesis sobre la diferencias entre categorías
+## Hipótesis sobre la diferencias entre categorías
 
 Basado en el mismo ejemplo de la sección anterior queremos probar lo siguiente:
 
@@ -845,7 +854,7 @@ Restamos las devianzas de los modelos y ese valor lo colocamos en el siguiente c
 
 
 
-### Intervalos de confianza mediante la función emmeans
+## Intervalos de confianza mediante la función emmeans
 
 **Correción de Bomferroni**: El profesor recomienda realizar este ya que es más seguro, debido a que se trata de un modelo mixto
 
@@ -865,7 +874,7 @@ El `p-value` se compara contra $\alpha$, ya que la función hace la correción d
 em.mod2=emmeans(mod1,pairwise~maq) #Realizados mediante prueba tuckey
 ```
 
-### Comparaciones para el nivel de significancia $\alpha$ cuando se usa emmeans (Bonferroni)
+## Comparaciones para el nivel de significancia $\alpha$ cuando se usa emmeans (Bonferroni)
 
 
 | Tipo de Prueba | Emmeans | A pie (Manual) |
@@ -1036,7 +1045,7 @@ tapply(y,Dia, mean)
 ```
 ## Gráfico para comparar la respuesta observada y simulada 
 
-```{r}
+```{r, warning=FALSE}
 library(ggplot2)
 library(gridExtra)
 p1 = qplot(maq,trigli,geom="boxplot",ylab="respuesta observada",
