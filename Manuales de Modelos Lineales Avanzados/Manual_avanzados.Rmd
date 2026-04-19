@@ -140,9 +140,6 @@ Cuando las unidades están en el nivel 1, los experimentos son como los del curs
 
 Es un modelo mixto, cuando hay dos factores o más en el nivel 1, en un diseño de dos niveles o más. Por el contrario cuando hay dos niveles, pero el nivel 1 solo tiene un factor es un diseño de bloques. Además si hay un factor en el nivel dos, también hay que usar modelos mixtos.
 
-# Parcelas divididas
-
-Cuando el diseño es de dos niveles con un factor en cada nivel, al mismo se le puede llamar como parcelas divididas. Un ejemplo de esto sería un experimento que quiere comparar el crecimiento de dos especies de papá en dos tipos de clima. En donde se siembran dos especies de papas en fincas que se encunetran en un clima frió y en otras que tienen un clima caliente.
 
 # Diferencias entre modelo mixto y modelo lineal clásico.
 
@@ -644,6 +641,47 @@ Con esto podemos concluir que las medias condicionales son iguales para los dos 
 Si yo quiero probar el coeficiente $\delta_j$, para ver si es importante que se encuentre en el modelo no lo puedo hacer con la función `drop1()`, así como se puede hacer con el factor del ejemplo anterior. Por ello para probar la hipótesis al inicio de esta sección se necesita el LRT. Normalmente este caso en específico se usa para observar si es necesario realizar o utilizar
 bloques en un experimento.
 
+
+
+## Prueba RMLE a mano 
+
+```{r, echo=FALSE}
+trigli=c(142.3, 144.0, 148.6, 146.9, 142.9, 147.4, 133.8,
+133.2, 134.9, 146.3, 145.2, 146.3, 125.9, 127.6,
+108.9, 107.5, 148.6, 156.5, 148.6, 153.1, 135.5,
+138.9, 132.1, 149.7, 152.0, 151.4, 149.7, 152.0,
+142.9, 142.3, 141.7, 141.2)
+dia=factor(rep(1:4,each=8))
+maq=factor(rep(c("A","B","C","D"),4,each=2))
+```
+
+
+El siguiente ejemplo se basa en el experimento de las maquinas
+
+**Queremos ver la significancia del factor maquina**, esto nos lleva a la siguiente hipótesis:
+
+$$H_0: \mu_{1\bullet} = \mu_{2\bullet} = \mu_{3\bullet} = \mu_{4\bullet}$$
+
+Con esta hipótesis queremos decir que si la media para los 4 días es igual sin importar la maquina.
+
+Realizandolo con la función `drop1`, obtenemos lo siguiente:
+
+```{r}
+mod1=lmer(trigli~1+maq+(1|dia))
+drop1(mod1, test = "Chisq")
+```
+Para obtener ese valor de `Pr(Chi)` de forma manual tenemos que realizar el siguiente proceso:
+
+```{r}
+mod1=lmer(trigli~1+maq+(1|dia), REML = F) #Modelo grande (con el factor máquina)
+mod2=lmer(trigli~1+(1|dia), REML = F) #Modelo pequeño (sin el factor máquina)
+LRT=-2*logLik(mod2)+2*logLik(mod1) #Resta de devianzias
+gl = 3 # Son trés grados de libertad, porque son 3 coef en el modelo
+p = pchisq(LRT,gl, lower.tail = F) #Se coloca el resultado en la prueba chi respectiva
+cat("Prueba de razón de verosimilitud", LRT, "\nProbabilidad de la prueba chi-cuadrado es", p)
+```
+
+
 # Estimación de modelos mixtos en r  
 
 ```{r}
@@ -1043,6 +1081,9 @@ alfa=c(0,-7.5,7.5,0)
 y1 = y+alfai
 tapply(y,Dia, mean)
 ```
+
+
+
 ## Gráfico para comparar la respuesta observada y simulada 
 
 ```{r, warning=FALSE}
@@ -1060,6 +1101,127 @@ p4 = qplot(maq,y2,geom="boxplot",ylab="respuesta simulada\ncentrada",
 xlab="máquina", ylim=c(100,170))
 grid.arrange(p1,p2, p3,p4,ncol=2,nrow=2)
 ```
+
+
+
+# Parcelas divididas
+
+Cuando el diseño es de dos niveles con un factor en cada nivel, al mismo se le puede llamar como parcelas divididas. Un ejemplo de esto sería un experimento que quiere comparar el crecimiento de dos especies de papá en dos tipos de clima. En donde se siembran dos especies de papas en fincas que se encunetran en un clima frió y en otras que tienen un clima caliente.
+
+Aspectos importantes de este diseño:
+
++ El factor que clasifica a los bloques es el factor superior o factor de parcela.
+
++ El factor cuyos niveles están dentro del bloque es el factor de subparcela.
+
++ Este tipo de diseños se analizan con el enfoque de modelos mixtos, donde el efecto del bloque se considera aleatorio pues los bloques se extraen de una población mayor de bloques.
+
++ Estos diseños nacen en Agronomía y literalmente obedecen a una parcela agrícola que se divide. 
++ *Cuando se trata de un diseño en otro contexto se llama simplemente diseño multinivel con un factor en el nivel 1 y factor en el nivel 2.*
+
+## Cambio de categórica a numérica
+
+Observe el siguiente ejemplo basado en el experimento del papel
+
+```{r, echo=FALSE, warning=FALSE}
+
+# 1. Simulación con "Pico" en 170 y caída en 180
+set.seed(303)
+n_puntos <- 5
+metodos <- c("Método A", "Método B")
+temperaturas <- c("150°C", "160°C", "170°C", "180°C")
+
+datos_pico <- expand.grid(
+  Repeticion = 1:n_puntos,
+  Metodo = metodos,
+  Temperatura = factor(temperaturas, levels = temperaturas)
+)
+
+# Definimos los niveles de resistencia para crear el efecto visual:
+# Subida constante hasta 170 y caída fuerte en 180
+efecto_temp <- c("150°C" = 15, "160°C" = 18.5, "170°C" = 10, "180°C" = 12)
+
+# Generar la respuesta con el pico y ruido
+datos_pico$Resistencia <- efecto_temp[as.character(datos_pico$Temperatura)] + 
+  (as.numeric(datos_pico$Metodo) * 4) + # El Método B está por encima del A
+  rnorm(nrow(datos_pico), sd = 1.2)
+
+# 2. Gráfico Izquierda: Puntos agrupados (Dotplot)
+p1 <- dotplot(Resistencia ~ Temperatura, groups = Metodo, data = datos_pico,
+              pch = 16, cex = 0.85,
+              auto.key = list(columns = 2, title = "Método", cex = 0.8),
+              ylab = "Resistencia (kg/cm)", xlab = "Temperatura")
+
+# 3. Gráfico Derecha: Curvas con "Punto Óptimo"
+# Usamos un span pequeño (0.4) para que la curva capture el quiebre drástico
+p2 <- xyplot(Resistencia ~ Temperatura, groups = Metodo, data = datos_pico,
+             type = c("p", "smooth"), 
+             lwd = 3, 
+             span = 0.4, 
+             auto.key = list(columns = 2, title = "Método", cex = 0.8),
+             ylab = "Resistencia (kg/cm)", xlab = "Temperatura")
+
+# 4. Mostrar en mosaico
+grid.arrange(p1, p2, ncol = 2)
+```
+A la izquierda podemos ver los resultados del experimento, sin embargo podemos ver que la variable temperatura se encuentra como una categoría. Lo que se nos viene la pregunta de si *podemos covetirla en una variable numérica*, por lo que tratamos de unir todas las respuesta como lo podemos observar en el gráfico de la derecha, esto nos lleva a un problema, ya que al hacer esto tenemos un problema con el supuesto de linealidad, debido a que este no se cumple, no puedo convertir la variable *Temperatura* en una variable numérica. 
+
+**Observe esta otra situación:**
+
+```{r, echo=FALSE, warning=FALSE}
+
+# 1. Simulación de datos con 2 métodos y 4 temperaturas
+set.seed(789)
+n_puntos <- 5
+metodos <- c("Método A", "Método B")
+temperaturas <- c("150°C", "160°C", "170°C", "180°C")
+
+datos_exp <- expand.grid(
+  Repeticion = 1:n_puntos,
+  Metodo = metodos,
+  Temperatura = factor(temperaturas, levels = temperaturas)
+)
+
+# Generar Resistencia: Método B es un poco más resistente que A
+# y ambos suben con la temperatura
+datos_exp$Resistencia <- 15 + 
+  (as.numeric(datos_exp$Metodo) * 5) + 
+  (as.numeric(datos_exp$Temperatura) * 3) + 
+  rnorm(nrow(datos_exp), sd = 0.8) # sd pequeña para que los puntos se vean "muy unidos"
+
+# 2. Gráfico Izquierda: Puntos agrupados por Método (Muy unidos)
+p1 <- dotplot(Resistencia ~ Temperatura, groups = Metodo, data = datos_exp,
+              pch = 16, cex = 0.85,
+              auto.key = list(columns = 2, title = "Método", cex = 0.8),
+              ylab = "Resistencia (kg/cm)", xlab = "Temperatura")
+
+# 3. Gráfico Derecha: Puntos y Líneas de tendencia por Método
+p2 <- xyplot(Resistencia ~ Temperatura, groups = Metodo, data = datos_exp,
+             type = c("p", "a"), lwd = 2,
+             auto.key = list(columns = 2, title = "Método", cex = 0.8),
+             ylab = "Resistencia (kg/cm)", xlab = "Temperatura")
+
+# 4. Mostrar en mosaico
+grid.arrange(p1, p2, ncol = 2)
+```
+
+Para este caso, sí podemos convertir la temperatura en una variable categórica en una variable numérica debido a que parace que no hay problemas con el supuesto de linealidad.También es importante ver el comportamiento inverso, si los datos se conforman en grupos y no de manera continua, por lo que podemos realizar el cambio de una variable numérica a una categórica.
+
+
+## Sobre el diseño de bloques y parcelas 
+
+La ventaja de usar parcelas dividas o bloques, es que nosotros podemos medir cuanta variabilidad están ocasionando los bloques y parcelas, por lo que esta variabilidad la podemos extraer y con esto al final desinflamos la variabilidad, con esto podemos obtener predicciones más precisas. Por otro lado, cuando el diseño es totalmente aleatorio esa variabilidad de bloque a bloque no la puedo extraer, por lo que no la puedo eliminar del modelo, como consecuencia toda esa variabilidad no cuantificada se dirige a la varibilidad del error. También si hay una varianza del error mayor, esto nos obliga a utlizar una mayor cantidad de muestra para observar resultados en nuestro experimento.
+
+
+
+
+# Diseños anidados
+
+
+
+
+
+
 ```{r, eval=FALSE}
 # Este código se verá bonito en el manual, pero R NO lo ejecutará.
 modelo_complejo <- lm(y ~ x1 + x2, data = mis_datos)
