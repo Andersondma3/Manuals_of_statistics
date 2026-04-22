@@ -1213,19 +1213,207 @@ Para este caso, sí podemos convertir la temperatura en una variable categórica
 La ventaja de usar parcelas dividas o bloques, es que nosotros podemos medir cuanta variabilidad están ocasionando los bloques y parcelas, por lo que esta variabilidad la podemos extraer y con esto al final desinflamos la variabilidad, con esto podemos obtener predicciones más precisas. Por otro lado, cuando el diseño es totalmente aleatorio esa variabilidad de bloque a bloque no la puedo extraer, por lo que no la puedo eliminar del modelo, como consecuencia toda esa variabilidad no cuantificada se dirige a la varibilidad del error. También si hay una varianza del error mayor, esto nos obliga a utlizar una mayor cantidad de muestra para observar resultados en nuestro experimento.
 
 
+# Diseños multinivel
 
+## Diseño con 2 niveles y factor fijo en ambos niveles
 
-# Diseños anidados
+Un fabricante de papel está interesado en tres métodos para preparar la pulpa y cuatro temperaturas de cocción de la pulpa. Aunque la temperatura es una variable continua, solo se van a estudiar 4 temperaturas.
 
+El fabricante desea estudiar el efecto del método y de la temperatura sobre la resistencia a la tensión del papel, que es el esfuerzo máximo a tensión obtenido durante una prueba hasta la ruptura bajo unas condiciones prescritas. El esfuerzo es expresado como la fuerza por unidad del ancho de la muestra puesta a prueba, medido en kg/cm. 
 
+El experimento se lleva a cabo de la siguiente forma:
 
++ Produce tres lotes de pulpa con cada uno de los tres métodos que está estudiando en un orden aleatorio. En total produce 9 lotes de pulpa. 
 
++ Cada vez que produce un lote lo divide en cuatro partes o muestras y realiza la cocción de cada muestra a una temperatura diferente.
 
+Además es importante resaltar que este tipo de diseño es un diseño de parcelas dividas.
+
+1. Recordar realizar el análisis gráfico de interacción mediante el gráfico `xyplot()`
+
+*Ejemplo de código*
 
 ```{r, eval=FALSE}
-# Este código se verá bonito en el manual, pero R NO lo ejecutará.
-modelo_complejo <- lm(y ~ x1 + x2, data = mis_datos)
+library(lattice)  
+xyplot(res ~ metodo, groups = temp,type="a",auto.key=list(columns=4),
+       xlab="método",ylab="resistencia",data=base)
 ```
+
+2. Realizar el modelo con la interacción
+
+
+```{r, echo=FALSE}
+setwd("~/GitHub/Apuntes-Modelos-lineales-Avanzados/Manuales de Modelos Lineales Avanzados")
+load("papel.Rdata")
+str(base)
+base$metodo = factor(base$metodo)
+levels(base$metodo)=c("M1","M2","M3")
+base$temp = factor(base$temp)
+base$lote=factor(base$lote)
+```
+
+
+```{r, }
+library(lme4)
+options(contrasts = c("contr.treatment", "contr.poly")) #Nos pasamos a suma nula
+mod1=lmer(res~metodo*temp+ (1|lote),data=base) #Lote es aleatorio y porque tiene diferentes observaciones adentro
+```
+
+3. Probar la hipótesis de interacción mediante la función `drop1`
+
+```{r}
+drop1(mod1,test="Chisq") #Se usa drop1, porque metodo y temp son fijos
+```
+
+*Nota:* Analice si existen valores que pueden estar afectando la hipótesis de interacción, por medio del gráfico `xyplot()`. Lo mismo lo puede analizar con el siguiente código:
+
+```{r, eval=FALSE}
+which(base$res == min(base$res)) #Ubicar el valor mínimo o máximo
+base2 = base[-26,] # Eliminar el valor
+mod2=lmer(res~metodo*temp+(1|lote),data=base2) #Hacer el modelo con la nueva base
+drop1(mod2,test="Chisq") #Probar de nuevo la hipótesis de interacción
+```
+
+### Análisis de diferencias de medias con ememeans
+
+
+1. Realizar la hipótesis de diferencias entre medias
+
+```{r}
+library(emmeans)
+a = emmeans(mod1, pairwise~temp|metodo, adjust="bonferroni")$contrasts
+# El código de arriba nos indica que se van a comparar las temperaturas dentro de cada método.
+# Esto se lo indicamos a r por medio del temp|metodo, si no hay interación se quita el método.
+
+a
+```
+
+Del resultado anterior podemos concluir lo siguiente:
+
+$$\text{Método 1:} \quad \mathbf{200} \quad \underline{225 \quad 250 \quad 275}$$
+$$\text{Método 2:} \quad \mathbf{200} \quad \underline{225 \quad 250 \quad 275}$$
+
+$$\text{Método 3:}  \quad \underline{200 \quad 225 \quad 250}\quad \mathbf{275}$$
+
+
+donde la linea $\underline{\text{temperatura}}$, presenta que no hubieron diferencias signifiactivas entre ellas.
+
+Lo anterior tiene implicaciones en las conclusiones depende el método que se escoja. Por lo tanto **si hay que escoger una temperatura escogemos al 275**
+
+
+Ahora realizando el análisis desde el otro punto de vista, **desde cuál método escojo según la temperatura**
+
+
+```{r}
+b = emmeans(mod1, pairwise~metodo|temp, adjust="bonferroni")$contrasts
+b
+```
+$$\text{Temp 200} \quad \underline{M1 \quad M2 \quad M3}$$
+
+$$\text{Temp 225} 
+\begin{cases} 
+\underline{M_3 \quad M_1} & \text{No hay diferencia} \\
+\underline{M_1 \quad M_2} & \text{No hay diferencia} \\
+M_3 \neq M_2 & \text{Diferencia significativa}
+\end{cases}$$
+
+
+$$\text{Temp 250} \quad \underline{M1 \quad M2 \quad M3}$$
+
+$$\text{Temp 275} \quad \underline{M1 \quad M2 \quad M3}$$
+
+
+Esto nos lleva a que podemos escoger cualquier método para las temperaturas 200, 250, 275. En cambio para la temperatura debemos escoger el método uno o dos ya que  este último es el mayor en esta temperatura, esto lo puede verificar viendo el `estimate`, para la temperatura 225.Sin embargo no tiene diferencias significativas con el método uno entonces da lo mismo escoger uno o dos. También lo podemos analizar mediante el gráfico `xyplot()`.
+
+**Si quiero usar el resultado anterior, pero con dos colas**
+
+```{r, eval=FALSE}
+p_valores <- as.data.frame(a)$p.value # Extracción del p valor
+2*p_valores < 0.05 #Para comparar con una cola
+```
+
+
+```{r}
+ic = confint(a)
+ic
+```
+
+### Corrección de intervalos de confianza
+
+Como la función `emmeans` usa un nivel de significancia global, estos intervalos son más anchos. Para ello debemos reconstriurlos tomando en cuenta solo aquellas diferencias que son significativas. Esto lo debemos realizar para observar si esa diferencias es relevante para nuestro estudio u objetivo.
+
+
+```{r}
+c=summary(mod1)$coef[,1]
+c200=c(1,0,0,0,0,0,0,0,0,0,0,0)
+c225=c(1,0,0,1,0,0,0,0,0,0,0,0)
+c250=c(1,0,0,0,1,0,0,0,0,0,0,0)
+c275=c(1,0,0,0,0,1,0,0,0,0,0,0)
+c225.200=c225-c200
+c250.200=c250-c200
+c275.200=c275-c200
+c250.225=c250-c225
+c275.225=c275-c225
+c275.250=c275-c250
+cont=cbind(c225.200,c250.200,c275.200,c250.225,c275.225,c275.250)
+L=t(cont)%*%c
+ee=sqrt(diag(t(cont)%*%vcov(mod1)%*%cont))
+t=L/ee
+round(pt(t,18,lower.tail = F),5)
+```
+```{r}
+t = qt(1-0.05/12,18) # recuerde que el número de diferencias es 6, por lo que estamos haciendo intervalos de una cola 
+ic = cbind(L-t*ee,L+t*ee)
+round(ic,3)
+```
+## Diseño con 3 niveles
+
+Como variante del ejercicio anterior (experimento papel), suponga que la capacidad de la planta solo permite realizar 15 corridas por día y se sospecha que de un día a otro se pueden experimentar diferencias en la resistencia. Entonces el fabricante decide considerar los días como bloques y corre una réplica en cada uno de tres días. Lleva a cabo el experimento así:
+
++ Cada día  produce tres lotes de pulpa, cada lote con uno de los tres métodos que está estudiando en un orden aleatorio.
+
++ Cada lote se divide en cuatro partes o muestras y realiza la cocción de cada muestra con una temperatura diferente, asignada aleatoriamente.
+
+
+```{r, echo=FALSE}
+load("papel2.Rdata")
+str(base)
+base$dia = factor(base$dia)
+base$metodo = factor(base$metodo)
+base$lote=factor(base$lote)
+base$lote1=factor(base$lote1)
+levels(base$metodo)=c("M1","M2","M3")
+base$temp = factor(base$temp)
+```
+### Gráfico de interacción
+
+```{r}
+xyplot(res ~ metodo|dia, groups = temp,type=c("p","a"),auto.key=list(columns=4),
+       xlab="método",ylab="resistencia",data=base)
+```
+
+### Creación del modelo en r 
+
+
+```{r, message=FALSE}
+#Estos dos códigos son los mismo
+mod1=lmer(res~metodo*temp+(1|dia/lote1),data=base)
+mod2 =lmer(res~metodo*temp+(1|dia)+(1|lote1), data = base) 
+```
+
+**Código para extraer las varianzas de los factores aleatorios**
+
+```{r}
+VarCorr(mod2)
+```
+
+**Hipótesis de interacción**
+
+```{r, message=FALSE}
+drop1(mod2,test="Chisq")
+```
+
+Como no hay interacción podemos realizar comparaciones marginales, es decir podemos comparar los métodos sin importar la temperatura o viceversa. Además nos pasamos un modelo que asume que no hay interacción.
 
 
 
