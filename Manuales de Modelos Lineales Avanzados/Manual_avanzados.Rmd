@@ -1539,7 +1539,7 @@ donde:
 + $I:$ cantidad de instructores dentro de cada región
 
 
-$$CMInst = \frac{SCInst}{\sum_{i=1}^R(b_1-1)}}$$
+$$CMInst = \frac{SCInst}{\sum_{i=1}^{R}(b_1-1)}$$
 
 donde
 
