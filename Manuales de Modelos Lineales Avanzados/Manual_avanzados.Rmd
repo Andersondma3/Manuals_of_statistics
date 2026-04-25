@@ -1416,5 +1416,230 @@ drop1(mod2,test="Chisq")
 Como no hay interacción podemos realizar comparaciones marginales, es decir podemos comparar los métodos sin importar la temperatura o viceversa. Además nos pasamos un modelo que asume que no hay interacción.
 
 
+# Diseños Anidados
+
+*Esta sección se basa en el siguiente ejmplo*
+
+Una compañía manufacturera tiene tres escuelas de mecánica regionales, una en cada una de sus regiones de operación. Cada escuela tiene dos instructores que dan cursos de tres semanas a 15 mecánicos aproximadamente. La compañía está interesada en conocer el efecto de la escuela (factor A) y el instructor (factor B) en el aprendizaje logrado. Se hace un experimento en el que se forman grupos en cada región y se asigna cada grupo a uno de los instructores.  A cada instructor se le asignan dos grupos. 
+
+$$\text{Estructura del Experimento} 
+\begin{cases} 
+\text{Nivel 3 (Escuela)} & \to \text{Factor Principal (Regional)} \\
+\text{Nivel 3 (Instructor)} & \to \text{Anidado en Escuela} \\
+\text{Nivel 1 (Grupo)} & \to \text{Unidad Observacional (Mecánicos)} 
+\end{cases}$$
+
+
+## Definición de diseño a anidado
+
+En un diseño anidado, los niveles de un factor (el anidado) son únicos para cada nivel del factor superior. Esto significa que el *Instructor 1* de la Escuela A no es la misma persona que el *Instructor 1* de la Escuela B; comparten un nombre o etiqueta, pero son unidades distintas. Si son identicos en todos los de niveles de un factor no es anidado.
+
+```{r, echo=FALSE}
+load("escuelas.Rdata")
+base$escuela=factor(base$escuela)
+base$instructor=factor(base$instructor)
+base$instructor1=factor(base$instructor1)
+levels(base$escuela)=c("Región K","Región D","Central")
+```
+
+
+```{r}
+dotplot(puntaje ~ instructor | escuela,xlab="instructor",
+layout = c(3,1),data=base)
+```
+
+
+Debido a que este diseño es anidado, **no se analiza la interacción**, porque la interacción compara dos niveles (los mismos dos niveles), en cada nivel del otro factor, esto es debido a que todos son diferentes en cada uno de los niveles.
+
+La cantidad de niveles de debe analizar dentro de cada facto, en el ejemplo anterior se debe analizar dentro de cada región, por lo que en este caso hay 2 por región.
+
+*Observe el siguiente gráfica, para observar las diferencias entre escuelas*
+
+```{r}
+bwplot(puntaje~escuela,xlab="escuela",ylab="puntaje",data=base)
+```
+
+**Se nota que algunas escuelas tienen puntajes promedio más altos que otras, por lo que sí se esperaría un efecto de la escuela en el aprendizaje. En particular, se notan mayores diferencias entre la escuela Central y Región K. Sin embargo, aquí no se está aislando la variabilidad que producen los instructores, lo que hace que esas diferencias no sean tan claras.**
+
+### De un diseño anidado  a un multinivel
+
+*En un país extremadamente grande habáin muchas escuelas de intructores y se selccionan 3 escuelas. Además se quiere generelizar el estudio para todas las escuelas, por lo que me interesa es observar la variabilidad entre estas. Dentro de cada escuela hay una cantidad considerable de intructores, así que se seleccionaron en cada una de las escuelas elegidas anteriormente dos intructores, por lo que estos ya son una muestra del total de instructores y cada uno de esos dos intructores tiene dos grupos, los cuales son los que voy a observar para el estudio.*
+
+Note que no hay factores fijos, por lo que es  un diseño de dos niveles sin factores
+
+Lo anterior es un ejemplo de un diseño multinivel, debido a que mi interés es ver la variabilidad entre escuelas.
+
+
+## Modelo del diseño anidado
+
+$$\mu_{ij} = \mu+\alpha_1C_1+\alpha_2C_2+\beta_{2(1)}B_{21}+\beta_{2(2)}B_{22}+\beta_{2(3)}B_{23}$$
+donde:
+
++ $\alpha_1$, $\alpha_2$, es el efecto de la región (escuela), la cual tiena la restricción $\alpha_3 = - \alpha_1-\alpha_2$ 
+
++ $\beta_{2(1)}$, $\beta_{2(2)}, \beta_{2(3)}$, es el efecto del instructor dentro de cada región. Las restricciones de cada nivel de forma resumida es $\beta_{2(i)} = -\beta_{1(i)}$
+
+*A continuación se le presentan las variables auxiliares*
+
+$$\mathbf{C} = \begin{array}{c|ccc}
+ & C_{11} & C_{21}  \\
+ \hline
+\text{Reg 1} & 1 & 0 \\
+\text{Reg 2} & 0 & 1 \\
+\text{Reg 3} & -1 & -1
+\end{array}
+\quad , \quad
+\mathbf{B} = \begin{array}{c|ccc}
+ & B_{11} & B_{21} & B_{31} \\
+\hline
+\text{I}_{1(1)} & -1 & 0 & 0 \\
+\text{I}_{2(1)} & 1 & 0 & 0 \\
+\text{I}_{1(2)} & 0 & -1 & 0 \\
+\text{I}_{2(2)} & 0 & 1 & 0 \\
+\text{I}_{1(3)} & 0 & 0 & -1 \\
+\text{I}_{2(3)} & 0 & 0 & 1
+\end{array}$$
+
+
+
+### Obtener manualmente los efectos de instructor
+
+Estos efectos representan la distancia de la media general de cada instructor hasta la media general de los instructores de esa escuela.
+
+
+```{r}
+medinst=with(base,tapply(puntaje,list(instructor,escuela),mean))
+medinst
+```
+
+
+```{r}
+medesc=with(base,tapply(puntaje,escuela,mean))
+medesc
+```
+
+
+```{r}
+bj.1=medinst[,1]-medesc[1]
+bj.2=medinst[,2]-medesc[2]
+bj.3=medinst[,3]-medesc[3]
+efinst=rbind(bj.1,bj.2,bj.3)
+efinst
+```
+
+
+### Obtención de manual de la suma de cuadrados de instructor dentro de cada escuela 
+
+$$SCInst =\sum_{i =1}^R\sum_{j = 1}^I2\beta_{j(i)}^2$$
+
+donde:
+
++ $R:$ cantidad de regiones 
+
++ $I:$ cantidad de instructores dentro de cada región
+
+
+$$CMInst = \frac{SCInst}{\sum_{i=1}^R(b_1-1)}}$$
+
+donde
+
++ $b_i:$ número de intructores dentro de cada escuela
+
+
+```{r}
+with(base,table(instructor,escuela)) #Réplicas por tratamiento
+```
+
+```{r}
+r=2 #número de instructores por cada escuela
+scinst=sum(r*efinst^2)
+scinst
+```
+```{r}
+gl=(2-1)*3
+gl
+```
+
+```{r}
+cminst=scinst/gl
+cminst
+```
+
+El cuadrado medio de instructor dentro de escuela es 189.2. Esta es una medida de la variabilidad entre los promedios  obtenidos por los instructores de cada escuela.
+
+
+### Comparación de intructores dentro de cada escuela
+
+
+Como son independientes las comparaciones, no se necesita realizar correción, ya que lo que nos intersa es que si existen diferencias entre ellos, pero dentro de cada grupo. Lo cual nos lleva a la siguiente hipótesis:
+
+
+$$H_0: \beta_{1(i)} = 0 \space \forall_i\\H_1: \text{Al menos un }  \beta_{1(i)} \neq 0$$
+
+
+
+$$H_0: \mu_{1(i)} = \mu_{2(i)} \space\forall_i\\
+H_1: \text{Al menos un }  \mu_{1(i)} \neq \mu_{2(i)}$$
+
+
+
+```{r}
+mod2=lm(puntaje~escuela+instructor1,data=base)
+anova(mod2)
+```
+
+Note que en los `gl` dan (n-1), ya que el total de obervaciones eran 12 y sumando la columna de los `df` nos da como resultado 11. `instructor1` esla variable no anidada.Por lo tanto, lo correcto es que se haga con la variable normal.
+
+
+
+### Indicarle a R que es un modelo para un diseño anidado
+
+
+```{r}
+options(contrasts=c("contr.sum","contr.poly")) #Suma nula
+mod3=lm(puntaje~escuela+escuela/instructor,data=base)
+```
+
+
+**Estimaciones automáticas de los efectos**
+
+```{r}
+model.tables(aov(mod3))
+```
+
+
+```{r}
+anova(mod3)#da lo mismo que con el mod2
+```
+
+### Comparaciones entre intructores
+
+```{r,message=FALSE}
+(em2=emmeans(mod3,pairwise~instructor|escuela))$contrasts
+```
+
+Recuerde que las comparaciones se hacen con un $\alpha = 0.05$
+
+**Se realizan los intervalos de confianza**
+
+```{r}
+confint(em2)
+```
+
+
+### Comparaciones entre escuelas
+
+
+```{r}
+TukeyHSD(aov(mod3),"escuela")
+```
+
+Observe que existe diferencias entre `Central-Región K`, por lo que se realiza un intervalo de confianza
+
+
+```{r}
+t=qt(1-0.05/2,6)
+round(c(8.75-t*1.87,8.75+t*1.87),2)
+```
 
 
