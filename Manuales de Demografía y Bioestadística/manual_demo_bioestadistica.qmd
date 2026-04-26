@@ -59,7 +59,8 @@ $$\text{RM} = \frac{N_{Masc}}{N_{Fem}} \times 100$$
 library(readxl)
 library(tidyverse)
 # Colocar dirección cada vez que se corre todo
-base = read_excel("~/GitHub/Manuals_of_statistics/Manuales de Demografía y Bioestadística/razones_lab1.xlsx") 
+setwd("~/GitHub/Apuntes-Modelos-lineales-Avanzados/Manuales de Demografía y Bioestadística")
+base = read_excel("razones_lab1.xlsx") 
 
 df_long <- base %>%
   pivot_longer(
@@ -299,3 +300,178 @@ fecha_obj = ymd("2030-07-01")
 # Cálculo de t en años decimales 
 t = as.numeric(difftime(fecha_obj, fecha0, units = "days")) / 365.25 
 ```
+
+# Suavizamiento
+
+## Gráfco en escala logarítimca
+
+```r
+ggplot(data=data1,aes(y=tasas,x=edades,color=sexo))+
+  geom_line()+scale_y_log10()+coord_cartesian(ylim = c(0.0000001, 1))
+```
+
+En este tipo de suavizamiento, se podría observar mucho ruido blanco, este se ocasiona debido a que el logaritmo cuando es cero (osea que no habría muertes), es infinito.
+
+
+### Primer método para la solución ante ruido blanco 
+
+Para solucionar esto se deben prorratear los datos tomando en cuenta los dos años anteriores y dos años después con respecto al año de defunción que estamos prorrateando, por ejemplo si estamos en el años 2017, se deben tomar en cuenta los años del 2015 hasta el 2019.
+
+```r
+def2H.sin.prorrateo <- c(defGuana1519$Hombre[1:90],sum(defGuana1519$Hombre[91:110]))
+def2M.sin.prorrateo <- c(defGuana1519$Mujer[1:90],sum(defGuana1519$Mujer[91:110]))
+
+dist2H <- def2H.sin.prorrateo/sum(def2H.sin.prorrateo)# Se crea la distribución relativa
+dist2M <- def2M.sin.prorrateo/sum(def2M.sin.prorrateo)
+
+def2H <- def2H.sin.prorrateo+dist2H*defGuana1519$Hombre[111] # Se hace el prorrateo
+def2M <- def2M.sin.prorrateo*dist2M*defGuana1519$Mujer[111]
+```
+
+
+
+### Segundo método para la solución ante ruido blanco
+
+La otra forma de solucionar el ruido blanco es por medio de promedios moviles
+
+```r
+
+def3H <- def2H
+def3M <- def2M
+
+
+for (i in 4:88) {
+  
+  def3H[i] <- mean(def2H[i-2:i+2])
+  def3M[i] <- mean(def2M[i-2:i+2])
+  
+}
+
+
+```
+
+## Logito de Brass
+
+$$\log\left(\frac{m_x^{des}}{1-m_x^{des}}\right)=\hat{\beta_0}+\hat{\beta_1}\log\left(\frac{m_x^{s}}{1-m_x} \right)$$
+```r
+logito_obs_H <- log(tasa3H[-91]/(1-tasa3H[-91])) #Se realiza con la tasa suavizada
+logito_base_H<- log(TVH2010$mxaju/(1-TVH2010$mxaju)) #Se hace con las tasa de origen
+
+
+mod1H <- lm(logito_obs_H~logito_base_H) #Se creo el modelo se regresión 
+mod1H$fitted #Se calculan los valores ajustados 
+mxsuavH <- exp(mod1H$fitted)/(1+exp(mod1H$fitted)) # Se coloca una exponencial para obtener el valor 
+
+tasasuavH=c(mxsuavH,tasa3H[91])
+
+dfH <- data.frame(edad=(0:90),tasa3H,tasasuavH)
+
+suavH <- ggplot(dfH,aes(x=edad,y=tasasuavH))+
+  geom_line()+scale_y_log10()+geom_line(aes(x=edad,y=tasa3H))
+suavH
+```
+
+
+## El modelo Gompertz 
+
+
+También se puede usar un modelo.  En demografía y actuariado, se usa el modelo Gompertz o el Gompertz-Makeham.
+
+El modelo Gompertz supone que  $m_x = \alpha* exp(\beta*edad)$, 
+
+Esto es equivalente a:  $\log(m_x)=\log(\alpha)+\beta*edad$, lo cual se puede estimar con un modelo de regresión lineal por mínimos cuadrados en donde $\log(m_x)=\bar{Y}$, $\log(\alpha)=\beta_0$, $\beta=\beta_1$, y $edad=x$.
+
+
+En mortalidad humana no se recomienda usar el modelo para edades más jóvenes, y hay un debate entre los demógrafos si el modelo de Gompertz se puede ajustar con edades superiores a 90.  Aquí vamos a usar el modelo para las edades entre 10 y 89 años con las tasas suavizadas con promedios móviles.  Se agregan después manualmente las tasas de 0 a 9 años, y la tasa de 90 años.
+
+*Modelo de Gompertz en r*
+
+
+```r
+edad.mod.gomp <- 10:89
+mod.gompertz.H <- lm(log(tasa3H[11:90])~edad.mod.gomp)
+mod.gompertz.M <- lm(log(tasa3M[11:90])~edad.mod.gomp)
+```
+
+
+Luego de obtener los valores con el modelo los suaviza
+
+```r
+tasa5H <- c(tasa3H[0:10],exp(mod.gompertz.H$fitted),tasa3H[91])
+tasa5M<- c(tasa3M[0:10],exp(mod.gompertz.H$fitted),tasa3M[91])
+```
+
+## Loess
+
+```r
+mod.loess.H <- loess(data=data2H,tasas ~ edades)
+mod.loess.M <- loess(data=data2M,tasas ~ edades)
+```
+
+```r
+tasa6Ha <- c(predict(mod.loess.H),tasa2H[91])
+tasa6Ma <- c(predict(mod.loess.M),tasa2M[91])
+```
+
+## Loess con más suavizamiento
+
+```r
+min.logmx.H <- min(log(tasa2H[tasa2H>0])) #Se obtiene el mínimo para cada sexo 
+min.logmx.M <- min(log(tasa2M[tasa2M>0]))
+
+logtasa6Hb <- ifelse(tasa2H==0,min.logmx.H,log(tasa2H)) #Para aquellos valores que son cero se reemplazan por el mínimo
+logtasa6Mb <- ifelse(tasa2M==0,min.logmx.M,log(tasa2M))
+
+##Con el default de loewss
+mod.loess.H <- loess(data=data6Hb,logtasa ~ edades)
+mod.loess.M <- loess(data=data6Mb,logtasa ~ edades)
+
+
+tasa6Hb <- c(exp(predict(mod.loess.H)),tasa2H[91])
+tasa6Mb <- c(exp(predict(mod.loess.M)),tasa2M[91])
+```
+
+# Estimación de la regresión logística
+
+**Código del gráfico**
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggpubr)
+library(ggplot2)
+
+year <- 2002:2010
+N <- c(1995000,2000000,2010000,2060000,2125000,2175000,2205000,2218000,2225000)
+
+data <- data.frame(cbind(year,N))
+
+```
+
+
+```{r}
+ggplot(data=data, aes(x=year, y=N)) +
+  geom_line()+
+  geom_point()+labs(title="Gr 1. Tamaño de Población",x="Año",y="Población")
+```
+
+
+```{r}
+logistica.ejemplo <-
+  nls(N ~ NI+NF / (1 + exp((tI -year) / phi)),
+      data = data,
+      start = list(NI=1900000,NF = 2250000, tI = 2004, phi = 1),
+      algorithm="port")
+options(scipen=999)
+summary(logistica.ejemplo)
+```
+Recuerde que: 
+
++ `phi` siempre se encuentra entre 0 y 1
+
++ `tI:` Es el año en el que empieza a crecer la curva, vea que en el gráfico anterior emepiza en 2004
+
++ `NI:` Es la población del año donde esa curva empieza a cambiar.
+
+
++ `NF:` Es la población donde la curva se comienza a estabilizar vea que en `2250000`
+
