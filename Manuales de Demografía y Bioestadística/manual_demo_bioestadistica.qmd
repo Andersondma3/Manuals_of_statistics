@@ -448,14 +448,14 @@ data <- data.frame(cbind(year,N))
 ```
 
 
-```{r}
+```{r, warning=FALSE}
 ggplot(data=data, aes(x=year, y=N)) +
   geom_line()+
   geom_point()+labs(title="Gr 1. Tamaño de Población",x="Año",y="Población")
 ```
 
 
-```{r}
+```{r, message=F}
 logistica.ejemplo <-
   nls(N ~ NI+NF / (1 + exp((tI -year) / phi)),
       data = data,
