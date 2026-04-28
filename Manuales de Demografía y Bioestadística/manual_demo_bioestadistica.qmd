@@ -300,6 +300,7 @@ fecha_obj = ymd("2030-07-01")
 # Cálculo de t en años decimales 
 t = as.numeric(difftime(fecha_obj, fecha0, units = "days")) / 365.25 
 ```
+---
 
 # Suavizamiento
 
@@ -430,12 +431,13 @@ mod.loess.M <- loess(data=data6Mb,logtasa ~ edades)
 tasa6Hb <- c(exp(predict(mod.loess.H)),tasa2H[91])
 tasa6Mb <- c(exp(predict(mod.loess.M)),tasa2M[91])
 ```
+---
 
 # Estimación de la regresión logística
 
 **Código del gráfico**
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 library(tidyverse)
 library(ggpubr)
 library(ggplot2)
@@ -474,4 +476,149 @@ Recuerde que:
 
 
 + `NF:` Es la población donde la curva se comienza a estabilizar vea que en `2250000`
+
+
+# Fecundidad 
+
+**Conceptos**
+
++ Fecundidad: “El número promedio de nacimientos por mujer (o por persona)”
+
++ Natalidad:   Indica la frecuencia de nacimientos en una población global durante un período de tiempo definido.  
+
+
+## Fórmulas de las tasa
+
+1. Tasa Bruta de Natalidad (TBN):
+
+
+$$TBN = \frac{\text{Promedio de Nacimientos del período } t}{\text{Población a mitad del período } t} \times 1000$$
+
+
+2. Relación (ó Razón) Niño-Mujer (RNM):
+
+$$RNM = \frac{\text{Población de 0 a 4 años}}{\text{Mujeres en edad fértil (de 15 a 49 años) a mitad del período } t} \times 100$$
+
+
+3. Tasa de Fecundidad General (TFG):
+
+
+$$TFG = \frac{\text{Promedio de Nacimientos del período } t}{\text{Mujeres en edad fértil (de 15 a 49 años) a mitad del período } t} \times 100$$
+
+
+
+4. Tasas específicas de fecundidad (${}_n f_x$):
+
+$${}_n f_x = \frac{\text{Promedio de Nacimientos de mujeres entre la edad } x \text{ y } x+n-1 \text{ en el período } t}{\text{Población femenina a la edad } x \text{ a mitad del período } t}$$
+
+
+
+5. Tasa Global de Fecundidad (TGF):
+
+
+$$TGF_{\text{período}} = n \times \sum_{x=15}^{\omega} {}_n f_x, \quad \text{para todo } x \in \{15, 15+1n, 15+2n, \dots\}$$
+
+
++ Es el indicador más frecuentemente utilizado.
+
++ No es técnicamente una tasa, pero un valor esperado basado en una cohorte sintética.  
+
++ Se interpreta como el número promedio de hijos que esperaría tener una mujer (o un hombre) al final de su vida reproductiva si se mantienen las tasas de fecundidad por edad observadas durante el período. 
+
++ Cuando se interpretan las TGFs, es común crear  dos grandes grupos de países o poblaciones:  las poblaciones con fecundidad por encima del reemplazo ($TGF>2.1$ hijos por mujer), y poblaciones con fecundidad por debajo del reemplazo $(TGF \leq 2.1)$. *El 2.1 implica que si una población mantiene este nivel de fecundidad durante un período largo de tiempo, la población mantendrá más o menos el mismo tamaño (en ausencia de migración y con cambios leves en la mortalidad).*
+
+
+
+6. Tasa Bruta de Reproducción (TBR):
+
+Representa el número de hijas (nacimientos femeninos) que tendría una mujer de una cohorte hipotética.
+
+
+
+$$TBR_{\text{período}} = n \times \sum_{i=15}^{49} {}_n f_x^f$$
+*Donde* ${}_n f_x^f$ es la tasa específica de fecundidad de nacimientos de mujeres por edad.
+
++ Relación con la TGF (Aproximación):
+
+Una forma común de calcularla cuando no se tienen los datos por sexo es mediante la razón de masculinidad al nacer (RMN):
+
+$$TBR = \frac{TGF}{1 + RMN} \cong \frac{TGF}{1 + 1.05} = \frac{TGF}{2.05}$$
+
+
+7. Tasa Neta de Reproducción (TNR):
+
+A diferencia de la TBR, la TNR sí toma en cuenta la mortalidad de las mujeres desde el nacimiento hasta el final de su vida reproductiva.
+
+$$TNR_{\text{período}} = n \times \sum_{i=15}^{49} \left( \frac{{}_n L_x^f}{l_0^f} \cdot {}_n f_x^f \right) = \frac{1}{1 + RMN} \left[ n \times \sum_{i=15}^{49} \left( \frac{{}_n L_x^f}{l_0^f} \cdot {}_n f_x \right) \right]$$
+Donde:
+\begin{itemize}
+    \item $TNR$: Tasa Neta de Reproducción.
+    \item $n$: Longitud del intervalo de edad (usualmente 1 o 5 años).
+    \item ${}_n f_x^f$: Tasa específica de fecundidad femenina para el intervalo de edad $[x, x+n)$. Solo considera nacimientos de niñas.
+    \item ${}_n L_x^f$: Número de años vividos por la cohorte femenina de la tabla de vida entre las edades $x$ y $x+n$.
+    \item $l_0^f$: Radix o cohorte inicial de la tabla de vida femenina (habitualmente 100,000).
+    \item $\frac{{}_n L_x^f}{l_0^f}$: Probabilidad de que una niña recién nacida sobreviva hasta el intervalo de edad $[x, x+n)$.
+    \item $RMN$: Relación de masculinidad al nacer (proporción de nacimientos de hombres por cada mujer, suele rondar 1.05).
+\end{itemize}
+
+## Curvas de fecundidad
+
+Para analizar fecundidad, se acostumbra también graficar las tasas específicas de fecundidad por edad (si son por grupos quinquenales de edad, se grafica la tasa en la edad media).  
+
+A partir del gráfico, se determina la forma de la curva.  
+
+Generalmente se definen tres curvas básicas que muestran el patrón de la fecundidad de una población:
+
++ Cúspide temprana:   La máxima fecundidad se presenta en el grupo de edades 20-24 años.
+
++ Cúspide dilatada:  La máxima fecundidad se presenta entre los dos grupos de edades 20-24 y 25-29. 
+
++ Cúspide tardía:  La máxima fecundidad se presenta en el grupo de edades 25-29 años. 
+
+
+
+## Edad Media de la Fecundidad ($\bar{M}$)
+
+Este indicador mide la edad promedio a la que las mujeres tienen a sus hijos, asumiendo que todas las edades tienen el mismo peso poblacional (es decir, se calcula sobre las tasas específicas).
+
+
+$$\bar{M}_{\text{período}} = \frac{\sum_{x=15}^{49} (\bar{X} \cdot {}_n f_x)}{\sum_{x=15}^{49} ({}_n f_x)} = \frac{\sum_{x=15}^{49} ((x + n/2) \cdot {}_n f_x)}{\sum_{x=15}^{49} ({}_n f_x)}$$
+
+*donde*
+
++ $\bar{M}_{\text{período}}$: Edad media de la fecundidad en el período $t$.
+
++ $\bar{X}$: Punto medio de la clase de edad (marca de clase). Se calcula como $x + \frac{n}{2}$.
+
++ $x$: Edad inicial del intervalo.
+
++ $n$: Amplitud del intervalo de edad (usualmente 5 años).
+
++ ${}_n f_x$: Tasa específica de fecundidad para el intervalo de edad $[x, x+n)$.
+
+
+# Tasa intrínseca de crecimiento e incercia poblacional
+
+
+## Relación entre la TNR y la Tasa de Crecimiento ($r$)
+
+Si suponemos un modelo de crecimiento exponencial, sabemos que la fórmula de la tasa de crecimiento es:
+
+$$r_e = \frac{1}{t} \cdot \ln\left(\frac{N_1}{N_0}\right)$$
+
+Si denominamos $N(M)$ al tamaño de la generación de las madres, y $N(0)$ al tamaño de la generación de las hijas, entonces:
+
+$$TNR \cong \frac{N(0)}{N(M)}$$
+
+Planteando que la $TNR$ es una tasa de crecimiento y que $M$ (edad media a la reproducción) es el tiempo en que una generación de mujeres se reproduce, entonces:
+
+$$r = \frac{1}{M} \cdot \ln(TNR)$$
+
+Ejemplo de cálculo: 
+
+Suponga que la $TNR$ es de 1.25 y la edad media a la reproducción ($M$) es de 22 años, entonces:
+
+$$r = \frac{1}{M} \cdot \ln(TNR) = \frac{1}{22} \cdot \ln(1.25) = 0.0101$$
+
+Interpretación: Esta cifra quiere decir que, si las tasas de fecundidad y mortalidad se mantienen constantes, la tasa de crecimiento de una población será de 0.0101, o sea de 1.01%.
 
