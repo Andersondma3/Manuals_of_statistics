@@ -236,7 +236,7 @@ $$V(Y) = \sigma_\delta^2+\sigma^2_\varepsilon$$
 
 **A continuación se representan las distribuciones por medio de una figura **
 
-```{r, echo=FALSE, fig.width=7, fig.height=5.5}
+```{r, echo=FALSE}
 # 1. Configuracion para curvas "pegadas"
 set.seed(123)
 x <- seq(0, 50, length=500)
@@ -283,7 +283,7 @@ donde:
 Se refiere a evaluar el supuesto de normalidad en la distribución  $Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$, la explicación de esta la puede encontratrar en la parte de arriba. Si tenemos muy pocos efectos en las muestra y queremos probar normalidad, la debemos asumir porque para probar esto se debe tener una cantidad considerable de observaciones. Sin emabargo podemos unir todos los residuales para probar normalidad en el caso de que se cumple el supuesto de *Homocedasticidad*
 
 
-```{r, echo=FALSE, fig.width=8, fig.height=6}
+```{r, echo=FALSE}
 # 1. Parametros estadisticos
 x <- seq(10, 50, length=500)
 mu_global <- 32      
@@ -401,6 +401,8 @@ $$E[Y|ij] = \mu_{ij} = \beta_0+\tau_i+\delta_i+(\tau\delta)_{ij}$$
  
 + $\tau_i$ es fijo, ya que este depende de la restricción que elijamos (suma nula o referencia)
 
+\newpage
+
 ## Gráficos de interacción
 
 *A continuación se le presenta un ejemplo de como se ve gráficamente un modelo con / sin interacción*
@@ -462,7 +464,7 @@ Tenenos dos varianzas: $\sigma_{\varepsilon}$ varianza del error la cual corresp
 
 **En ambos gráficos podemos observar que las maquinas no son consistentes (cuando hay interacción), debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción que las maquinas son bastante consistentes.**
 
-```{r, echo=FALSE}
+```{r,echo=FALSE}
 p1 <- dotplot(Trig_NoInt ~ Maquina, groups = Dia, data = datos,
               type = "p", 
               auto.key = list(columns = 4, title = "Día", cex = 0.8),
@@ -485,7 +487,7 @@ print(p2, position = c(0.5, 0, 1, 1))
 dotplot(Trig_NoInt ~ Maquina|Dia,xlab="día",ylab="triglicéridos", data = datos)
 ```
 
-## Modelo con interacción en r {lm_int}
+## Modelo con interacción en r
 
 ```{r, echo=FALSE}
 trigli=c(142.3, 144.0, 148.6, 146.9, 142.9, 147.4, 133.8,
@@ -515,7 +517,9 @@ H_0 &: \sigma^2_{\tau \delta} = 0 \quad \text{(No existe interacción)} \\
 H_1 &: \sigma^2_{\tau \delta} > 0 \quad \text{(Existe interacción significativa)}
 \end{aligned}$$
 
-Esta hipótesis se puede realizar mediante el método realizado en la sección de [La prueba de la razón de verosimilitud](#sig_fact)
+Esta hipótesis se puede realizar mediante el método realizado en la sección de la prueba de la razón de verosimilitud
+
+\newpage
 
 *En r se realiza de la siguiente manera*
 
@@ -870,7 +874,7 @@ confint(mod1)
 
 Basado en el mismo ejemplo de la sección anterior queremos probar lo siguiente:
 
-$$H_0:\alpha_i = 0 \space \forall_i \text{ ó }  \alpha_2 = \alpha_3 = \alpha_3$$
+$$H_0:\alpha_i = 0 \space \forall_i \text{ ó } \space \alpha_2 = \alpha_3 = \alpha_3$$
 La función `drop1` nos sirve para probar si las medias de las 4 maquinas son iguales que es lo mismo que probar si los efectos de las 4 maquinas son iguales a cero.
 
 ```{r}
@@ -920,6 +924,7 @@ em.mod2=emmeans(mod1,pairwise~maq) #Realizados mediante prueba tuckey
 | **Una cola** | $\frac{p}{2} < \alpha$ ó $p < 2\cdot\alpha$ | $p < \frac{\alpha}{d}$ |
 | **Dos colas** | $p < \alpha$ | $p < \frac{\alpha}{2d}$ |
 
+\newpage
 
 ### Proceso manual para la creación de intervalos de confianza
 
@@ -1118,6 +1123,8 @@ Aspectos importantes de este diseño:
 
 + Estos diseños nacen en Agronomía y literalmente obedecen a una parcela agrícola que se divide. 
 + *Cuando se trata de un diseño en otro contexto se llama simplemente diseño multinivel con un factor en el nivel 1 y factor en el nivel 2.*
+
+\newpage
 
 ## Cambio de categórica a numérica
 
