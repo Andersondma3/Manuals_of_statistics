@@ -18,6 +18,8 @@ format:
     embed-resources: true
     smooth-scroll: true
   pdf:
+    pdf-engine: pdflatex
+    dev: pdf
     toc: true
     number-sections: true
     papersize: letter
@@ -494,39 +496,56 @@ Para la explicación de las siguientes fórmulas se usaran los siguientes datos:
 
 Estos corresponde a la cantidad de nacimientos según la edad de la madre y la población por edades quinquenales.
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(flextable)
 library(officer)
 
-# 1. Asegurémonos de tener los datos (basado en image_857b1a.png)
+# 1. Datos base
 datos_pob <- data.frame(
   Grupo = c("De 15 a 19", "De 20 a 24", "De 25 a 29", "De 30 a 34", 
             "De 35 a 39", "De 40 a 44", "De 45 a 49"),
   Hombres = c(2319, 6090, 6995, 5787, 3467, 897, 55),
   Mujeres = c(2243, 5803, 6627, 5691, 3345, 845, 40),
-  Total = c(4562,11893,13622,11478,6812,1743,95)
+  Total = c(4562, 11893, 13622, 11478, 6812, 1743, 95)
 )
 
-# 2. Flextable corregida
+# 2. Flextable sin fuentes específicas (Eliminamos Arial)
 tabla_estilo <- flextable(datos_pob) %>%
-  # El primer colwidth es 1 (para Grupo) y el segundo es 2 (para Hombres y Mujeres)
-  # Total de columnas: 1 + 2 = 3. ¡Ahora sí calza!
+  # Configuramos etiquetas de encabezado
+  set_header_labels(
+    Grupo = "Grupo",
+    Hombres = "Hombres",
+    Mujeres = "Mujeres",
+    Total = "Total"
+  ) %>%
+  # Agregamos la fila superior de agrupación
   add_header_row(
     values = c("Grupo de Edad", "Distribución por Sexo"), 
     colwidths = c(1, 3)
   ) %>%
+  # 3. Estilo base (SIN LLAMAR A font())
   theme_booktabs() %>%
+  font(fontname = "", part = "all") %>%
   autofit() %>%
   align(align = "center", part = "all") %>%
   align(j = 1, align = "left", part = "all") %>%
   colformat_double(big.mark = ",", digits = 0) %>%
-  set_header_labels(
-    Grupo = "Grupo",
-    Hombres = "Hombres",
-    Mujeres = "Mujeres"
-  ) %>%
-  bg(bg = "#f0f0f0", part = "header") %>%
-  bold(part = "header")
+  # 4. Formato visual simple
+  bg(part = "header", bg = "#F2F2F2")
+# 
+# %>%
+#   theme_booktabs() %>%
+#   # FORZAR FUENTE ESTÁNDAR (Opcional: puedes comentar esta línea)
+#   font(fontname = NULL, part = "all") %>% 
+#   autofit() %>%
+#   align(align = "center", part = "all") %>%
+#   align(j = 1, align = "left", part = "all") %>%
+#   colformat_double(big.mark = ",", digits = 0) %>%
+#   # Estética limpia en blanco/gris para evitar errores de color en LaTeX
+#   bg(bg = "#f0f0f0", part = "header") %>%
+#   bold(part = "header")
+
+# Para asegurar que no haya rastro de Arial en las propiedades internas
 
 datos_nac = datos_pob
 
@@ -536,8 +555,8 @@ tabla_estilo
 
 
 
-```{r, echo=FALSE}
-# Datos extraídos de la imagen image_857b1a.png
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+# 1. Asegurar que los datos estén cargados
 datos_extensos <- data.frame(
   Grupo = c("Total", "0 - 4", "5 - 9", "10 - 14", "15 - 19", "20 - 24", 
             "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49", 
@@ -554,37 +573,48 @@ datos_extensos <- data.frame(
               50240, 32911, 19893, 9738, 3108, 190)
 )
 
+# 2. Construcción de la Flextable sin fuentes problemáticas
 ft <- flextable(datos_extensos) %>%
-  # Encabezado de nivel superior: Grupo de edad (1 col) y Población (3 cols)
-  add_header_row(
-    values = c("Grupos de edades", "Población por Sexo"), 
-    colwidths = c(1, 3)
-  ) %>%
-  theme_booktabs() %>%
-  autofit() %>%
-  # Alineación
-  align(align = "center", part = "all") %>%
-  align(j = 1, align = "left", part = "all") %>%
-  # Formato de números con separador de miles
-  colformat_double(big.mark = ",", digits = 0) %>%
-  # Estilo para la fila de Total (primera fila)
-  bold(i = 1, bold = TRUE) %>%
-  bg(i = 1, bg = "#FFF2CC", part = "body") %>% # Color crema suave para el total
-  # Estilo de encabezados
-  bold(part = "header") %>%
-  bg(part = "header", bg = "#F2F2F2") %>%
-  # Etiquetas de columnas nivel 2
+  # PASO 1: Definir etiquetas (siempre primero)
   set_header_labels(
     Grupo = "Edades",
     Total = "Total",
     Hombres = "Hombres",
     Mujeres = "Mujeres"
-  )
+  ) %>%
+  # PASO 2: Agregar fila superior de agrupación
+  add_header_row(
+    values = c("Grupos de edades", "Población por Sexo"), 
+    colwidths = c(1, 3)
+  ) %>%
+  # 3. Estilo base (SIN LLAMAR A font())
+  theme_booktabs() %>%
+  font(fontname = "", part = "all") %>% 
+  autofit() %>%
+  align(align = "center", part = "all") %>%
+  align(j = 1, align = "left", part = "all") %>%
+  colformat_double(big.mark = ",", digits = 0) %>%
+  # 4. Formato visual simple
+  bg(part = "header", bg = "#F2F2F2")
 
+# %>%
+#   # PASO 3: Estilos y limpieza de fuentes
+#   theme_booktabs() %>%
+#   font(fontname = NULL, part = "all") %>% # Usa la fuente sans-serif genérica del documento
+#   autofit() %>%
+#   align(align = "center", part = "all") %>%
+#   align(j = 1, align = "left", part = "all") %>%
+#   colformat_double(big.mark = ",", digits = 0) %>%
+#   # Colores discretos para evitar errores de sombreado en LaTeX
+#   bold(i = 1, bold = TRUE) %>%
+#   bg(i = 1, bg = "#FFF2CC", part = "body") %>%
+#   bold(part = "header") %>%
+#   bg(part = "header", bg = "#F2F2F2")
+
+# Guardar para uso posterior
 datos_pob = datos_extensos
 
 ft
-
 ```
 
 
@@ -745,7 +775,7 @@ Donde:
 Para el ejemplo de este cálculo se usará la siguiente tabla de vida
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
 # 1. Aseguramos el objeto de datos (basado en image_83a584.png)
 tabla_vida_data <- data.frame(
   x = c("0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95", "100 y +"),
@@ -756,23 +786,35 @@ tabla_vida_data <- data.frame(
   ex = c(83.22, 78.97, 74.02, 69.07, 64.16, 59.29, 54.43, 49.58, 44.78, 40.04, 35.36, 30.77, 26.33, 22.08, 18.05, 14.23, 10.81, 7.96, 5.61, 3.62, 1.50)
 )
 
-# 2. Construcción de la flextable (Orden estricto)
+# 2. Construcción de la flextable (Orden estricto y sin fuentes externas)
 ft_vida <- flextable(tabla_vida_data) %>%
-  # PASO 2: Agregar filas de encabezado adicionales
+  # PASO 2: Agregar fila superior de agrupación
   add_header_row(
     values = c("Edades", "Funciones de la Tabla de Vida (Mujeres)"), 
     colwidths = c(1, 5)
   ) %>%
-  # PASO 3: Formato visual (Todo en blanco)
-  theme_booktabs() %>% 
-  bg(bg = "white", part = "all") %>% 
-  align(align = "center", part = "all") %>%
-  # Formato de números
-  colformat_double(j = 2:5, big.mark = ",", digits = 0) %>%
-  colformat_double(j = 6, digits = 2) %>%
-  # Ajustes finales
+  # 3. Estilo base (SIN LLAMAR A font())
+  theme_booktabs() %>%
+  font(fontname = "", part = "all") %>% 
   autofit() %>%
-  bold(part = "header")
+  align(align = "center", part = "all") %>%
+  align(j = 1, align = "left", part = "all") %>%
+  colformat_double(big.mark = ",", digits = 0) %>%
+  # 4. Formato visual simple
+  bg(part = "header", bg = "#F2F2F2")
+
+# %>%
+#   # PASO 3: Formato visual y limpieza de fuentes para evitar errores en LuaLaTeX
+#   theme_booktabs() %>% 
+#   font(fontname = NULL, part = "all") %>% 
+#   bg(bg = "white", part = "all") %>% 
+#   align(align = "center", part = "all") %>%
+#   # Formato de números con separadores de miles
+#   colformat_double(j = 2:5, big.mark = ",", digits = 0) %>%
+#   colformat_double(j = 6, digits = 2) %>%
+#   # Ajustes finales de estilo
+#   autofit() %>%
+#   bold(part = "header")
 
 # 3. Mostrar el resultado
 ft_vida
