@@ -489,10 +489,127 @@ Recuerde que:
 
 ## Fórmulas de las tasa
 
+
+Para la explicación de las siguientes fórmulas se usaran los siguientes datos:
+
+Estos corresponde a la cantidad de nacimientos según la edad de la madre y la población por edades quinquenales.
+
+```{r, echo=FALSE}
+library(flextable)
+library(officer)
+
+# 1. Asegurémonos de tener los datos (basado en image_857b1a.png)
+datos_pob <- data.frame(
+  Grupo = c("De 15 a 19", "De 20 a 24", "De 25 a 29", "De 30 a 34", 
+            "De 35 a 39", "De 40 a 44", "De 45 a 49"),
+  Hombres = c(2319, 6090, 6995, 5787, 3467, 897, 55),
+  Mujeres = c(2243, 5803, 6627, 5691, 3345, 845, 40),
+  Total = c(4562,11893,13622,11478,6812,1743,95)
+)
+
+# 2. Flextable corregida
+tabla_estilo <- flextable(datos_pob) %>%
+  # El primer colwidth es 1 (para Grupo) y el segundo es 2 (para Hombres y Mujeres)
+  # Total de columnas: 1 + 2 = 3. ¡Ahora sí calza!
+  add_header_row(
+    values = c("Grupo de Edad", "Distribución por Sexo"), 
+    colwidths = c(1, 3)
+  ) %>%
+  theme_booktabs() %>%
+  autofit() %>%
+  align(align = "center", part = "all") %>%
+  align(j = 1, align = "left", part = "all") %>%
+  colformat_double(big.mark = ",", digits = 0) %>%
+  set_header_labels(
+    Grupo = "Grupo",
+    Hombres = "Hombres",
+    Mujeres = "Mujeres"
+  ) %>%
+  bg(bg = "#f0f0f0", part = "header") %>%
+  bold(part = "header")
+
+datos_nac = datos_pob
+
+tabla_estilo
+
+```
+
+
+
+```{r, echo=FALSE}
+# Datos extraídos de la imagen image_857b1a.png
+datos_extensos <- data.frame(
+  Grupo = c("Total", "0 - 4", "5 - 9", "10 - 14", "15 - 19", "20 - 24", 
+            "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49", 
+            "50 - 54", "55 - 59", "60 - 64", "65 - 69", "70 - 74", 
+            "75 - 79", "80 - 84", "85 - 89", "90 - 94", "95 - 99", "100 años y +"),
+  Total = c(5135912, 280328, 363893, 378855, 380855, 397973, 424762, 439454, 
+            430470, 372006, 307214, 282183, 281986, 249706, 195649, 139877, 
+            94686, 60059, 34648, 15986, 5018, 302),
+  Hombres = c(2565812, 142383, 185342, 193411, 194055, 202224, 215188, 222393, 
+              216126, 185329, 152707, 139319, 139103, 122291, 94861, 66460, 
+              44446, 27148, 14755, 6248, 1910, 112),
+  Mujeres = c(2570099, 137945, 178551, 185444, 186800, 195748, 209574, 217061, 
+              214344, 186677, 154507, 142864, 142884, 127414, 100788, 73417, 
+              50240, 32911, 19893, 9738, 3108, 190)
+)
+
+ft <- flextable(datos_extensos) %>%
+  # Encabezado de nivel superior: Grupo de edad (1 col) y Población (3 cols)
+  add_header_row(
+    values = c("Grupos de edades", "Población por Sexo"), 
+    colwidths = c(1, 3)
+  ) %>%
+  theme_booktabs() %>%
+  autofit() %>%
+  # Alineación
+  align(align = "center", part = "all") %>%
+  align(j = 1, align = "left", part = "all") %>%
+  # Formato de números con separador de miles
+  colformat_double(big.mark = ",", digits = 0) %>%
+  # Estilo para la fila de Total (primera fila)
+  bold(i = 1, bold = TRUE) %>%
+  bg(i = 1, bg = "#FFF2CC", part = "body") %>% # Color crema suave para el total
+  # Estilo de encabezados
+  bold(part = "header") %>%
+  bg(part = "header", bg = "#F2F2F2") %>%
+  # Etiquetas de columnas nivel 2
+  set_header_labels(
+    Grupo = "Edades",
+    Total = "Total",
+    Hombres = "Hombres",
+    Mujeres = "Mujeres"
+  )
+
+datos_pob = datos_extensos
+
+ft
+
+```
+
+
+
 1. Tasa Bruta de Natalidad (TBN):
 
 
 $$TBN = \frac{\text{Promedio de Nacimientos del período } t}{\text{Población a mitad del período } t} \times 1000$$
+
+*Ejemplo donde se usa de la fórmula*
+
+```{r}
+quinquenales_pob = datos_pob %>% 
+  filter(Grupo %in% c("15 - 19", "20 - 24", "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49")) 
+        
+# 1.'datos_nac' tiene el total de nacimientos
+nacimientos_totales <- sum(datos_nac$Total) 
+
+# 2. Cálculo de la Tasa Bruta de Natalidad (TBN)
+poblacion_total <- 5135912
+TBN <- (nacimientos_totales / poblacion_total) * 1000
+
+print(paste("La TBN es:", round(TBN, 2), "por mil habitantes"))
+```
+
 
 
 2. Relación (ó Razón) Niño-Mujer (RNM):
@@ -505,11 +622,37 @@ $$RNM = \frac{\text{Población de 0 a 4 años}}{\text{Mujeres en edad fértil (d
 
 $$TFG = \frac{\text{Promedio de Nacimientos del período } t}{\text{Mujeres en edad fértil (de 15 a 49 años) a mitad del período } t} \times 100$$
 
+*Ejemplo donde se usa de la fórmula*
+
+```{r}
+# 1. Sumamos el total de mujeres en edad fértil (Denominador para TFG)
+total_mujeres_fertil <- sum(quinquenales_pob$Mujeres)
+
+# 2. Cálculo de la Tasa de Fecundidad General (TFG)
+# Se multiplica por 1,000 para la interpretación demográfica estándar
+TFG <- (nacimientos_totales / total_mujeres_fertil) * 1000
+
+print(paste("La TFG es:", round(TFG, 2), "por mil mujeres"))
+```
+
 
 
 4. Tasas específicas de fecundidad (${}_n f_x$):
 
 $${}_n f_x = \frac{\text{Promedio de Nacimientos de mujeres entre la edad } x \text{ y } x+n-1 \text{ en el período } t}{\text{Población femenina a la edad } x \text{ a mitad del período } t}$$
+*Ejemplo donde se usa de la fórmula*
+
+```{r}
+resultados_fecundidad <- quinquenales_pob %>%
+  mutate(
+    Nacimientos = datos_nac$Total, # Extraemos los nacimientos del otro objeto
+    TEF = (Nacimientos / Mujeres) 
+  ) %>% 
+  select(Grupo,TEF)
+
+# 2. Ver el resultado
+print(resultados_fecundidad)
+```
 
 
 
@@ -527,6 +670,15 @@ $$TGF_{\text{período}} = n \times \sum_{x=15}^{\omega} {}_n f_x, \quad \text{pa
 
 + Cuando se interpretan las TGFs, es común crear  dos grandes grupos de países o poblaciones:  las poblaciones con fecundidad por encima del reemplazo ($TGF>2.1$ hijos por mujer), y poblaciones con fecundidad por debajo del reemplazo $(TGF \leq 2.1)$. *El 2.1 implica que si una población mantiene este nivel de fecundidad durante un período largo de tiempo, la población mantendrá más o menos el mismo tamaño (en ausencia de migración y con cambios leves en la mortalidad).*
 
+*Ejemplo donde se usa de la fórmula*
+
+
+```{r}
+TGF = 5*sum(resultados_fecundidad$TEF)
+
+cat("Se espera que una mujer al final de su vida fértil tenga en promedio", round(TGF,2), "hijos si se mantiene constantes las tasas observadas en el año ****")
+```
+
 
 
 6. Tasa Bruta de Reproducción (TBR):
@@ -538,11 +690,39 @@ Representa el número de hijas (nacimientos femeninos) que tendría una mujer de
 $$TBR_{\text{período}} = n \times \sum_{i=15}^{49} {}_n f_x^f$$
 *Donde* ${}_n f_x^f$ es la tasa específica de fecundidad de nacimientos de mujeres por edad.
 
-+ Relación con la TGF (Aproximación):
+*Ejemplo donde se usa de la fórmula*
+
+
+```{r}
+resultados_tbr <- quinquenales_pob %>%
+  mutate(
+    Nacimientos = datos_nac$Mujeres, # Extraemos los nacimientos del otro objeto
+    TBR = (Nacimientos / Mujeres) 
+  ) %>% 
+  select(Grupo,TBR)
+
+print(resultados_tbr)
+```
+```{r}
+TGR = 5*sum(resultados_tbr$TBR) #Tasa GLOBAL DE REPRODUCCIÓN
+cat("Se espera que una mujer al final de su vida fértil tenga en promedio", round(TGR,2), "hijas si se mantiene constantes las tasas observadas en el año ****")
+```
+
+
+6.1 Relación con la TGF (Aproximación)
 
 Una forma común de calcularla cuando no se tienen los datos por sexo es mediante la razón de masculinidad al nacer (RMN):
 
 $$TBR = \frac{TGF}{1 + RMN} \cong \frac{TGF}{1 + 1.05} = \frac{TGF}{2.05}$$
+
+*Ejemplo donde se usa de la fórmula*
+
+```{r}
+#La TGF la obtuvimos anteriormente
+
+TBR = TGF*(100/205)
+round(TBR,2) #Compare con el resultado anterior
+```
 
 
 7. Tasa Neta de Reproducción (TNR):
@@ -560,6 +740,67 @@ Donde:
     \item $\frac{{}_n L_x^f}{l_0^f}$: Probabilidad de que una niña recién nacida sobreviva hasta el intervalo de edad $[x, x+n)$.
     \item $RMN$: Relación de masculinidad al nacer (proporción de nacimientos de hombres por cada mujer, suele rondar 1.05).
 \end{itemize}
+
+
+Para el ejemplo de este cálculo se usará la siguiente tabla de vida
+
+
+```{r, echo=FALSE}
+# 1. Aseguramos el objeto de datos (basado en image_83a584.png)
+tabla_vida_data <- data.frame(
+  x = c("0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95", "100 y +"),
+  dx = c(898, 65, 76, 135, 211, 237, 285, 408, 596, 835, 1189, 1844, 2898, 4273, 6126, 9644, 14628, 18259, 18247, 12997, 6148),
+  lx = c(100000, 99102, 99038, 98962, 98827, 98616, 98379, 98094, 97686, 97090, 96255, 95066, 93222, 90324, 86051, 79924, 70280, 55652, 37393, 19146, 6148),
+  Lx = c(497756, 495350, 494999, 494472, 493607, 492489, 491183, 489449, 486939, 483362, 478301, 470719, 458865, 440937, 414938, 375512, 314831, 232612, 141346, 63235, 9222),
+  Tx = c(8321783, 7825922, 7330582, 6835567, 6341062, 5847431, 5354939, 4863719, 4374208, 3887183, 3403714, 2925225, 2454165, 1994801, 1553268, 1137360, 759995, 443224, 209744, 69401, 9222),
+  ex = c(83.22, 78.97, 74.02, 69.07, 64.16, 59.29, 54.43, 49.58, 44.78, 40.04, 35.36, 30.77, 26.33, 22.08, 18.05, 14.23, 10.81, 7.96, 5.61, 3.62, 1.50)
+)
+
+# 2. Construcción de la flextable (Orden estricto)
+ft_vida <- flextable(tabla_vida_data) %>%
+  # PASO 2: Agregar filas de encabezado adicionales
+  add_header_row(
+    values = c("Edades", "Funciones de la Tabla de Vida (Mujeres)"), 
+    colwidths = c(1, 5)
+  ) %>%
+  # PASO 3: Formato visual (Todo en blanco)
+  theme_booktabs() %>% 
+  bg(bg = "white", part = "all") %>% 
+  align(align = "center", part = "all") %>%
+  # Formato de números
+  colformat_double(j = 2:5, big.mark = ",", digits = 0) %>%
+  colformat_double(j = 6, digits = 2) %>%
+  # Ajustes finales
+  autofit() %>%
+  bold(part = "header")
+
+# 3. Mostrar el resultado
+ft_vida
+```
+
+
+```{r}
+# 1. Filtramos los años-persona vividos (Lx) para el rango fértil
+quinquenales_Lx <- tabla_vida_data %>% 
+  filter(x %in% c("15", "20", "25", "30", "35", "40", "45")) %>% 
+  select(x, Lx)
+
+# 2. Cálculo de la TNR por grupo
+tnr_valores <- resultados_tbr$TBR * quinquenales_Lx$Lx / (5 * 100000)
+
+TNR_tabla <- data.frame(
+  Grupo = quinquenales_Lx$x,
+  `TNR por Grupo` = round(tnr_valores, 4)
+)
+
+# 3. Calcular la TNR Global (la suma de los aportes de cada grupo)
+TNR_Global <- 5*sum(tnr_valores)
+
+print(TNR_tabla)
+cat("\nSe espera que una mujer al final de sus vida fértil tenga en promedio", round(TNR_Global,2), "hijas que llegan a sobrevivir a la edad reproductiva, si se mantienen las tasas observadas, para el año ****")
+```
+
+
 
 ## Curvas de fecundidad
 
@@ -621,4 +862,3 @@ Suponga que la $TNR$ es de 1.25 y la edad media a la reproducción ($M$) es de 2
 $$r = \frac{1}{M} \cdot \ln(TNR) = \frac{1}{22} \cdot \ln(1.25) = 0.0101$$
 
 Interpretación: Esta cifra quiere decir que, si las tasas de fecundidad y mortalidad se mantienen constantes, la tasa de crecimiento de una población será de 0.0101, o sea de 1.01%.
-
