@@ -136,12 +136,15 @@ Cuando las unidades están en el nivel 1, los experimentos son como los del curs
 | * La variable dependiente se mide una vez por cada sujeto. | * La variable dependiente se mide más de una vez en la misma unidad de análisis. | * La variable dependiente se mide en muchos momentos a lo largo del tiempo, para cada unidad de análisis. |
 | * Las unidades de análisis se agrupan (clusters de unidades). | * La medición se realiza en varios niveles de un factor de medidas repetidas. | |
 
-# Diferencia entre un modelo con bloques y un modelo mixto.
+
+# Diferencias entre los diferentes tipos de modelos
+
+## Diferencia entre un modelo con bloques y un modelo mixto.
 
 Es un modelo mixto, cuando hay dos factores o más en el nivel 1, en un diseño de dos niveles o más. Por el contrario cuando hay dos niveles, pero el nivel 1 solo tiene un factor es un diseño de bloques. Además si hay un factor en el nivel dos, también hay que usar modelos mixtos.
 
 
-# Diferencias entre modelo mixto y modelo lineal clásico.
+## Diferencias entre modelo mixto y modelo lineal clásico.
 
 + El modelo de regresión lineal simple requiere de formular muchos supuestos para que su uso sea adecuado.
 
@@ -152,9 +155,7 @@ Es un modelo mixto, cuando hay dos factores o más en el nivel 1, en un diseño 
 
 + Los Modelos Lineales Mixtos Generalizados (GLMM) incluyen técnicas de modelación no solo para variables continuas, sino también nominales, ordinales, conteos, respuestas asimétricas, entre otras.
 
-
-
-# Modelos lineales mixtos
+## Sobre los Modelos lineales mixtos
 
 Modelos para variables continuas en los que los residuos se distribuyen normalmente, pero podrían no ser independientes o no tener varianza constante.
 
@@ -163,7 +164,7 @@ El término “lineal” proviene del hecho de que estos modelos son lineales en
 El término “mixto” es debido a que las covariables pueden incluir un “mix” de efectos fijos y efectos aleatorios
 
 
-## Sobre los supuestos
+# Supuestos en los modelos mixtos
 
 
 Los modelos mixtos permiten manejar estructuras de variabilidad que no son homogéneas, por lo que se pueden usar cuando hay homocedasticidad. En un ANOVA no se necesita linealidad, en cambio cuando hay covaribales, variables numéricas como en regresión, en los modelos mixtos necesitamos linealidad. Si sucede el caso de que esta última no se da, debemos realizar una transformación. 
@@ -233,6 +234,8 @@ $$Y|i\sim \mathcal{N}(\mu_i,\sigma^2_\varepsilon)$$
 $$V(Y) = \sigma_\delta^2+\sigma^2_\varepsilon$$
 
 *Nota*: Esta suma nos sirve para ver en terminos relativos (%), la variabilidad, normalmente se usa para dar conclusiones. De tal manera que podemos tener estos dos casos $\sigma_\delta^2 <\sigma^2_\varepsilon$ ó $\sigma_\delta^2 > \sigma^2_\varepsilon$. En palabras simples, nos sirve para buscar quien es el culpable de generar mayor variabilidad. *Ver en el índice el ICC sección 7.3*
+
+\newpage
 
 **A continuación se representan las distribuciones por medio de una figura **
 
@@ -500,7 +503,7 @@ maq=factor(rep(c("A","B","C","D"),4,each=2))
 ```
 
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 library(lme4)
 mod1=lmer(trigli~1+maq+(1|dia)) #Código de modelo sin interacción
 mod1_int=lmer(trigli~1+maq+(1|dia)+(1|dia:maq))
@@ -810,43 +813,6 @@ diff(ci)
 
 Con esta diferencia podemos ver potencia,el ancho del intervalo. Para ello se tiene que simular varias veces y guardar esos resultados, para analizar cada uno de los casos anteriores. Para al final sacar el promedio del ancho del intervalo. De manera que cambiando `r` y `n` se llegue a un ancho del intervalo deseado.
 
-### Simulación de intervalos de confianza
-
-```{r}
-n=6       # Número de Lotes (Nivel 2)
-r=5         # Unidades por Lote (Nivel 1)
-k=10    # Cuántas de iteraciones
-
-sd.res=49.51
-muj=1500     # Media global de referencia
-anchos=numeric(k) # Vector vacío para guardar los resultados, de forma más rápida
-
-for(i in 1:k) {
-  # 1. Generamos los efectos de los lotes
-  # Suponemos una desviación estándar entre lotes 
-  sd.lote=15 
-  efectos_lote=rnorm(n, 0, sd.lote)
-  
-  # 2. Generamos la respuesta 
-  mujs=rep(muj + efectos_lote, each = r)
-  y=rnorm(n * r, mujs, sd.res)
-  Lote2=factor(rep(1:n, each = r))
-  
-  # 3. Ajustamos el modelo y calculamos el IC
-  # Se usa Wald y parm para que sea rápido en las 100 iteraciones
-  mod1.3=lmer(y ~ 1 + (1|Lote2), control = lmerControl(calc.derivs = FALSE))
-  CI=confint(mod1.3, parm = "(Intercept)", method = "Wald")
-  
-  # 4. Guardamos la diferencia (el ancho)
-  anchos[i]=diff(as.vector(CI))
-}
-
-promedio_ancho=mean(anchos)
-
-print(c("El promedio del ancho es",round(promedio_ancho,3)))
-```
-
-
 # Intervalos de confianza para las diferencias de diferentes categorías
 
 Para las siguientes secciones se utlizará el siguiente ejemplo:
@@ -860,7 +826,7 @@ Estos intervalos los podremos realizar, siempre y cuando el modelo que estemos a
 Para este tema usaremos el modelo **sin interacción** presentado en la sección de Modelo con interacción en r
 
 ```{r}
-summary(mod1)
+fixef(mod1)# Se extraen los efectos fijos del modelo
 ```
 Observe que `maqB = 1.8`, esto quiere decir que la maquina B es 1.8 puntos mayor que la máquina A, esto es debido a que estamos con el modelo de tratamiento de referencia y esa medida corresponde al efecto de la maquina B que se calcula de la siguiente manera $\alpha_b = \mu_b-\mu_a$. Es importante resaltar que la máquina que tiene menor media es la D. Recuerde que la restricción de referencia es $\alpha_1 = 0$
 
@@ -900,11 +866,11 @@ Restamos las devianzas de los modelos y ese valor lo colocamos en el siguiente c
 
 **Correción de Bomferroni**: El profesor recomienda realizar este ya que es más seguro, debido a que se trata de un modelo mixto
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 library(emmeans)
 em.mod1=emmeans(mod1,pairwise~maq,adjust="bonferroni")
 #emmeans(mod1,pairwise~factor_fijo,adjust="bonferroni")
-em.mod1
+em.mod1$contrasts
 ```
 
 
@@ -912,9 +878,12 @@ El `p-value` se compara contra $\alpha$, ya que la función hace la correción d
 
 **Tuckey**
 
-```{r, echo=FALSE}
+```{r}
 em.mod2=emmeans(mod1,pairwise~maq) #Realizados mediante prueba tuckey
+em.mod2$contrasts
 ```
+Observe que el `p-value` cambia
+
 
 ## Comparaciones para el nivel de significancia $\alpha$ cuando se usa emmeans (Bonferroni)
 
@@ -970,10 +939,8 @@ round(p*12,3) # Estas son las probabilidad que tira el emmeans
 
 ```{r}
 # Recuerde que el número de diferencias es 6 en este caso
-print("Comparación de dos colas")
-print(p < 0.05/12)
-print("Comparación de una colaa")
-print(p < 0.05/6)
+cat("Comparación de dos colas", p < 0.05/12 )
+cat("\nComparación de una cola",p < 0.05/6)
 ```
 
 
@@ -981,7 +948,7 @@ print(p < 0.05/6)
 
 **Podemos extraer los valores estimados de la función `emmeans`, para mejorar los intervalos de confianza**
 
-Podemos mejorar los intervalos, debido a que la función `mmeans`, toma en cuenta todas las diferencias posibles. Sin emabargo no todas las diferencias son significativas, por lo que se necesita aplicar el siguiente proceso para mejor su precisión.
+Podemos mejorar los intervalos, debido a que la función `emmeans`, toma en cuenta todas las diferencias posibles. Sin emabargo no todas las diferencias son significativas, por lo que se necesita aplicar el siguiente proceso para mejor su precisión.
 
 
 ```{r}
@@ -995,117 +962,8 @@ round(ic,3)
 
 
 
-# Simulación del experimento de las maquinas
-
-Esta simulación se realizó con el ejemplo de las maquinas vistó en clase
-
-## Simulación de los efectos
-
-```{r}
-sd.dia=7.1 # desviación estándar del día
-n=4 #número de días
-ef.dia=rnorm(n,0,sd.dia)
-med=147
-muj=med+ef.dia
-mean(muj)
-```
-## Simulación de la respuesta con las medias
 
 
-
-```{r}
-sd.res = 6.55 #desviación estándar observada de la respuesta
-n = 4 #número de observaciones
-r = 8 #número de replicas por día
-mujs = rep(muj,each=r) #simulamos la medias de cada uno de los días 
-y = rnorm(n*r,mujs,sd.res) # simulación de la respuesta 
-Dia = factor(rep(1:n, each = r)) # creamos la nueva variable día 
-tapply(y,Dia, mean) # cálculo de medias por día 
-```
-*Nota:* Conforme que `n` aumenta la media será más parecida a la que colocamos, en este caso usted puede colocar `n = 60` y lo que sucederá es que la media de los `mujs`, será casi igual a la que usted proporcionó.
-
-##  Simulación de la respuesta con los efectos
-
-```{r}
-n = 6 #número de días
-k = 4 # número de máquinas
-r = 16 #número de replicas por día, este debe ser múltiplo de k
-alfa=c(0,-7.5,7.5,0) #efectos observados 
-alfai=rep(alfa,each=r/k,n) #Número de observaciones entre 4 días, n es el número de días
-```
-
-**Luego de simular los efectos de cada día, simulamos la respuesta y le sumamos los efectos.**
-
-
-```{r}
-y = rnorm(n*r,mujs,sd.res) #simulación de la respuesta 
-y1 = y+alfai # respuesta más el efecto simulado
-```
-
-**Creamos una nueva variable día y una nueva variable maquina**
-
-```{r}
-maquina = factor(rep(1:k,each = r/k,n)) #Creación de la variable máquina
-Dia = factor(rep(1:n, each = r))# Creación de la variable Día 
-```
-
-**Se calculan la medias por maquina en cada día**
-
-```{r}
-tabla = tapply(y1, list(Día = Dia, Máquina = maquina), mean)
-print(tabla)
-```
-
-
-**Realizados un nuevo modelo con las variables creadas anteriormente**
-
-```{r}
-mod2 = lmer(y1~maquina+(1|Dia))
-```
-
-
-```{r}
-summary(mod2)
-```
-```{r, echo=FALSE}
-trigli=c(142.3, 144.0, 148.6, 146.9, 142.9, 147.4, 133.8,
-133.2, 134.9, 146.3, 145.2, 146.3, 125.9, 127.6,
-108.9, 107.5, 148.6, 156.5, 148.6, 153.1, 135.5,
-138.9, 132.1, 149.7, 152.0, 151.4, 149.7, 152.0,
-142.9, 142.3, 141.7, 141.2)
-dia=factor(rep(1:4,each=8))
-maq=factor(rep(c("A","B","C","D"),4,each=2))
-sd.res = 6.55
-n = 4
-r = 8
-mujs = rep(muj,each=r)
-y = rnorm(n*r,mujs,sd.res)
-Dia = factor(rep(1:n, each = r))
-alfa=c(0,-7.5,7.5,0)
-(alfai=rep(alfa,each=r/4,n))
-y1 = y+alfai
-tapply(y,Dia, mean)
-```
-
-
-
-## Gráfico para comparar la respuesta observada y simulada 
-
-```{r, warning=FALSE}
-library(ggplot2)
-library(gridExtra)
-p1 = qplot(maq,trigli,geom="boxplot",ylab="respuesta observada",
-xlab="máquina", ylim=c(100,170))
-trigli2= trigli-lm(trigli~dia)$fit+mean(trigli) #Centramos trigli por día
-p2 = qplot(maq,trigli2,geom="boxplot",ylab="respuesta observada\ncentrada",
-xlab="máquina", ylim=c(100,170))
-p3 = qplot(maq,y1,geom="boxplot",ylab="respuesta simulada",
-xlab="máquina", ylim=c(100,170))
-y2 = y1-lm(y1~dia)$fit+mean(y1)
-p4 = qplot(maq,y2,geom="boxplot",ylab="respuesta simulada\ncentrada",
-xlab="máquina", ylim=c(100,170))
-grid.arrange(p1,p2, p3,p4,ncol=2,nrow=2)
-```
 
 
 
@@ -1131,7 +989,7 @@ Aspectos importantes de este diseño:
 Observe el siguiente ejemplo basado en el experimento del papel
 
 ```{r, echo=FALSE, warning=FALSE}
-
+library(gridExtra)
 # 1. Simulación con "Pico" en 170 y caída en 180
 set.seed(303)
 n_puntos <- 5
@@ -1249,7 +1107,7 @@ xyplot(res ~ metodo, groups = temp,type="a",auto.key=list(columns=4),
 2. Realizar el modelo con la interacción
 
 
-```{r, echo=FALSE}
+```{r, include=FALSE}
 setwd("~/GitHub/Apuntes-Modelos-lineales-Avanzados/Manuales de Modelos Lineales Avanzados")
 load("papel.Rdata")
 str(base)
@@ -1297,10 +1155,13 @@ a
 
 Del resultado anterior podemos concluir lo siguiente:
 
-$$\text{Método 1:} \quad \mathbf{200} \quad \underline{225 \quad 250 \quad 275}$$
-$$\text{Método 2:} \quad \mathbf{200} \quad \underline{225 \quad 250 \quad 275}$$
-
-$$\text{Método 3:}  \quad \underline{200 \quad 225 \quad 250}\quad \mathbf{275}$$
+$$
+\begin{aligned}
+\text{Método 1} &: \quad \mathbf{200} \quad \underline{225 \quad 250 \quad 275} \\
+\text{Método 2} &: \quad \mathbf{200} \quad \underline{225 \quad 250 \quad 275} \\
+\text{Método 3} &: \quad \underline{200 \quad 225 \quad 250} \quad \mathbf{275}
+\end{aligned}
+$$
 
 
 donde la linea $\underline{\text{temperatura}}$, presenta que no hubieron diferencias signifiactivas entre ellas.
@@ -1382,7 +1243,7 @@ Como variante del ejercicio anterior (experimento papel), suponga que la capacid
 + Cada lote se divide en cuatro partes o muestras y realiza la cocción de cada muestra con una temperatura diferente, asignada aleatoriamente.
 
 
-```{r, echo=FALSE}
+```{r, include=FALSE}
 load("papel2.Rdata")
 str(base)
 base$dia = factor(base$dia)
@@ -1580,13 +1441,21 @@ El cuadrado medio de instructor dentro de escuela es 189.2. Esta es una medida d
 
 Como son independientes las comparaciones, no se necesita realizar correción, ya que lo que nos intersa es que si existen diferencias entre ellos, pero dentro de cada grupo. Lo cual nos lleva a la siguiente hipótesis:
 
+$$
+\begin{aligned}
+H_0 &: \beta_{1(i)} = 0, \quad \forall i \\
+H_1 &: \text{Al menos un } \beta_{1(i)} \neq 0
+\end{aligned}
+$$
 
-$$H_0: \beta_{1(i)} = 0 \space \forall_i\\H_1: \text{Al menos un }  \beta_{1(i)} \neq 0$$
 
 
-
-$$H_0: \mu_{1(i)} = \mu_{2(i)} \space\forall_i\\
-H_1: \text{Al menos un }  \mu_{1(i)} \neq \mu_{2(i)}$$
+$$
+\begin{aligned}
+H_0 &: \mu_{1(i)} = \mu_{2(i)}, \quad \forall i \\
+H_1 &: \text{Al menos un } \mu_{1(i)} \neq \mu_{2(i)}
+\end{aligned}
+$$
 
 
 
@@ -1630,7 +1499,7 @@ Recuerde que las comparaciones se hacen con un $\alpha = 0.05$
 **Se realizan los intervalos de confianza**
 
 ```{r}
-confint(em2)
+confint(em2)$contrasts
 ```
 
 
@@ -1649,4 +1518,259 @@ t=qt(1-0.05/2,6)
 round(c(8.75-t*1.87,8.75+t*1.87),2)
 ```
 
+# Simulaciones
+
+## Simulación de intervalos de confianza
+
+```{r, eval=FALSE}
+sim_ancho <- function(n, r, k = 10, med = 1500, sd.lote = 42, sd.res = 49.51) {
+  # Los argumentos deberían ir aquí si no estamos en una función
+  lote <- rep(1:n, each = r) # Creación de la variable lote
+  res <- matrix(nrow = k, ncol = 3) # Creación de la matr´z de resultados 
+  
+  for(i in 1:k) {  
+    ef.lote <- rnorm(n, 0, sd.lote) # Simulación del efecto del lote
+    muj <- med + ef.lote # Media de cada lote 
+    mujs <- rep(muj, each = r) #Repetición de la media para cada réplica
+    y <- rnorm(n * r, mujs, sd.res) # Simulación de la respuesta 
+    modn <- lmer(y ~ (1 | lote)) # Creación del modelo con esa variable
+    ci <- confint(modn) # Intervalos de confianza para el modelo creado
+    res[i, ] <- diff(t(ci))# Cálculo de anchos de los intervalos y se guardan en la matriz
+    prom = apply(res, 2, mean)# Se cálcula la media de los resultados de la matriz
+  }
+  
+  return(list(prom,res))
+}
+```
+
+```{r, eval=FALSE}
+sim_ancho(6,5) #Ejemplo de uso de la función anterior
+```
+
+
+## Combinaciones múltiples del ancho del intervalo 
+
+```{r, eval=FALSE}
+sim_ancho_todos <- function(k = 10, med = 1500, sd.lote = 42, sd.res = 49.51) {
+  # Los parámetros pueden ir en esta parte cuando no se trate de una función
+  resultado_final <- data.frame()
+  
+  for(n in 2:10) { #Número de lotes
+    for(r in 2:10) { #número de réplicas por lote
+      
+      if(n * r <= 30) { # Número máximo de réplicas
+        
+        lote <- rep(1:n, each = r) # Creación de la variable lote
+        res <- matrix(nrow = k, ncol = 3) #Creación de la matriz de resultados
+        
+        for(i in 1:k) {  
+          ef.lote <- rnorm(n, 0, sd.lote)
+          muj <- med + ef.lote
+          mujs <- rep(muj, each = r)
+          y <- rnorm(n * r, mujs, sd.res)
+          modn <- lmer(y ~ (1 | lote))
+          ci <- confint(modn)
+          res[i, ] <- diff(t(ci))
+        }
+        
+        prom <- apply(res, 2, mean)
+        
+        resultado_final <- rbind(resultado_final,
+                                 data.frame(n = n,
+                                            r = r,
+                                            Ntotal = n * r,
+                                            ancho1 = prom[1],
+                                            ancho2 = prom[2],
+                                            ancho3 = prom[3]))
+      }
+    }
+  }
+  
+  return(resultado_final)
+}
+```
+
+```{r, eval=FALSE}
+resultado <- sim_ancho_todos(k = 10)
+resultado
+```
+
+
+
+```{r, eval=FALSE}
+#encontrar el ancho mínimo de ancho1
+ancho_min <- min(resultado$ancho1)
+
+#encontrar en qué fila está
+fila_min <- which(resultado$ancho1 == ancho_min)
+
+#mostrar la combinación
+resultado[fila_min, ]
+```
+## Simulación de potencia para diferentes combinaciones de días y máquinas
+
+```{r, eval=FALSE}
+library(lme4)
+
+pot = function(n, r, nsim = 100){
+  
+  if(r %% 4 != 0){ # Que tiene que ser divisible por 4
+    stop("r debe ser múltiplo de 4, porque hay 4 máquinas.")
+  }
+  # Parámetros de la simulación
+  sd.dia = 7.1
+  sd.res = 6.55
+  alfa = c(0, -5, 5, 0) # Aquí es donde se coloca el delta
+  
+  rechazos = 0 # Creamos un contador para la cantidad de veces de rechazo
+  
+  for(i in 1:nsim){
+    
+    muj = 147 + rnorm(n, 0, sd.dia) #Simulación de la media de cada día   
+    mujs = rep(muj, each = r)#Repetición de cada media segúb la cantidad de réplicas       
+    
+    y = rnorm(n * r, mujs, sd.res) #Simulación de la respuesta
+    
+    alfai = rep(alfa, each = r/4, times = n) #Simulación de los efectos 
+    y1 = y + alfai #Simulación de la nueva respuesta
+    
+    DIA = factor(rep(1:n, each = r)) #Creación de la variable día 
+    MAQ = factor(rep(c("A","B","C","D"), each = r/4, times = n))#Creación de la variable máquina
+    
+    mod = try(lmer(y1 ~ MAQ + (1|DIA)), silent = TRUE)# Creación del modelo
+    
+    if(!inherits(mod, "try-error")){ # Condición sobre si hay un error se ignora
+      
+      tabla = try(drop1(mod, test = "Chisq"), silent = TRUE) #Guardar la tabla del drop1
+      
+      if(!inherits(tabla, "try-error") && nrow(tabla) > 1){
+        
+        pval = tabla$`Pr(Chi)`[2] #extraer la probabilidad
+        
+        if(!is.na(pval) && pval < 0.05){ #Calcular la proporción de rechazos (potencia)
+          rechazos = rechazos + 1
+        }
+      }
+    }
+  }
+  
+  rechazos / nsim
+}
+
+#Serie de pruebas
+pot(n=4, r=8)
+## [1] 0.66
+pot(n=6, r=8)
+## [1] 0.86
+pot(n=8, r=8)
+## [1] 0.94
+pot(n=10, r=8)
+## [1] 1
+pot(n=12, r=8)
+## [1] 1
+```
+
+
+
+## Simulación de experimento de lotes, día y máquina
+
+```{r, eval=FALSE}
+library(lme4)
+
+
+nsim <- 800
+# Se crea el vector donde se guardará la potencia de las variables
+p_metodo <- numeric(nsim)
+p_temp <- numeric(nsim)
+
+# Se definen los parametros
+n_lotes <- 9
+n_met <- 3
+n_temp <- 4
+
+sd.lote <- 1.7
+sd.res <- 2.3619
+
+mu <- 30.4722
+ef.met <- c(0, 3.41, -1.166)
+ef.temp <- c(0, 3.33, 5.888, 9.222)
+
+# Creación de las variables
+Lote <- factor(rep(1:n_lotes, each = n_met * n_temp))
+metodo <- factor(rep(rep(1:n_met, each = n_temp), n_lotes))
+temp <- factor(rep(1:n_temp, n_lotes * n_met))
+
+# Se creán los vectores para la simulación
+sdlote =c()
+sdres = c()
+
+# For para realizar la simulacion
+
+for (i in 1:nsim) {
+
+  #Simulación del efecto del lote y se guarda con el ancho de la variable lote con [LOte]
+  ef_lote_sim <- rnorm(n_lotes, 0, sd.lote)[Lote]
+  
+  # Simulación de la respuesta
+  y <- mu +
+    ef.met[metodo] +
+    ef.temp[temp] +
+    ef_lote_sim +
+    rnorm(n_lotes * n_met * n_temp, 0, sd.res)
+  
+  # Creación del modelo 
+  mod <- lmer(y ~ metodo + temp + (1 | Lote))
+  
+ 
+  # Se obtiene las sd estimadas del modelo 
+  vc = VarCorr(mod)
+  vc = as.data.frame(vc)
+  sdlote[i] = vc[1,5] # Se guarda la sdlote en su respectivo vector
+  sdres[i] = vc[2,5]
+  
+  
+  # Se obtiene la significancia 
+  sig <- drop1(mod, test = "Chisq")
+  
+  p_metodo[i] <- sig[2, 4]
+  p_temp[i] <- sig[3, 4]
+}
+
+cat("Potencia para Método:", mean(p_metodo < 0.05), "\n")
+## Potencia para Método: 1
+cat("Potencia para Temperatura:", mean(p_temp < 0.05), "\n")
+## Potencia para Temperatura: 1
+
+
+
+# Salidas de la simulacion: vectores con las desviaciones estandar de lote y res. 
+
+varlote = sdlote^2
+varres = sdres^2
+
+# Media de cada distribucion: sigma cuadrado lote y sigma cuadrado  
+mean_lote = mean(varlote)
+mean_res = mean(varres)
+
+
+cat("El promedio de la varianza del lote es:", round(mean_lote,3), "\nEl promedio de la distribucion de sigmas cuadrados es", round(mean_res,3), "\nLa varianza del lote fijada es" , sd.lote^2, "\nEl sigma fijado es de:", sd.res^2)
+```
+
+## Gráfico para comparar la respuesta observada y simulada 
+
+```{r, eval=FALSE}
+library(ggplot2)
+library(gridExtra)
+p1 = qplot(maq,trigli,geom="boxplot",ylab="respuesta observada",
+xlab="máquina", ylim=c(100,170))
+trigli2= trigli-lm(trigli~dia)$fit+mean(trigli) #Centramos trigli por día
+p2 = qplot(maq,trigli2,geom="boxplot",ylab="respuesta observada\ncentrada",
+xlab="máquina", ylim=c(100,170))
+p3 = qplot(maq,y1,geom="boxplot",ylab="respuesta simulada",
+xlab="máquina", ylim=c(100,170))
+y2 = y1-lm(y1~dia)$fit+mean(y1)
+p4 = qplot(maq,y2,geom="boxplot",ylab="respuesta simulada\ncentrada",
+xlab="máquina", ylim=c(100,170))
+grid.arrange(p1,p2, p3,p4,ncol=2,nrow=2)
+```
 
