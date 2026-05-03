@@ -167,7 +167,7 @@ El término “mixto” es debido a que las covariables pueden incluir un “mix
 # Supuestos en los modelos mixtos
 
 
-Los modelos mixtos permiten manejar estructuras de variabilidad que no son homogéneas, por lo que se pueden usar cuando hay homocedasticidad. En un ANOVA no se necesita linealidad, en cambio cuando hay covaribales, variables numéricas como en regresión, en los modelos mixtos necesitamos linealidad. Si sucede el caso de que esta última no se da, debemos realizar una transformación. 
+Los modelos mixtos permiten manejar estructuras de variabilidad que no son homogéneas y homogénas (homocedasticidad), este último no es tan común en modelos mixtos. Con respecto al análisis de varianza (ANOVA) sabemos que este no necesita linealidad. Por otro lado sabemos que esto es distinto cuando el modelo contiene covariabales ó variables numéricas como en regresión, en el caso de los modelos mixtos necesitamos linealidad. Si sucede el caso no se cumple, debemos realizar una transformación. 
 
 En un caso extremo donde los datos se comporten de una forma muy extraña, lo que podemos hacer es convertir la variable continua en una forma categórica, de manera que se parte la variable continua y se forman las categorías con dichos intervalos. Además para los modelos mixtos el hecho de que las variables predictoras no estén correlacionadas, lo que conocemos en otros cursos como el supuesto de no multicolinealidad, para que así los errores estándar no se inflen y las variables puedan explicar adecuadamente el modelo.
 
@@ -216,7 +216,7 @@ $$V(Y|\text{escuela}) = V(error)$$
 
 **Existen dos en el ejemplo de las escuelas:**
 
-$V(\varepsilon):$ Esta corresponde a una varianza por cada escuela, pero si hay homocesasticidad habría solo una. En un caso extremo se puede tener $V(\varepsilon|\text{Pública}) \neq V(\varepsilon|\text{Privada})$
+$V(\varepsilon):$ Esta corresponde a una varianza por cada escuela, pero si hay homocedasticidad habría solo una. En un caso extremo se puede tener $V(\varepsilon|\text{Pública}) \neq V(\varepsilon|\text{Privada})$
 
 $V(\mu|\text{Tipo de escuela}):$ Hay dos una para la escuela pública y otra para la privada. De igual forma si hay homocedasticidad solo habría una, es decir $V(\mu|\text{Pública})=V(\mu|\text{Privada})$
 
