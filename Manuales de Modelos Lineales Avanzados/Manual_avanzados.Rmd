@@ -358,7 +358,7 @@ $$H_1: \sigma_i > 0 $$
 + Formalmente: Siendo $\sigma^2_\varepsilon$ la varianza dentro de los grupos, y siendo $\sigma_\delta^2$ la varianza entre los grupos, el coeficiente de correlación intraclase $(\rho_I)$ es:
 
 $$\rho_I = \frac{\sigma_\delta^2}{\sigma_\delta^2+\sigma^2_\varepsilon}$$
-Esto nos dice que porcentaje de varibilidad se debe a las unidades del nivel 2. Si hay **baja** variabilidad intra clase $\rho_I \to 0$, quiere decir que las unidades del segundo nivel son muy similares, por el contrario si $\rho_I \to 1$, nos esta diciendo que son muy difentes.
+Esto nos dice que porcentaje de varibilidad se debe a las unidades del nivel 2. Si hay **baja** variabilidad intra clase $\rho_I \to 0$, quiere decir que las unidades del segundo nivel son muy similares, por el contrario si $\rho_I \to 1$, nos esta diciendo que son muy diferentes.
 
 *A continuación se le presenta un ejemplo sobre un cálculo en r*
 
@@ -373,15 +373,15 @@ Si se requiere sacar un intervalo de confianza para las varianzas, se recomienda
 
 # Modelo con Interacción
 
-Una inconsistencia en el factor del nivel 2, es lo que nos sospecha que haya interacción
+Una inconsistencia en el factor del nivel 2, es lo que nos da la sospecha que haya interacción
 
-El efecto de la i-ésimo del factor del nivel 2 se denota con: $\tau_i$  
+El efecto del i-ésimo del factor del nivel 2 se denota con: $\tau_i$  
 
 El efecto del j-ésima unidad de nivel 2 se denota con: $\delta_j$
 
-El efecto de interacción para la i-ésimo factor en la  j-ésima unidad de nivel 2 se denota con: 
+El efecto de interacción para el i-ésimo factor en la  j-ésima unidad de nivel 2 se denota con: 
 
-*A continuación el modelo es explicado, basandosé en el ejemplo de las máquinas vistas en clase*
+*A continuación el modelo es explicado, basándose en el ejemplo de las máquinas vistas en clase*
 
 
 La k-ésima muestra dentro del j-ésimo día, para la i-ésima máquina se puede expresar como:
@@ -465,7 +465,7 @@ En este experimento se tiene un estudio con 2 niveles con un factor en el nivel 
 
 Tenenos dos varianzas: $\sigma_{\varepsilon}$ varianza del error la cual corresponde, a la de muestra a muestra dentro de un día y una muestra. Por otro lado $\sigma_{\delta}$ varianza de los efectos del día.
 
-**En ambos gráficos podemos observar que las maquinas no son consistentes (cuando hay interacción), debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción que las maquinas son bastante consistentes.**
+**En ambos gráficos podemos observar que las maquinas no son consistentes, esto indica que se sospecha de una posible interacción, debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción se da cuando las maquinas son bastante consistentes, como se puede ver en el gráfico de la derecha.**
 
 ```{r,echo=FALSE}
 p1 <- dotplot(Trig_NoInt ~ Maquina, groups = Dia, data = datos,
@@ -533,8 +533,12 @@ anova(mod1, mod1_int, test = "LRT")
 ```
 
 ```{r}
-summary(mod1)
+VarCorr(mod1)
+(7.0879)^2
+(6.5494)^2
 ```
+
+
 **Observe que la variancia de día a día es 50.24 y la variancia residual es 42.89.**
 
 ## Esperanza marginal del factor de la unidad de nivel 2
@@ -543,7 +547,7 @@ En un modelo sin interacción podemos tener la siguiente esperanza:
 
 $$E[E[Y|ij]] = \mu_{i*} = \beta_0+\tau_i$$
 
-## Componenetes de la varianza 
+## Componentes de la varianza 
 
 
 Se consideran tres fuentes de variabilidad:
@@ -738,7 +742,7 @@ $$\begin{aligned}
 &E[CMRes] = \sigma^2_{\varepsilon}
 \end{aligned}$$
 
-**Se empieza estimando $\sigma^2_epsilon$ con el CMRes y se sustituye en la primera ecuación:**
+**Se empieza estimando $\sigma^2_{epsilon}$ con el CMRes y se sustituye en la primera ecuación:**
 
 $$\begin{aligned}
 &CMLote = CMRes+n\sigma^2_\delta
