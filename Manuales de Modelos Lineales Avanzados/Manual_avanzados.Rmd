@@ -935,7 +935,7 @@ round(ic,3)
 
 # Parcelas divididas
 
-Cuando el diseño es de dos niveles con un factor en cada nivel, al mismo se le puede llamar como parcelas divididas. Un ejemplo de esto sería un experimento que quiere comparar el crecimiento de dos especies de papá en dos tipos de clima. En donde se siembran dos especies de papas en fincas que se encunetran en un clima frió y en otras que tienen un clima caliente.
+Cuando el diseño es de dos niveles con un factor en cada nivel, al mismo se le puede llamar como parcelas divididas. Un ejemplo de esto sería un experimento que quiere comparar el crecimiento de dos especies de papa en dos tipos de clima. En donde se siembran dos especies de papas en fincas que se encuentran en un clima frío y en otras que tienen un clima caliente.
 
 Aspectos importantes de este diseño:
 
@@ -995,7 +995,7 @@ p2 <- xyplot(Resistencia ~ Temperatura, groups = Metodo, data = datos_pico,
 # 4. Mostrar en mosaico
 grid.arrange(p1, p2, ncol = 2)
 ```
-A la izquierda podemos ver los resultados del experimento, sin embargo podemos ver que la variable temperatura se encuentra como una categoría. Lo que se nos viene la pregunta de si *podemos covetirla en una variable numérica*, por lo que tratamos de unir todas las respuesta como lo podemos observar en el gráfico de la derecha, esto nos lleva a un problema, ya que al hacer esto tenemos un problema con el supuesto de linealidad, debido a que este no se cumple, no puedo convertir la variable *Temperatura* en una variable numérica. 
+A la izquierda podemos ver los resultados del experimento, sin embargo podemos ver que la variable temperatura se encuentra como una categoría. Lo que se nos viene la siguiente pregunta: *¿Podemos convetirla en una variable numérica?*, por lo que tratamos de unir todas las respuesta, como lo podemos observar en el gráfico de la derecha, esto nos puede ocasionar un problema, ya que al realizar esto, estaríamos ignorando el cumplimiento del supuesto de linealidad, debido a que este no se cumple, no podemos convertir la variable *Temperatura* en una variable numérica. 
 
 **Observe esta otra situación:**
 
