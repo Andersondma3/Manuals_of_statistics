@@ -762,48 +762,10 @@ confint(mod1)
 
 *Nota:* Se le llama `sigma` a la desviación estándar del error, `sig01` es la del lote. Para obtener la varianza recuerde elevar al cuadrado los resultados. Además note que los intervalos no son simétricos, debido  a que el $\pm$ en el intervalo de confianza de varianzas no se utliza. Si el limite inferior da cero quiere decir que el intervalo no se tuvo que haber realizado, debido a que la varianza puede ser cero.
 
-**Simulación de los deltas** (Forma1)
-
-```{r}
-sd.lote=42 #sigma delta
-n=6 #Número de lotes
-med=1500
-ef.lote=rnorm(n,0,sd.lote) #simulación de los deltas
-(muj=med+ef.lote)
-```
-**Simulación de los deltas** (Forma2, un poco más directa)
-
-
-```{r}
-sd.lote1=42 #sigma delta
-n=6 # Número de lotes
-med=1500
-(muj.2=rnorm(n,med,sd.lote1)) #simulación de los deltas
-```
-
-
-**Simulación de la respuesta**
-
-```{r}
-n = 6
-sd.res = 49.51
-r = 5 # Número de observaciones por lote
-mujs = rep(muj,each=r)
-y = rnorm(n*r,mujs,sd.res)
-```
-
-
 **Obtener los efectos alteatorios ($\delta$) de forma directa**
 
 ```{r, eval=FALSE}
 deltas = ranef(mod)
-```
-
-
-Para crear la variable Lote (la variable del nivel 2), se realiza de la siguiente manera
-
-```{r, eval=FALSE}
-Lote2 = factor(rep(1:n, each = r))
 ```
 
 ### Código para las diferencias entre intervalos de confianza
