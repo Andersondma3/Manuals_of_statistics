@@ -471,13 +471,13 @@ Tenenos dos varianzas: $\sigma_{\varepsilon}$ varianza del error la cual corresp
 p1 <- dotplot(Trig_NoInt ~ Maquina, groups = Dia, data = datos,
               type = "p", 
               auto.key = list(columns = 4, title = "Día", cex = 0.8),
-              main = "Escenario Sin interacción",
+              main = "Escenario Con interacción",
               ylab = "Triglicéridos (mg/dl)", xlab = "Máquina")
 
 p2 <- dotplot(Trig_Int ~ Maquina, groups = Dia, data = datos,
               type = "p", 
               auto.key = list(columns = 4, title = "Día", cex = 0.8),
-              main = "Escenario B Con interacción",
+              main = "Escenario B Sin interacción",
               ylab = "Triglicéridos (mg/dl)", xlab = "Máquina")
 
 # 3. Dibujar en mosaico (1 fila, 2 columnas)
@@ -715,7 +715,7 @@ Con respecto al modelo `REML`, debido a que en los modelos mixtos se utlilizan m
 
 ## Estimaciones manuales mediante un modelo lineal 
 
-Para poder explicar este tema se usa el siguiente caso de **Colorantes** en donde se tiene un solo factor aleatorio que son lotes de producción, y se quiere verificar si la variabiliad existente entre los promedios de los lotes es mucho mayor que la variabilidad del error.
+Para poder explicar este tema se usa el siguiente caso de **Colorantes** en donde se tiene un solo factor aleatorio que son lotes de producción, y se quiere verificar si la variabilidad existente entre los promedios de los lotes es mucho mayor que la variabilidad del error.
 
 ```{r, eval=FALSE}
 mod2=lm(prod~lote,data=base)
@@ -760,7 +760,7 @@ $$\begin{aligned}
 confint(mod1)
 ```
 
-*Nota:* Se le llama `sigma` a la desviación estándar del error, `sig01` es la del lote. Para obtener la varianza recuerde elevar al cuadrado los resultados. Además note que los intervalos no son simétricos, debido  a que el $\pm$ en el intervalo de confianza de varianzas no se utliza. Si el limite inferior da cero quiere decir que el interavlo no se tuvo que haber realizado, debido a que la varianza puede ser cero.
+*Nota:* Se le llama `sigma` a la desviación estándar del error, `sig01` es la del lote. Para obtener la varianza recuerde elevar al cuadrado los resultados. Además note que los intervalos no son simétricos, debido  a que el $\pm$ en el intervalo de confianza de varianzas no se utliza. Si el limite inferior da cero quiere decir que el intervalo no se tuvo que haber realizado, debido a que la varianza puede ser cero.
 
 **Simulación de los deltas** (Forma1)
 
@@ -838,7 +838,7 @@ Observe que `maqB = 1.8`, esto quiere decir que la maquina B es 1.8 puntos mayor
 confint(mod1)
 ```
 
-**Al observar el intervalo de 95% de confianza se tiene que la desviación estándar de día a día está entre 2.9 y 15.7. Esto confirma que esta fuente de variabilidad es importante. Por lo tanto, hay evidencia que hay fuentes de variabilidad que deben revisarse para que este modelo de espectofotómetro funcione mejor. Se esperaría mayor consitencia de uno a otro día.**
+**Al observar el intervalo de 95% de confianza se tiene que la desviación estándar de día a día está entre 2.9 y 15.7. Esto confirma que esta fuente de variabilidad es importante. Por lo tanto, hay evidencia que hay fuentes de variabilidad que deben revisarse para que este modelo de espectofotómetro funcione mejor. Se esperaría mayor consistencia de uno a otro día.**
 
 ## Hipótesis sobre la diferencias entre categorías
 
@@ -952,7 +952,7 @@ cat("\nComparación de una cola",p < 0.05/6)
 
 **Podemos extraer los valores estimados de la función `emmeans`, para mejorar los intervalos de confianza**
 
-Podemos mejorar los intervalos, debido a que la función `emmeans`, toma en cuenta todas las diferencias posibles. Sin emabargo no todas las diferencias son significativas, por lo que se necesita aplicar el siguiente proceso para mejor su precisión.
+Podemos mejorar los intervalos, debido a que la función `emmeans`, toma en cuenta todas las diferencias posibles. Sin embargo, no todas las diferencias son significativas, por lo que se necesita aplicar el siguiente proceso para mejor su precisión.
 
 
 ```{r}
