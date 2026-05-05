@@ -77,11 +77,11 @@ par(mfrow = c(1, 1))
 
 **Negro:** La distribución de los grupos de una escuela pública.
 
-**Azul:** La distribución de los grupos de una escuela privada .
+**Azul:** La distribución de los grupos de una escuela privada.
 
-**Celeste:** La distribución de las escuelas públicas.
+**Celeste:** La distribución de las medias de las escuelas públicas.
 
-**Rojo:** La distribución de las escuelas privadas.
+**Rojo:** La distribución de las medias de las distribuciones de las escuelas privadas.
 
 *Unidades del nivel 1*
 
