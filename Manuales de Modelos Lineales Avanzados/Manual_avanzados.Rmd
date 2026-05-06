@@ -31,6 +31,20 @@ output:
 
 + Los efectos de los niveles escogidos son aleatorios en el sentido de que son una muestra de esa distribución de efectos.
 
+
+## Gráfico para el comportamiento de la respuesta entre lotes
+
+El código general de este gráfico es `qplot(X,Y,geom="boxplot")`, *a continuación se le da un ejemplo*
+
+```{r}
+load("colorantes.Rdata")
+library(ggplot2)
+qplot(lote,prod,geom="boxplot",ylab="producción",data=base)
+```
+*Intepretación del gráfico:* Hay algunos lotes que tienen producciones muy bajas mientras que otros las tienen muy altas, aunque no interesa identificar cuáles son los lotes con producción más baja o más alta puesto que los lotes son aleatorios.
+
+
+
 ## Ejemplo de las escuelas 
 
 **ATENCIÓN AL SIGUIENTE EJEMPLO EXPUESTO EN CLASE**
@@ -1176,6 +1190,15 @@ ic
 
 Como la función `emmeans` usa un nivel de significancia global, estos intervalos son más anchos. Para ello debemos reconstriurlos tomando en cuenta solo aquellas diferencias que son significativas. Esto lo debemos realizar para observar si esa diferencias es relevante para nuestro estudio u objetivo.
 
+Para realizar ese proceso tome como ejemplo, los coeficientes del siguiente modelo:
+
+
+```{r}
+round(summary(mod1)$coef[,1],2)
+```
+
+*Nota:* Recuerede que este análisis es marginal, solo para las temperaturas
+
 
 ```{r}
 c=summary(mod1)$coef[,1]
@@ -1259,7 +1282,7 @@ Una compañía manufacturera tiene tres escuelas de mecánica regionales, una en
 $$\text{Estructura del Experimento} 
 \begin{cases} 
 \text{Nivel 3 (Escuela)} & \to \text{Factor Principal (Regional)} \\
-\text{Nivel 3 (Instructor)} & \to \text{Anidado en Escuela} \\
+\text{Nivel 2 (Instructor)} & \to \text{Anidado en Escuela} \\
 \text{Nivel 1 (Grupo)} & \to \text{Unidad Observacional (Mecánicos)} 
 \end{cases}$$
 
@@ -1285,9 +1308,9 @@ layout = c(3,1),data=base)
 
 Debido a que este diseño es anidado, **no se analiza la interacción**, porque la interacción compara dos niveles (los mismos dos niveles), en cada nivel del otro factor, esto es debido a que todos son diferentes en cada uno de los niveles.
 
-La cantidad de niveles de debe analizar dentro de cada facto, en el ejemplo anterior se debe analizar dentro de cada región, por lo que en este caso hay 2 por región.
+La cantidad de niveles se debe analizar dentro de cada factor, en el ejemplo anterior se debe analizar dentro de cada región, por lo que en este caso hay 2 por región.
 
-*Observe el siguiente gráfica, para observar las diferencias entre escuelas*
+*Observe el siguiente gráfico, para observar las diferencias entre escuelas*
 
 ```{r}
 bwplot(puntaje~escuela,xlab="escuela",ylab="puntaje",data=base)
@@ -1297,7 +1320,7 @@ bwplot(puntaje~escuela,xlab="escuela",ylab="puntaje",data=base)
 
 ### De un diseño anidado  a un multinivel
 
-*En un país extremadamente grande habáin muchas escuelas de intructores y se selccionan 3 escuelas. Además se quiere generelizar el estudio para todas las escuelas, por lo que me interesa es observar la variabilidad entre estas. Dentro de cada escuela hay una cantidad considerable de intructores, así que se seleccionaron en cada una de las escuelas elegidas anteriormente dos intructores, por lo que estos ya son una muestra del total de instructores y cada uno de esos dos intructores tiene dos grupos, los cuales son los que voy a observar para el estudio.*
+*En un país extremadamente grande habián muchas escuelas de intructores y se selccionan 3 escuelas. Además se quiere generelizar el estudio para todas las escuelas, por lo que me interesa es observar la variabilidad entre estas. Dentro de cada escuela hay una cantidad considerable de intructores, así que se seleccionaron en cada una de las escuelas elegidas anteriormente dos intructores, por lo que estos ya son una muestra del total de instructores y cada uno de esos dos intructores tiene dos grupos, los cuales son los que voy a observar para el estudio.*
 
 Note que no hay factores fijos, por lo que es  un diseño de dos niveles sin factores
 
