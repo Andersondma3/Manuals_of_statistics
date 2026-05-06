@@ -1300,9 +1300,12 @@ levels(base$escuela)=c("Región K","Región D","Central")
 ```
 
 
+
+### Gráfico para representar gráficamente los datos y observar variabilidad
+
 ```{r}
 dotplot(puntaje ~ instructor | escuela,xlab="instructor",
-layout = c(3,1),data=base)
+layout = c(3,1),data=base) # el layout normalmente se pone en lugar del 3, la cantidad de cajas que se quieren ver
 ```
 
 
@@ -1339,7 +1342,7 @@ donde:
 *A continuación se le presentan las variables auxiliares*
 
 $$\mathbf{C} = \begin{array}{c|ccc}
- & C_{11} & C_{21}  \\
+ & C_{1} & C_{2}  \\
  \hline
 \text{Reg 1} & 1 & 0 \\
 \text{Reg 2} & 0 & 1 \\
@@ -1347,7 +1350,7 @@ $$\mathbf{C} = \begin{array}{c|ccc}
 \end{array}
 \quad , \quad
 \mathbf{B} = \begin{array}{c|ccc}
- & B_{11} & B_{21} & B_{31} \\
+ & B_{21} & B_{22} & B_{23} \\
 \hline
 \text{I}_{1(1)} & -1 & 0 & 0 \\
 \text{I}_{2(1)} & 1 & 0 & 0 \\
