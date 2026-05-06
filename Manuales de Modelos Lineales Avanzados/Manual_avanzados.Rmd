@@ -36,7 +36,7 @@ output:
 
 El código general de este gráfico es `qplot(X,Y,geom="boxplot")`, *a continuación se le da un ejemplo*
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 load("colorantes.Rdata")
 library(ggplot2)
 qplot(lote,prod,geom="boxplot",ylab="producción",data=base)
@@ -1431,7 +1431,7 @@ El cuadrado medio de instructor dentro de escuela es 189.2. Esta es una medida d
 ### Comparación de intructores dentro de cada escuela
 
 
-Como son independientes las comparaciones, no se necesita realizar correción, ya que lo que nos intersa es que si existen diferencias entre ellos, pero dentro de cada grupo. Lo cual nos lleva a la siguiente hipótesis:
+Como son independientes las comparaciones, no se necesita realizar correción, ya que lo que nos interesa es si existen diferencias entre ellos, pero dentro de cada grupo. Lo cual nos lleva a la siguiente hipótesis:
 
 $$
 \begin{aligned}
@@ -1456,7 +1456,7 @@ mod2=lm(puntaje~escuela+instructor1,data=base)
 anova(mod2)
 ```
 
-Note que en los `gl` dan (n-1), ya que el total de obervaciones eran 12 y sumando la columna de los `df` nos da como resultado 11. `instructor1` esla variable no anidada.Por lo tanto, lo correcto es que se haga con la variable normal.
+Note que en los `gl` dan (n-1), ya que el total de obervaciones eran 12 y sumando la columna de los `df` nos da como resultado 11. `instructor1` es la variable no anidada.Por lo tanto, lo correcto es que se haga con la variable normal.
 
 
 
@@ -1480,7 +1480,7 @@ model.tables(aov(mod3))
 anova(mod3)#da lo mismo que con el mod2
 ```
 
-### Comparaciones entre intructores
+### Comparaciones entre instructores
 
 ```{r,message=FALSE}
 (em2=emmeans(mod3,pairwise~instructor|escuela))$contrasts
