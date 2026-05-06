@@ -853,8 +853,17 @@ em.mod1=emmeans(mod1,pairwise~maq,adjust="bonferroni")
 em.mod1$contrasts
 ```
 
+### Intervalos de confianza cuando hay interacción 
+
 
 El `p-value` se compara contra $\alpha$, ya que la función hace la correción de una vez.
+
+```{r, eval=FALSE}
+em.mod1=emmeans(mod1,pairwise~maq|dia,adjust="bonferroni")
+#emmeans(mod1,pairwise~factor_fijo|otro_factor,adjust="bonferroni")
+#factor_fijo|otro_factor son las comparaciones considerando el otro factor
+```
+
 
 **Tuckey**
 
@@ -1129,7 +1138,6 @@ library(emmeans)
 a = emmeans(mod1, pairwise~temp|metodo, adjust="bonferroni")$contrasts
 # El código de arriba nos indica que se van a comparar las temperaturas dentro de cada método.
 # Esto se lo indicamos a r por medio del temp|metodo, si no hay interación se quita el método.
-
 a
 ```
 
@@ -1415,6 +1423,7 @@ r=2 #número de instructores por cada escuela
 scinst=sum(r*efinst^2)
 scinst
 ```
+
 ```{r}
 gl=(2-1)*3
 gl
@@ -1599,6 +1608,7 @@ fila_min <- which(resultado$ancho1 == ancho_min)
 #mostrar la combinación
 resultado[fila_min, ]
 ```
+
 ## Simulación de potencia para diferentes combinaciones de días y máquinas
 
 ```{r, eval=FALSE}
@@ -1617,15 +1627,11 @@ pot = function(n, r, nsim = 100){
   rechazos = 0 # Creamos un contador para la cantidad de veces de rechazo
   
   for(i in 1:nsim){
-    
-    muj = 147 + rnorm(n, 0, sd.dia) #Simulación de la media de cada día   
-    mujs = rep(muj, each = r)#Repetición de cada media segúb la cantidad de réplicas       
-    
+    muj = 147 + rnorm(n, 0, sd.dia) #Simulación de la media de cada día
+    mujs = rep(muj, each = r)#Repetición de cada media según la cantidad de réplicas       
     y = rnorm(n * r, mujs, sd.res) #Simulación de la respuesta
-    
-    alfai = rep(alfa, each = r/4, times = n) #Simulación de los efectos 
+    alfai = rep(alfa, each = r/4, times = n) #Simulación de los efectos
     y1 = y + alfai #Simulación de la nueva respuesta
-    
     DIA = factor(rep(1:n, each = r)) #Creación de la variable día 
     MAQ = factor(rep(c("A","B","C","D"), each = r/4, times = n))#Creación de la variable máquina
     
@@ -1664,13 +1670,13 @@ pot(n=12, r=8)
 
 
 
-## Simulación de experimento de lotes, día y máquina
+## Simulación de potencia, para un experimento de tres niveles, sin interacción
+
+La simulación se basa en el experimento de papel visto en clase
 
 ```{r, eval=FALSE}
 library(lme4)
-
-
-nsim <- 800
+nsim <- 800 #número de simulaciones
 # Se crea el vector donde se guardará la potencia de las variables
 p_metodo <- numeric(nsim)
 p_temp <- numeric(nsim)
@@ -1679,10 +1685,11 @@ p_temp <- numeric(nsim)
 n_lotes <- 9
 n_met <- 3
 n_temp <- 4
-
-sd.lote <- 1.7
+#Estos se obtienen del VarCorr(mod)
+sd.lote <- 1.7 
 sd.res <- 2.3619
 
+#Estos se obtienen del fixef(mod)
 mu <- 30.4722
 ef.met <- c(0, 3.41, -1.166)
 ef.temp <- c(0, 3.33, 5.888, 9.222)
@@ -1713,7 +1720,6 @@ for (i in 1:nsim) {
   # Creación del modelo 
   mod <- lmer(y ~ metodo + temp + (1 | Lote))
   
- 
   # Se obtiene las sd estimadas del modelo 
   vc = VarCorr(mod)
   vc = as.data.frame(vc)
@@ -1729,11 +1735,7 @@ for (i in 1:nsim) {
 }
 
 cat("Potencia para Método:", mean(p_metodo < 0.05), "\n")
-## Potencia para Método: 1
 cat("Potencia para Temperatura:", mean(p_temp < 0.05), "\n")
-## Potencia para Temperatura: 1
-
-
 
 # Salidas de la simulacion: vectores con las desviaciones estandar de lote y res. 
 
@@ -1743,8 +1745,6 @@ varres = sdres^2
 # Media de cada distribucion: sigma cuadrado lote y sigma cuadrado  
 mean_lote = mean(varlote)
 mean_res = mean(varres)
-
-
 cat("El promedio de la varianza del lote es:", round(mean_lote,3), "\nEl promedio de la distribucion de sigmas cuadrados es", round(mean_res,3), "\nLa varianza del lote fijada es" , sd.lote^2, "\nEl sigma fijado es de:", sd.res^2)
 ```
 
