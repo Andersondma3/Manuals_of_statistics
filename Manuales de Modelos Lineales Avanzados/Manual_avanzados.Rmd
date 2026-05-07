@@ -1555,15 +1555,11 @@ sim_ancho(6,5) #Ejemplo de uso de la función anterior
 sim_ancho_todos <- function(k = 10, med = 1500, sd.lote = 42, sd.res = 49.51) {
   # Los parámetros pueden ir en esta parte cuando no se trate de una función
   resultado_final <- data.frame()
-  
   for(n in 2:10) { #Número de lotes
     for(r in 2:10) { #número de réplicas por lote
-      
       if(n * r <= 30) { # Número máximo de réplicas
-        
         lote <- rep(1:n, each = r) # Creación de la variable lote
         res <- matrix(nrow = k, ncol = 3) #Creación de la matriz de resultados
-        
         for(i in 1:k) {  
           ef.lote <- rnorm(n, 0, sd.lote)
           muj <- med + ef.lote
@@ -1573,9 +1569,7 @@ sim_ancho_todos <- function(k = 10, med = 1500, sd.lote = 42, sd.res = 49.51) {
           ci <- confint(modn)
           res[i, ] <- diff(t(ci))
         }
-        
         prom <- apply(res, 2, mean)
-        
         resultado_final <- rbind(resultado_final,
                                  data.frame(n = n,
                                             r = r,
@@ -1586,7 +1580,6 @@ sim_ancho_todos <- function(k = 10, med = 1500, sd.lote = 42, sd.res = 49.51) {
       }
     }
   }
-  
   return(resultado_final)
 }
 ```
@@ -1613,9 +1606,7 @@ resultado[fila_min, ]
 
 ```{r, eval=FALSE}
 library(lme4)
-
 pot = function(n, r, nsim = 100){
-  
   if(r %% 4 != 0){ # Que tiene que ser divisible por 4
     stop("r debe ser múltiplo de 4, porque hay 4 máquinas.")
   }
@@ -1623,9 +1614,7 @@ pot = function(n, r, nsim = 100){
   sd.dia = 7.1
   sd.res = 6.55
   alfa = c(0, -5, 5, 0) # Aquí es donde se coloca el delta
-  
   rechazos = 0 # Creamos un contador para la cantidad de veces de rechazo
-  
   for(i in 1:nsim){
     muj = 147 + rnorm(n, 0, sd.dia) #Simulación de la media de cada día
     mujs = rep(muj, each = r)#Repetición de cada media según la cantidad de réplicas       
@@ -1634,27 +1623,19 @@ pot = function(n, r, nsim = 100){
     y1 = y + alfai #Simulación de la nueva respuesta
     DIA = factor(rep(1:n, each = r)) #Creación de la variable día 
     MAQ = factor(rep(c("A","B","C","D"), each = r/4, times = n))#Creación de la variable máquina
-    
     mod = try(lmer(y1 ~ MAQ + (1|DIA)), silent = TRUE)# Creación del modelo
-    
     if(!inherits(mod, "try-error")){ # Condición sobre si hay un error se ignora
-      
       tabla = try(drop1(mod, test = "Chisq"), silent = TRUE) #Guardar la tabla del drop1
-      
       if(!inherits(tabla, "try-error") && nrow(tabla) > 1){
-        
         pval = tabla$`Pr(Chi)`[2] #extraer la probabilidad
-        
         if(!is.na(pval) && pval < 0.05){ #Calcular la proporción de rechazos (potencia)
           rechazos = rechazos + 1
         }
       }
     }
   }
-  
   rechazos / nsim
 }
-
 #Serie de pruebas
 pot(n=4, r=8)
 ## [1] 0.66
@@ -1680,7 +1661,6 @@ nsim <- 800 #número de simulaciones
 # Se crea el vector donde se guardará la potencia de las variables
 p_metodo <- numeric(nsim)
 p_temp <- numeric(nsim)
-
 # Se definen los parametros
 n_lotes <- 9
 n_met <- 3
@@ -1688,64 +1668,109 @@ n_temp <- 4
 #Estos se obtienen del VarCorr(mod)
 sd.lote <- 1.7 
 sd.res <- 2.3619
-
 #Estos se obtienen del fixef(mod)
 mu <- 30.4722
 ef.met <- c(0, 3.41, -1.166)
 ef.temp <- c(0, 3.33, 5.888, 9.222)
-
 # Creación de las variables
 Lote <- factor(rep(1:n_lotes, each = n_met * n_temp))
 metodo <- factor(rep(rep(1:n_met, each = n_temp), n_lotes))
 temp <- factor(rep(1:n_temp, n_lotes * n_met))
-
 # Se creán los vectores para la simulación
 sdlote =c()
 sdres = c()
-
 # For para realizar la simulacion
-
 for (i in 1:nsim) {
-
   #Simulación del efecto del lote y se guarda con el ancho de la variable lote con [LOte]
   ef_lote_sim <- rnorm(n_lotes, 0, sd.lote)[Lote]
-  
   # Simulación de la respuesta
   y <- mu +
     ef.met[metodo] +
     ef.temp[temp] +
     ef_lote_sim +
     rnorm(n_lotes * n_met * n_temp, 0, sd.res)
-  
   # Creación del modelo 
   mod <- lmer(y ~ metodo + temp + (1 | Lote))
-  
   # Se obtiene las sd estimadas del modelo 
   vc = VarCorr(mod)
   vc = as.data.frame(vc)
   sdlote[i] = vc[1,5] # Se guarda la sdlote en su respectivo vector
   sdres[i] = vc[2,5]
-  
-  
   # Se obtiene la significancia 
   sig <- drop1(mod, test = "Chisq")
-  
   p_metodo[i] <- sig[2, 4]
   p_temp[i] <- sig[3, 4]
 }
-
 cat("Potencia para Método:", mean(p_metodo < 0.05), "\n")
 cat("Potencia para Temperatura:", mean(p_temp < 0.05), "\n")
-
 # Salidas de la simulacion: vectores con las desviaciones estandar de lote y res. 
-
 varlote = sdlote^2
 varres = sdres^2
-
 # Media de cada distribucion: sigma cuadrado lote y sigma cuadrado  
 mean_lote = mean(varlote)
 mean_res = mean(varres)
 cat("El promedio de la varianza del lote es:", round(mean_lote,3), "\nEl promedio de la distribucion de sigmas cuadrados es", round(mean_res,3), "\nLa varianza del lote fijada es" , sd.lote^2, "\nEl sigma fijado es de:", sd.res^2)
+```
+
+
+## Simulación de base de datos de pinturas
+
+El objetivo de est simulación es generar una nueva base de datos, para 4 días con 3 tarros por día
+
+```{r, echo=FALSE}
+load("pinturas1.Rdata")
+base$aplicacion = factor(base$aplicacion)
+base$tarro = factor(base$tarro)
+base$dia = factor(base$dia)
+```
+
+**Primero debemos crear el modelo originial**
+
+```{r}
+mod1 = lmer(reflect~aplicacion+(1|tarro)+(1|dia), data = base)
+VarCorr(mod1)
+```
+
+
+```{r}
+med=tapply(base$reflect,base$aplicacion,mean) 
+med # medias de cada aplicación
+```
+
+**Procedemos a realizar la simulación**
+
+```{r}
+sd_res = 1.9743  
+sd_dia = 6.7305  
+sd_tarro = 3.4274  
+#Se crea la variable día 
+dia=factor(rep(c("d1","d2","d3","d4"),each=9)) 
+# Creamos la variable tarro 
+tarro = factor(rep(1:12,each = 3)) # 3 tarros por 4 días
+#Creamos la variable apliación
+aplicacion=factor(rep(1:3,12)) # A todos los tarros se les hiciern todas las aplicaciones
+#Simulamos el efecto del tarro
+ef_tarro = rnorm(12,0,sd_tarro)[tarro]
+#Simulamos el efecto del día
+ef_dia = rnorm(4,0,sd_dia)[dia]
+#Asignación de cada aplicación
+muj = med[aplicacion]
+#Simulamos el error
+epsilon=rnorm(36,0,sd_res)
+#Simulación de respuesta final
+reflect1 = muj + ef_tarro+ef_dia+epsilon
+```
+
+**Respuesta observada**
+
+```{r}
+dotplot(reflect~aplicacion|dia,groups=tarro,type=c("p","a"),base,ylim=c(55,95))
+```
+**Respuesta Similar**
+
+
+```{r}
+dotplot(reflect1~aplicacion|dia,groups=tarro,type=c("p","a"),ylim=c(55,95)) 
 ```
 
 ## Gráfico para comparar la respuesta observada y simulada 
