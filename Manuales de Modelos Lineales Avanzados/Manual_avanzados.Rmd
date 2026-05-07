@@ -297,7 +297,7 @@ donde:
 
 ### ¿Cuándo se nos habla de verificar la normalidad a que se refiere?
 
-Se refiere a evaluar el supuesto de normalidad en la distribución  $Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$, la explicación de esta la puede encontratrar en la parte de arriba. Si tenemos muy pocos efectos en las muestra y queremos probar normalidad, la debemos asumir porque para probar esto se debe tener una cantidad considerable de observaciones. Sin emabargo podemos unir todos los residuales para probar normalidad en el caso de que se cumple el supuesto de *Homocedasticidad*
+Se refiere a evaluar el supuesto de normalidad en la distribución  $Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$, la explicación de esta la puede encontrar en la parte de arriba. Si tenemos muy pocos efectos en las muestra y queremos probar normalidad, la debemos asumir porque para probar esto se debe tener una cantidad considerable de observaciones. Sin embargo podemos unir todos los residuales para probar normalidad en el caso de que se cumple el supuesto de *Homocedasticidad*.
 
 
 ```{r, echo=FALSE}
@@ -343,7 +343,7 @@ points(punto_x_obs, punto_y_obs, pch=19, col="black", cex=1)
 
 # Leyenda
 legend("topright", 
-       legend=c("Media Global (mu)", "Media Grupal (mu_i)", "Dato Observado"),
+       legend=c("Media Global (mu)", "Media Grupal (mu_i)", "Efecto aleatorio"),
        col=c("red", "blue", "black"), lwd=2, bty="n")
 ```
 
@@ -351,7 +351,8 @@ legend("topright",
 
 + El modelo tiene solo un coeficiente **fijo** que es el **intercepto** o media general, y tiene un componente aleatorio que son los efectos de las unidades del segundo nivel. 
 
-+ Interesa determinar si hay efecto de las unidades del segundo nivel, pero no interesa estimar la magnitud de los mismos ya que son solo una muestra de una población mayor de unidades infinitas.
++ Interesa determinar si hay efecto de las unidades del segundo nivel, pero no interesa estimar la magnitud de los mismos,
+ya que son solo una muestra de una población mayor de unidades infinitas.
 
 + La variancia de cualquier observación se obtiene a partir de dos fuentes: la de unidad de nivel 2 a unidad de nivel 2 (inter sujeto) y la residual (intra sujeto).
 
@@ -391,9 +392,9 @@ Una inconsistencia en el factor del nivel 2, es lo que nos da la sospecha que ha
 
 El efecto del i-ésimo del factor del nivel 2 se denota con: $\tau_i$  
 
-El efecto del j-ésima unidad de nivel 2 se denota con: $\delta_j$
+El efecto aleatorio de la j-ésima unidad de nivel 2 se denota con: $\delta_j$ con su distribución $\delta_j\sim\mathcal{N}(0,\sigma_\delta)$
 
-El efecto de interacción para el i-ésimo factor en la  j-ésima unidad de nivel 2 se denota con: 
+El efecto de interacción para el i-ésimo factor en la  j-ésima unidad de nivel 2 se denota con: $(\tau\delta)_{ij}$ 
 
 *A continuación el modelo es explicado, basándose en el ejemplo de las máquinas vistas en clase*
 
@@ -473,11 +474,11 @@ xyplot(Y ~ Maquina, groups = Dia, data = datos,
 
 **Gráfico de puntos para la interacción**
 
-El siguiente gráfico normalmente se utliza debido a que es una cantidad de observaciones pequeña.
+El siguiente gráfico normalmente se utiliza, debido a que es una cantidad de observaciones pequeña.
 
 En este experimento se tiene un estudio con 2 niveles con un factor en el nivel 1 , lo que corresponde a lo que conocemos como un diseño de bloques.
 
-Tenenos dos varianzas: $\sigma_{\varepsilon}$ varianza del error la cual corresponde, a la de muestra a muestra dentro de un día y una muestra. Por otro lado $\sigma_{\delta}$ varianza de los efectos del día.
+Tenenos dos varianzas: $\sigma_{\varepsilon}$ varianza del error, la cual corresponde a la de muestra a muestra dentro de un día y una observación. Por otro lado $\sigma_{\delta}$ varianza de los efectos aleatorios del día.
 
 **En ambos gráficos podemos observar que las maquinas no son consistentes, esto indica que se sospecha de una posible interacción, debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción se da cuando las maquinas son bastante consistentes, como se puede ver en el gráfico de la derecha.**
 
@@ -561,6 +562,8 @@ En un modelo sin interacción podemos tener la siguiente esperanza:
 
 $$E[E[Y|ij]] = \mu_{i*} = \beta_0+\tau_i$$
 
+*Nota:* Recuerede que en un modelo com imteracción podemos hacer análsis de manera marginal.
+
 ## Componentes de la varianza 
 
 
@@ -580,7 +583,7 @@ $$V(Y|i) = \sigma_i^2 = \sigma_{\delta}^2+ \sigma_{\tau\delta}^2+\sigma_\varepsi
 
 # Prueba de razón de verosimilitud {#sig_fact}
 
-Definición de la verosimilitud creada en la clase: *La verosimilitud es que tan creíble la estimación de un parámetro, basado en los datos de la muestra. Con el objetivo de dar una medida de la credibilidad de la estimación.*
+Definición de la verosimilitud creada en la clase: *La verosimilitud es que tan creíble es la estimación de un parámetro, basado en los datos de la muestra. Con el objetivo de dar una medida de la credibilidad de la estimación.*
 
 Esta nos sirve para probar la hipótesis relativa a la variancia del componente aleatorio de interacción: 
 $H_0:\sigma_{\delta}^2 = 0$ contra la alternativa: $H_1:\sigma_{\delta}^2 > 0$.
@@ -588,7 +591,7 @@ $H_0:\sigma_{\delta}^2 = 0$ contra la alternativa: $H_1:\sigma_{\delta}^2 > 0$.
 Aunque la hipótesis se plantea en términos de una restricción para el parámetro, hay que tener presente que lo que se compara es la calidad del ajuste obtenido con **dos modelos anidados**.
 La prueba de la razón de verosimilitud (LRT) equivale a la diferencia de las devianzas de los dos modelos que se comparan (la fórmula está más abajo). 
 
-El estadístico LRT usa como distribución de referencia aproximada una chi-cuadrado con grados de libertad equivalente a la diferencia en el número de parámetros de ambos modelos.
+El estadístico LRT usa como distribución de referencia aproximada una chi-cuadrado con grados de libertad, equivalente a la diferencia en el número de parámetros de ambos modelos.
 
 *A continuación se le presenta la fórmula*
 
@@ -611,9 +614,9 @@ donde:
 + $\frac{\mathcal{L}_{\omega}}{\mathcal{L}_{\Omega}}$ es la razón de las verosimilitudes **Esto es el LRT**
 
 
-En este caso el valor-p obtenido debe tomarse con cautela ya que el parámetro que se prueba está en el borde del dominio de posibles valores para el parámetro.
+En este caso el valor-p obtenido debe tomarse con cautela, ya que el parámetro que se prueba está en el borde del dominio de posibles valores para el parámetro.
 
-El valor-p será conservador en el sentido de que será mayor que el valor-p que se obtendría en simulaciones.
+El valor-p, será conservador en el sentido de que será mayor que el valor-p que se obtendría en simulaciones.
 
 En el peor de los casos el valor-p será el doble de lo que debería ser. 
 
@@ -638,6 +641,8 @@ Para el **modelo 1**:
 + 2 parámetros fijos($\beta_0,\beta_1)$
 
 + 2 parámetros aleatorios ($\sigma^2_\delta,\sigma^2_\varepsilon$)
+
+\newpage
 
 Para el **modelo 2**:
 
@@ -768,13 +773,15 @@ $$\begin{aligned}
 &\hat{\sigma^2_\delta}=\frac{CMLote-CMRes}{n}
 \end{aligned}$$
 
+\newpage
+
 ## Intervalos de confianza para las varianzas 
 
 ```{r, eval=FALSE}
 confint(mod1)
 ```
 
-*Nota:* Se le llama `sigma` a la desviación estándar del error, `sig01` es la del lote. Para obtener la varianza recuerde elevar al cuadrado los resultados. Además note que los intervalos no son simétricos, debido  a que el $\pm$ en el intervalo de confianza de varianzas no se utliza. Si el limite inferior da cero quiere decir que el intervalo no se tuvo que haber realizado, debido a que la varianza puede ser cero.
+*Nota:* Se le llama `sigma` a la desviación estándar del error, `sig01` es la del lote. Para obtener la varianza recuerde elevar al cuadrado los resultados. Además note que los intervalos no son simétricos, debido  a que el $\pm$ en el intervalo de confianza de varianzas no se utiliza. Si el limite inferior da cero, quiere decir que el intervalo no se tuvo que haber realizado, debido a que la varianza puede ser cero.
 
 **Obtener los efectos alteatorios ($\delta$) de forma directa**
 
@@ -791,7 +798,7 @@ diff(ci)
 ```
 
 
-Con esta diferencia podemos ver potencia,el ancho del intervalo. Para ello se tiene que simular varias veces y guardar esos resultados, para analizar cada uno de los casos anteriores. Para al final sacar el promedio del ancho del intervalo. De manera que cambiando `r` y `n` se llegue a un ancho del intervalo deseado.
+Con esta diferencia podemos ver potencia,el ancho del intervalo. Para ello se tiene que simular varias veces y guardar esos resultados, para analizar cada uno de los casos anteriores. Para al final sacar el promedio del ancho del intervalo. De manera que cambiando `r` y `n` se llegue a un ancho del intervalo deseado. *Se encuentra una simulación de esto en la última sección*.
 
 # Intervalos de confianza para las diferencias de diferentes categorías
 
@@ -820,7 +827,7 @@ confint(mod1)
 
 Basado en el mismo ejemplo de la sección anterior queremos probar lo siguiente:
 
-$$H_0:\alpha_i = 0 \space \forall_i \text{ ó } \space \alpha_2 = \alpha_3 = \alpha_3$$
+$$H_0:\alpha_i = 0  \space \forall_i \text{ ó } \space \alpha_2 = \alpha_3 = \alpha_3$$
 La función `drop1` nos sirve para probar si las medias de las 4 maquinas son iguales que es lo mismo que probar si los efectos de las 4 maquinas son iguales a cero.
 
 ```{r}
@@ -844,7 +851,7 @@ Restamos las devianzas de los modelos y ese valor lo colocamos en el siguiente c
 
 ## Intervalos de confianza mediante la función emmeans
 
-**Correción de Bomferroni**: El profesor recomienda realizar este ya que es más seguro, debido a que se trata de un modelo mixto
+**Correción de Bomferroni**: El profesor recomienda realizar este ya que es más seguro, debido a que se trata de un modelo mixto.
 
 ```{r,warning=FALSE, message=FALSE}
 library(emmeans)
@@ -873,6 +880,14 @@ em.mod2$contrasts
 ```
 Observe que el `p-value` cambia
 
+### Intervalos de confianza para diferencias de factores fijos sin interacción 
+
+```{r, eval=FALSE}
+em.mod1=emmeans(mod1,pairwise~maq,adjust="tuckey")
+#Intervalo par diferencias entre máquinas
+```
+
+
 
 ## Comparaciones para el nivel de significancia $\alpha$ cuando se usa emmeans (Bonferroni)
 
@@ -882,7 +897,7 @@ Observe que el `p-value` cambia
 | **Una cola** | $\frac{p}{2} < \alpha$ ó $p < 2\cdot\alpha$ | $p < \frac{\alpha}{d}$ |
 | **Dos colas** | $p < \alpha$ | $p < \frac{\alpha}{2d}$ |
 
-\newpage
+
 
 ### Proceso manual para la creación de intervalos de confianza
 
@@ -1020,6 +1035,8 @@ grid.arrange(p1, p2, ncol = 2)
 ```
 A la izquierda podemos ver los resultados del experimento, sin embargo podemos ver que la variable temperatura se encuentra como una categoría. Lo que se nos viene la siguiente pregunta: *¿Podemos convetirla en una variable numérica?*, por lo que tratamos de unir todas las respuesta, como lo podemos observar en el gráfico de la derecha, esto nos puede ocasionar un problema, ya que al realizar esto, estaríamos ignorando el cumplimiento del supuesto de linealidad, debido a que este no se cumple, no podemos convertir la variable *Temperatura* en una variable numérica. 
 
+\newpage
+
 **Observe esta otra situación:**
 
 ```{r, echo=FALSE, warning=FALSE}
@@ -1071,15 +1088,15 @@ La ventaja de usar parcelas dividas o bloques, es que nosotros podemos medir cua
 
 ## Diseño con 2 niveles y factor fijo en ambos niveles
 
-Un fabricante de papel está interesado en tres métodos para preparar la pulpa y cuatro temperaturas de cocción de la pulpa. Aunque la temperatura es una variable continua, solo se van a estudiar 4 temperaturas.
+*Un fabricante de papel está interesado en tres métodos para preparar la pulpa y cuatro temperaturas de cocción de la pulpa. Aunque la temperatura es una variable continua, solo se van a estudiar 4 temperaturas.*
 
-El fabricante desea estudiar el efecto del método y de la temperatura sobre la resistencia a la tensión del papel, que es el esfuerzo máximo a tensión obtenido durante una prueba hasta la ruptura bajo unas condiciones prescritas. El esfuerzo es expresado como la fuerza por unidad del ancho de la muestra puesta a prueba, medido en kg/cm. 
+*El fabricante desea estudiar el efecto del método y de la temperatura sobre la resistencia a la tensión del papel, que es el esfuerzo máximo a tensión obtenido durante una prueba hasta la ruptura bajo unas condiciones prescritas. El esfuerzo es expresado como la fuerza por unidad del ancho de la muestra puesta a prueba, medido en kg/cm. *
 
-El experimento se lleva a cabo de la siguiente forma:
+*El experimento se lleva a cabo de la siguiente forma:*
 
-+ Produce tres lotes de pulpa con cada uno de los tres métodos que está estudiando en un orden aleatorio. En total produce 9 lotes de pulpa. 
++ *Produce tres lotes de pulpa con cada uno de los tres métodos que está estudiando en un orden aleatorio. En total produce 9 lotes de pulpa. *
 
-+ Cada vez que produce un lote lo divide en cuatro partes o muestras y realiza la cocción de cada muestra a una temperatura diferente.
++ *Cada vez que produce un lote lo divide en cuatro partes o muestras y realiza la cocción de cada muestra a una temperatura diferente.*
 
 Además es importante resaltar que este tipo de diseño es un diseño de parcelas dividas.
 
@@ -1109,7 +1126,6 @@ base$lote=factor(base$lote)
 
 ```{r, }
 library(lme4)
-options(contrasts = c("contr.treatment", "contr.poly")) #Nos pasamos a suma nula
 mod1=lmer(res~metodo*temp+ (1|lote),data=base) #Lote es aleatorio y porque tiene diferentes observaciones adentro
 ```
 
@@ -1205,7 +1221,7 @@ Para realizar ese proceso tome como ejemplo, los coeficientes del siguiente mode
 round(summary(mod1)$coef[,1],2)
 ```
 
-*Nota:* Recuerede que este análisis es marginal, solo para las temperaturas
+*Nota:* Recuerede que este análisis es marginal, solo para las temperaturas. Además utilice la función `contrasts(variable)`, para guiarse al momento de construir los vectores.
 
 
 ```{r}
@@ -1313,9 +1329,11 @@ levels(base$escuela)=c("Región K","Región D","Central")
 
 ```{r}
 dotplot(puntaje ~ instructor | escuela,xlab="instructor",
-layout = c(3,1),data=base) # el layout normalmente se pone en lugar del 3, la cantidad de cajas que se quieren ver
+layout = c(3,1),data=base)
 ```
 
+
+*Nota:* El `layout` normalmente se pone en lugar del 3, la cantidad de columnas que se quieren ver.
 
 Debido a que este diseño es anidado, **no se analiza la interacción**, porque la interacción compara dos niveles (los mismos dos niveles), en cada nivel del otro factor, esto es debido a que todos son diferentes en cada uno de los niveles.
 
@@ -1331,9 +1349,9 @@ bwplot(puntaje~escuela,xlab="escuela",ylab="puntaje",data=base)
 
 ### De un diseño anidado  a un multinivel
 
-*En un país extremadamente grande habián muchas escuelas de intructores y se selccionan 3 escuelas. Además se quiere generelizar el estudio para todas las escuelas, por lo que me interesa es observar la variabilidad entre estas. Dentro de cada escuela hay una cantidad considerable de intructores, así que se seleccionaron en cada una de las escuelas elegidas anteriormente dos intructores, por lo que estos ya son una muestra del total de instructores y cada uno de esos dos intructores tiene dos grupos, los cuales son los que voy a observar para el estudio.*
+*En un país extremadamente grande habián muchas escuelas de intructores y se selccionan 3 escuelas. Además se quiere generalizar el estudio para todas las escuelas, por lo que me interesa es observar la variabilidad entre estas. Dentro de cada escuela, hay una cantidad considerable de intructores, así que se seleccionaron en cada una de las escuelas elegidas anteriormente dos intructores, por lo que estos ya son una muestra del total de instructores y cada uno de esos dos intructores tiene dos grupos, los cuales son los que voy a observar para el estudio.*
 
-Note que no hay factores fijos, por lo que es  un diseño de dos niveles sin factores
+Note que no hay factores fijos, por lo que es  un diseño de dos niveles sin factores.
 
 Lo anterior es un ejemplo de un diseño multinivel, debido a que mi interés es ver la variabilidad entre escuelas.
 
