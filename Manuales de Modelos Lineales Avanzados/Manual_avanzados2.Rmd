@@ -442,3 +442,89 @@ ggplot() +  # Líneas de los Lotes (Mismo origen, distinta pendiente)
   )
 ```
 
+
+# Análisis del experimento papel
+
+```{r, echo=FALSE}
+load("papel.Rdata")
+base$metodo=factor(base$metodo)
+base$lote=factor(base$lote)
+```
+
+
+
+```{r}
+library(lattice)
+xyplot(res~temp|lote,type=c("r","p"),xlab="temperatura",
+ylab="resistencia",data=base)
+```
+
+Observe que en este caso, en la mayoría hya linealiad, en algunos hay otros comportamuientos, pero los mismos no son consistentes. Además con solo cuatro puntos no podemos asegurar ningún otro tipo de comportamiento, por lo que asumimos que se cumple el supuesto de linealidad.
+
+
+*De la siguiente forma, obtenemos cuantos lotes por cada método tenemos *
+
+```{r}
+apply(table(base$metodo, base$lote) > 0,1,sum)
+```
+
+*A continuación se gráfican los lotes dentro de cada método*
+
+```{r}
+xyplot(res~temp|metodo,groups=lote,type=c("r"),xlab="temperatura",
+ylab="resistencia",layout=c(3,1),data=base)
+```
+
+En este caso note que las pendientes de los lotes no son iguales dentro de cada método, por lo que se podría sospechar de una posible interacción entre lote y temperatura.
+
+*A continuación se gráfican las lineas de cada método*
+
+```{r}
+xyplot(res~temp,groups=metodo,type=c("r"),xlab="temperatura",
+ylab="resistencia",data=base,auto.key = T)
+```
+
+Apesar de que se observe una pequeña interacción, no es tan fuerte como la que se vió en el gráfico anterior. *Es importante resaltar que esto lo estamos haciendo debido a que la temperatura es bastante lineal*.
+
+**Nota:** La ventaja de que la temperatura sea númerica y super lineal, es se puede usar para interpolar valores para cualquier temperatura.
+
+
+## Modelo completo para el experimento de papel
+
+Se tiene el siguiente modelo:
+
+
+$$y_{iTjkl} = \beta_0+\beta_1T+\alpha_i+\gamma_jT+\omega_iT+\delta_{k(i)}+\lambda_{k(i)}T+\varepsilon_{ijkl}$$
+donde:
+
+Usando tratamiento de referencia
+
++ $\alpha_i:$ Efecto del i-ésimo método en el intercepto,con las retricciones $\alpha_1 = 0$ y que $\alpha_2 = \mu_{2,T=0}-\mu_{1,T=0}$, *La representación gráfica de estos efectos se encuentran en la sección de arriba*.
+
++ $\beta_1:$ Pendiente de la temperatura.
+
++ $\gamma_j;$ Efecto j-ésimo de interacción entre el método y temperatura, con la restricción $\gamma_1 = 0$, este significa cuánto aumenta la temperatura con respecto al método 1.
+
+
++ $\delta_k:$ Efecto del lote 
+
+**Las ecuaciones de las rectas para cada método son las siguientes**
+
+**Método 1**
+
+$\mu_{1,T}= \beta_0+\beta_1T$
+
+
+**Método 2**
+
+$\mu_{2,T}= (\beta_0+\alpha_2)+(\beta_1+\gamma_2)T$
+
+
+**Método 3**
+
+$\mu_{3,T}= (\beta_0+\alpha_3)+(\beta_1+\gamma_3)T$
+
+
+Note que mediante las restas de estas ecuaciones cuando $T = 0$, obtenemos los $\alpha_i$
+
+
