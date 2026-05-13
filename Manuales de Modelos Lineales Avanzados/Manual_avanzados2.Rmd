@@ -11,3 +11,200 @@ output:
     toc_depth: '3'
 ---
 
+# Variables continuas como predictores
+
+Este tipo de variables sería como si en el ejemplo de `Papel` que lo analizamos en el caso anterior tuviera el factor de temperatura, como una variable númerica, no como una categoría. Dado esto, para estos casos es crucial el **supuesto de linealidad**.
+
+## Comparación del diseño de papel, cuando la variable temperatura es númerica o categórica
+
+Para dicho experimentop teníamos dos niveles:
+
++ Nivel 1: El número de muestras , este tiene como factor la temperatura. *Es importante notar que la temperatura puede ser un factor o una variable continua.*
+
+
++ NIvel 2: El lote, este tiene como factor el método.
+
+
+*A continuación se le brinda un ejemplo de gráfico de la temperatura como categoría*
+
+
+```{r,echo=FALSE}
+library(ggplot2)
+library(dplyr)
+
+# 1. Simulación de datos basada en image_664bac.png
+set.seed(123)
+temperaturas <- c(200, 225, 250, 275)
+lotes <- c(1, 2, 3)
+n_muestras <- 4 # Puntos por combinación
+
+df_simulado <- expand.grid(
+  temp = temperaturas,
+  lote = as.factor(lotes),
+  replica = 1:n_muestras
+) %>%
+  mutate(
+    # Simulación de resistencia en el rango [26, 45]
+    res = 25 + (as.numeric(lote) * 2) + (temp * 0.03) + rnorm(n(), 0, 1.5)
+  )
+
+# 2. Gráfico con colores por lote y sin medias
+ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
+  geom_point(size = 2.25, alpha = 0.8) + # Solo los puntos de datos
+  facet_wrap(~ lote) + # Un panel por lote
+  scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) + # Colores personalizados
+  labs(
+    title = "Número de  Lote",
+    x = "Temperatura (°C)",
+    y = "Resistencia",
+    color = "Lote"
+  ) +
+  theme_bw() +
+  theme(legend.position = "none",plot.title = element_text(hjust = 0.5)) # Quitamos la leyenda porque ya está el título en el panel
+```
+*A continuación se le brinda un ejemplo de gráfico de la temperatura como númerica*
+
+
+```{r,warning=FALSE, message=FALSE}
+ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
+  geom_point(size = 2, alpha = 0.6) + # Puntos de datos observados
+  
+  # 2. Agregar la línea de regresión para el supuesto de linealidad
+  # 'method = lm' ajusta un modelo lineal (y = a + bx)
+  geom_smooth(method = "lm", se = FALSE, size = 1) + 
+  
+  facet_wrap(~ lote) +
+  scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) +
+  labs(
+    title = "Relación Lineal: Resistencia vs Temperatura",
+    subtitle = "Ajuste lineal por Lote (Variable Continua)",
+    x = "Temperatura (°C)",
+    y = "Resistencia"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"), # Título centrado y en negrita
+    plot.subtitle = element_text(hjust = 0.5),            # Subtítulo centrado
+    legend.position = "none"
+  )
+```
+
+
+Para convertir la variable temperatura a una variable númerica, es super importante que se cumpla el **suspuesto de linealidad**, para poder realizar este cambió en el análisis. Si sucede que los puntos tienen otra forma, como una cuadrática, logarítmica etc. Se necesitarian más datos, para asegurarlo, en cambió con la linealidad, esto no sucede así, debido a que es usual que con 4 datos está se pueda observar correctamente. Es importante resaltar que la linealidad se debe cumplir dentro de la unidad de nivel 2, en nuestro ejemplo sería, en cada lote. Si sucede el caso de que en todos los lotes, los datos están muy desordenos, es altamente recomendado trabajarlo como factor.Por último, si tenemos muchas observaciones dentro de cada lote, lo recomendable es realizar agrupaciones, para tener un mayor control de la variable.
+
+
+## Modelos para variables continuas en modelos mixtos
+
+Una vez teniendo en cuenta las diferencias entre una variable categórica y una continua, a continuacón se le presentan ambos modelos:
+
+*Los siguientes modelos, se contruyen basados en el ejemplo del experimento Papel*
+
+### Modelo con interacción de una variable categórica
+
+
+
+$$y_{ijkl} = \beta_0+\alpha_i+\beta_j+(\alpha\beta)_{ij}+\delta_k+\varepsilon_{ijkl}$$
+
+donde:
+
++ **Los factores fijos corresponden a :** $\beta_0:$ Es el intercepto,$\alpha_i:$ Efécto del método,$\beta_j:$ Efecto de la temperatura y el efecto de interación entre estos factores $(\alpha\beta)_{ij}$
+
+
++ **Las distribuciones de los factores aleatorios, asociadas al modelo corresponden a :** $\delta_k\sim\mathcal{N}(0,\sigma_\delta)$. De $\varepsilon\sim\mathcal{N}(0,\sigma_\varepsilon)$, también esta la distribución $Y_{ij}\sim\mathcal{N}(\mu_j,\sigma_\varepsilon)$. Por último, sabemos que $\delta_k = \mu_k-\mu$, de esto obtenemos que $\mu_j\sim\mathcal{N}(0,\sigma_\delta)$ 
+
+
+### Modelo con interacción de una variable númerica
+
+Para este modelo debemos pensar que la temperatura no es un factor, sino quna variable númerica, que cumple con el supuesto de linealidad. Dado lo anterior, el modelo resultante queda de la siguiente manera:
+
+
+$$y_{iTjkl} = \beta_0+\alpha_i+\gamma_1T+\omega_iT+\delta_k+\varepsilon_{ijkl}$$
+
+Utilizando tratamiento de referencia
+
+donde:
+
++ $\beta_0:$ Es el intercepto del modelo
+
++ $\alpha_i:$ Efecto del método, con las restricciones $\alpha_1 = 0$
+
+
+**Modelo para el método 1**
+
+$$y_{1Tjkl} = \beta_0+\gamma_1T+\varepsilon_{ijkl}$$
+
+*Observe que la pendiente es* $\gamma_1$
+
+
+**Modelo para el método 2**
+
+$$y_{2Tjkl} = (\beta_0+\alpha_2)+(\gamma_1+\omega_2)T+\varepsilon_{ijkl}$$
+
+*Observe que la pendiente es* $\gamma_1+\omega_2$
+
+
+**Modelo para el método 3**
+
+
+$$y_{2Tjkl} = (\beta_0+\alpha_2)+(\gamma_1+\omega_3)T+\varepsilon_{ijkl}$$
+
+
+*Observe que la pendiente es* $\gamma_1+\omega_3$
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+# 1. Definición de parámetros
+mu <- 35
+beta <- 0.08
+alphas <- c(-4, 0, 4)
+x_start <- 200 # Inicio del eje visible
+
+df_lineas <- data.frame(
+  temp = rep(seq(200, 275, length.out = 100), 3),
+  metodo = rep(c("Método 1", "Método 2", "Método 3"), each = 100),
+  alpha_val = rep(alphas, each = 100)
+) %>%
+  mutate(res = mu + alpha_val + (beta * (temp - 237.5)))
+
+# 2. Gráfico con alpha en el intercepto (inicio del eje)
+ggplot(df_lineas, aes(x = temp, y = res, color = metodo)) +
+  geom_line(size = 1.1) +
+  # Referencia de la Gran Media (Global Mean)
+  geom_segment(aes(x = 200, xend = 275, y = mu + (beta * (200 - 237.5)), 
+                   yend = mu + (beta * (275 - 237.5))), 
+               color = "black", linetype = "dotted") +
+  
+  # --- MODIFICACIÓN DE PARÁMETROS PARA EL INTERCEPTO ---
+  # Dibujamos las llaves justo en x = 200 (el intercepto del gráfico)
+  annotate("segment", x = 200, xend = 200, y = 32, yend = 28, # Alpha 1
+           arrow = arrow(ends = "both", length = unit(0.15, "cm")), color = "red") +
+  annotate("text", x = 203, y = 30, label = "alpha[2]", parse = TRUE, color = "red") +
+  
+ annotate("segment", 
+         x = 198, xend = 198,        # 'x' menor para que esté más atrás
+         y = 36, yend = 28,          # 'y' menores para que esté abajo
+         arrow = arrow(ends = "both", length = unit(0.15, "cm")), 
+         color = "darkgreen") +
+ annotate("text", 
+         x = 195,                    # 'x' un poco antes del segmento para no traslapar
+         y = 33.5,                     # 'y' central entre 32 y 28
+         label = "alpha[3]", 
+         parse = TRUE, 
+         color = "darkgreen")+
+  
+  scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) +
+  labs(
+    title = "Representación de los Efectos Fijos del Método",
+    subtitle = expression(paste("Distancia del intercepto definida por ", alpha[i], " = ", mu[i], " - ", mu)),
+    x = "Temperatura (°C)",
+    y = "Resistencia"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+
+Cuando no hay interacción los $\alpha$, representan la diferencias entre las medias con respecto al método 1 (referencia).En el caso cuando hay interacción, los $\alpha$ representan la diferencia cuando la temperatura es 0, lo cual no tendría ningún sentido en el experimento de papel, en otros casos ese análisis si puede tener sentido.
+
+
