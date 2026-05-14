@@ -28,7 +28,7 @@ Para dicho experimentop teníamos dos niveles:
 *A continuación se le brinda un ejemplo de gráfico de la temperatura como categoría*
 
 
-```{r,echo=FALSE}
+```{r,echo=FALSE, message=FALSE}
 library(ggplot2)
 library(dplyr)
 
@@ -443,6 +443,64 @@ ggplot() +  # Líneas de los Lotes (Mismo origen, distinta pendiente)
 ```
 
 
+```{r, echo=FALSE}
+
+# 1. Simulación de un solo método con interacción en la pendiente
+set.seed(2026)
+temp_cont <- seq(200, 275, length.out = 50)
+n_lotes <- 3
+
+df_delta <- expand.grid(
+  temp = temp_cont,
+  lote_id = 1:n_lotes
+) %>%
+  mutate(
+    lote_unico = as.factor(paste("Lote", lote_id)),
+    beta_base = 0.20, # Pendiente media del método
+    # El Lote 2 tendrá una interacción marcada (delta positivo)
+    beta_lote = case_when(
+      lote_id == 1 ~ -0.08,
+      lote_id == 2 ~ 0.15,  # Este es nuestro delta notable
+      lote_id == 3 ~ -0.05
+    ),
+    beta_final = beta_base + beta_lote,
+    res = 30 + (beta_final * (temp - 200))
+  )
+
+# 2. Línea de la media teórica
+df_media_unica <- data.frame(temp = temp_cont) %>%
+  mutate(res_media = 30 + (0.20 * (temp - 200)))
+
+# 3. Gráfico con la anotación de Delta
+ggplot() +
+  # Líneas de los lotes
+  geom_line(data = df_delta, 
+            aes(x = temp, y = res, color = lote_unico, group = lote_unico), 
+            size = 0.8, alpha = 0.5) +
+  # Línea de la MEDIA (Referencia)
+  geom_line(data = df_media_unica, 
+            aes(x = temp, y = res_media), 
+            color ="red2", size = 1.5) +
+  # ANOTACIÓN DE DELTA (Distancia al final del eje)
+  annotate("segment", x = 270, xend = 270, 
+           y = 44, yend = 54.5, # Distancia entre media y Lote 2 al final
+           arrow = arrow(ends = "both", length = unit(0.2, "cm")), 
+           color = "black", size = 1) +
+  annotate("text", x = 273, y = 49, 
+           label = "delta[k]", parse = TRUE, 
+           color = "black", size = 5) +
+  scale_color_manual(values = c("Lote 1" = "blue2", "Lote 2" = "blue2", "Lote 3" = "blue2")) +
+  labs(
+    title = "Efecto de Interacción Lote × Temperatura",
+    subtitle = "Delta representa la distancia de la pendiente del lote respecto a la media",
+    x = "Temperatura (°C)", y = "Resistencia", color = "Lote"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+
 # Análisis del experimento papel
 
 ```{r, echo=FALSE}
@@ -488,26 +546,6 @@ Apesar de que se observe una pequeña interacción, no es tan fuerte como la que
 
 **Nota:** La ventaja de que la temperatura sea númerica y super lineal, es se puede usar para interpolar valores para cualquier temperatura.
 
-
-## Modelo completo para el experimento de papel
-
-Se tiene el siguiente modelo:
-
-
-$$y_{iTjkl} = \beta_0+\beta_1T+\alpha_i+\gamma_jT+\omega_iT+\delta_{k(i)}+\lambda_{k(i)}T+\varepsilon_{ijkl}$$
-donde:
-
-Usando tratamiento de referencia
-
-+ $\alpha_i:$ Efecto del i-ésimo método en el intercepto,con las retricciones $\alpha_1 = 0$ y que $\alpha_2 = \mu_{2,T=0}-\mu_{1,T=0}$, *La representación gráfica de estos efectos se encuentran en la sección de arriba*.
-
-+ $\beta_1:$ Pendiente de la temperatura.
-
-+ $\gamma_j;$ Efecto j-ésimo de interacción entre el método y temperatura, con la restricción $\gamma_1 = 0$, este significa cuánto aumenta la temperatura con respecto al método 1.
-
-
-+ $\delta_k:$ Efecto del lote 
-
 **Las ecuaciones de las rectas para cada método son las siguientes**
 
 **Método 1**
@@ -527,4 +565,118 @@ $\mu_{3,T}= (\beta_0+\alpha_3)+(\beta_1+\gamma_3)T$
 
 Note que mediante las restas de estas ecuaciones cuando $T = 0$, obtenemos los $\alpha_i$
 
+
+## Modelo completo para el experimento de papel
+
+Se tiene el siguiente modelo:
+
+
+$$y_{iTjkl} = \beta_0+\beta_1T+\alpha_i+\gamma_jT+\omega_iT+\delta_{k(i)}+\lambda_{k(i)}T+\varepsilon_{ijkl}$$
+donde:
+
+Usando tratamiento de referencia
+
++ $\alpha_i:$ Efecto del i-ésimo método en el intercepto,con las retricciones $\alpha_1 = 0$ y que $\alpha_2 = \mu_{2,T=0}-\mu_{1,T=0}$, *La representación gráfica de estos efectos se encuentran en la sección de arriba*.
+
++ $\beta_1:$ Pendiente de la temperatura.
+
++ $\gamma_j;$ Efecto j-ésimo de interacción entre el método y temperatura, con la restricción $\gamma_1 = 0$, este significa cuánto aumenta la temperatura con respecto al método 1. 
+
+
++ $\delta_k:$ Efecto del lote con respecto a la linea media del método al que corresponde, en el intercepto, el cuál se distribuye como $\delta_k~\sim\mathcal{N}(0,\sigma_\delta^2)$. *Recuerde que en la sección anterior hay una representación gráfica de este efecto*.
+
++ $\lambda_{k(i)}:$ Es el efecto de interacción entre lote y temperatura, el cual significa cuánto cambia la pendiente del k-ésimo lote con respecto a la pendiente general del i-ésimo método.Este se distribuye como  $\lambda_{k(i)}\sim\mathcal{N}(0,\sigma_\lambda)$
+
+
+### Sobre la interacción entre los factores aleatorios 
+
+Tenemos los siguientes casos
+
++ Si $\rho = 0$, entonces $\delta_k$ y $\lambda_{k(i)}$ se distribuyen de forma independiente.
+
+
++ $\rho \neq 0$, entonces $(\delta_k, \lambda_{k(i)}) \sim \mathcal{N}_2 \left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \boldsymbol{\Sigma} \right)$.
+
+*La matriz de covarianzas se contruye de la siguiente manera*
+
+$$\boldsymbol{\Sigma} = \begin{pmatrix} 
+\sigma_\delta^2 & \sigma_{\delta\lambda} \\ 
+\sigma_{\lambda\delta} & \sigma_\lambda^2 
+\end{pmatrix}$$
+
+
+Además de lo anterior tenemos lo siguiente:
+
+$$\rho = \frac{\sigma_{\delta\lambda}}{\sigma_\delta\sigma_\lambda} \implies\sigma_{\delta\lambda} = \rho\space\sigma_\delta\space\sigma_\lambda $$
+
+
+*A continuación se gráfica, como se ve* $\rho$ *según cada caso*
+
+```{r, echo=FALSE}
+library(mvtnorm)
+
+# Configuración de la matriz de gráficos (1 fila, 3 columnas)
+par(mfrow = c(1, 3), mar = c(1, 1, 3, 1))
+
+# Secuencia para los ejes X e Y
+x <- seq(-3, 3, length = 50)
+y <- seq(-3, 3, length = 50)
+mu <- c(0, 0)
+
+# Función para graficar la superficie según rho
+graficar_persp <- function(rho, titulo) {
+  # Definir matriz de varianza-covarianza
+  sigma <- matrix(c(1, rho, rho, 1), ncol = 2)
+  
+  # Calcular la densidad bivariada
+  z <- outer(x, y, function(x, y) dmvnorm(cbind(x, y), mean = mu, sigma = sigma))
+  
+  # Generar el gráfico 3D
+  persp(x, y, z, 
+        theta = 30, phi = 30, # Ángulos de visión
+        expand = 0.5, 
+        col = "lightblue", 
+        shade = 0.5,
+        ticktype = "detailed",
+        main = titulo,
+        zlab = "f(x,y)",
+        cex.main = 1.5)
+}
+
+# 1. Independencia: rho = 0
+graficar_persp(0, expression(rho == 0))
+
+# 2. Correlación Media: rho = 0.5
+graficar_persp(0.5, expression(rho == 0.5))
+
+# 3. Dependencia Fuerte: rho = 0.99
+# Nota: Usamos 0.99 porque 1 hace que la matriz sea singular y persp falle
+graficar_persp(0.99, expression(rho == 0.99))
+
+# Restaurar configuración original de par
+par(mfrow = c(1, 1))
+```
+
+
+
+### Resumen de pruebas de hipótesis a realizar 
+
+1. $H_0: \rho = 0$
+
+2. $H_0: \sigma_\lambda = 0$. En ocasiones si no hay correlación este paso puede omitirse.
+
+2.5. $H_0: \sigma_{\delta}:$ Hay que tener cuiadado, porque depende del sieño este no se puede eliminar
+
+3. $H_0: \gamma_j = 0$
+
++ Rechazo: Hay interacción entre método y temperatura, *Ver el gráfico de la sección de arriba*. 
+
++ No rechazo: No hay interacción entre método y temperatura ,*Ver el gráfico de la sección de arriba*. Luego de estos realizamos las hipótesis de los demás factores fijos $(H_0:\alpha_i = 0)$ Si son significativos realizamos los intervalos de confianza, si sucede el caso contrario se debe anailizar potencia.
+
+
+4. $H_0: \beta_1 = 0$
+
+
+
+*Nota: Cuando la diferencia es significativa, pero no relevante, esto se debe a la poca variabilidad y cuando una muestra es muy grande*
 
