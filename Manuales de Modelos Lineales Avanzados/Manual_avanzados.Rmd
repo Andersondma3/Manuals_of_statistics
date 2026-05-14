@@ -31,6 +31,20 @@ output:
 
 + Los efectos de los niveles escogidos son aleatorios en el sentido de que son una muestra de esa distribución de efectos.
 
+
+## Gráfico para el comportamiento de la respuesta entre lotes
+
+El código general de este gráfico es `qplot(X,Y,geom="boxplot")`, *a continuación se le da un ejemplo*
+
+```{r, warning=FALSE, message=FALSE}
+load("colorantes.Rdata")
+library(ggplot2)
+qplot(lote,prod,geom="boxplot",ylab="producción",data=base)
+```
+*Intepretación del gráfico:* Hay algunos lotes que tienen producciones muy bajas mientras que otros las tienen muy altas, aunque no interesa identificar cuáles son los lotes con producción más baja o más alta puesto que los lotes son aleatorios.
+
+
+
 ## Ejemplo de las escuelas 
 
 **ATENCIÓN AL SIGUIENTE EJEMPLO EXPUESTO EN CLASE**
@@ -77,11 +91,11 @@ par(mfrow = c(1, 1))
 
 **Negro:** La distribución de los grupos de una escuela pública.
 
-**Azul:** La distribución de los grupos de una escuela privada .
+**Azul:** La distribución de los grupos de una escuela privada.
 
-**Celeste:** La distribución de las escuelas públicas.
+**Celeste:** La distribución de las medias de las escuelas públicas.
 
-**Rojo:** La distribución de las escuelas privadas.
+**Rojo:** La distribución de las medias de las distribuciones de las escuelas privadas.
 
 *Unidades del nivel 1*
 
@@ -136,15 +150,15 @@ Cuando las unidades están en el nivel 1, los experimentos son como los del curs
 | * La variable dependiente se mide una vez por cada sujeto. | * La variable dependiente se mide más de una vez en la misma unidad de análisis. | * La variable dependiente se mide en muchos momentos a lo largo del tiempo, para cada unidad de análisis. |
 | * Las unidades de análisis se agrupan (clusters de unidades). | * La medición se realiza en varios niveles de un factor de medidas repetidas. | |
 
-# Diferencia entre un modelo con bloques y un modelo mixto.
+
+# Diferencias entre los diferentes tipos de modelos
+
+## Diferencia entre un modelo con bloques y un modelo mixto.
 
 Es un modelo mixto, cuando hay dos factores o más en el nivel 1, en un diseño de dos niveles o más. Por el contrario cuando hay dos niveles, pero el nivel 1 solo tiene un factor es un diseño de bloques. Además si hay un factor en el nivel dos, también hay que usar modelos mixtos.
 
-# Parcelas divididas
 
-Cuando el diseño es de dos niveles con un factor en cada nivel, al mismo se le puede llamar como parcelas divididas. Un ejemplo de esto sería un experimento que quiere comparar el crecimiento de dos especies de papá en dos tipos de clima. En donde se siembran dos especies de papas en fincas que se encunetran en un clima frió y en otras que tienen un clima caliente.
-
-# Diferencias entre modelo mixto y modelo lineal clásico.
+## Diferencias entre modelo mixto y modelo lineal clásico.
 
 + El modelo de regresión lineal simple requiere de formular muchos supuestos para que su uso sea adecuado.
 
@@ -155,9 +169,7 @@ Cuando el diseño es de dos niveles con un factor en cada nivel, al mismo se le 
 
 + Los Modelos Lineales Mixtos Generalizados (GLMM) incluyen técnicas de modelación no solo para variables continuas, sino también nominales, ordinales, conteos, respuestas asimétricas, entre otras.
 
-
-
-# Modelos lineales mixtos
+## Sobre los Modelos lineales mixtos
 
 Modelos para variables continuas en los que los residuos se distribuyen normalmente, pero podrían no ser independientes o no tener varianza constante.
 
@@ -166,10 +178,10 @@ El término “lineal” proviene del hecho de que estos modelos son lineales en
 El término “mixto” es debido a que las covariables pueden incluir un “mix” de efectos fijos y efectos aleatorios
 
 
-## Sobre los supuestos
+# Supuestos en los modelos mixtos
 
 
-Los modelos mixtos permiten manejar estructuras de variabilidad que no son homogéneas, por lo que se pueden usar cuando hay homocedasticidad. En un ANOVA no se necesita linealidad, en cambio cuando hay covaribales, variables numéricas como en regresión, en los modelos mixtos necesitamos linealidad. Si sucede el caso de que esta última no se da, debemos realizar una transformación. 
+Los modelos mixtos permiten manejar estructuras de variabilidad que no son homogéneas y homogénas (homocedasticidad), este último no es tan común en modelos mixtos. Con respecto al análisis de varianza (ANOVA) sabemos que este no necesita linealidad. Por otro lado sabemos que esto es distinto cuando el modelo contiene covariabales ó variables numéricas como en regresión, en el caso de los modelos mixtos necesitamos linealidad. Si sucede el caso no se cumple, debemos realizar una transformación. 
 
 En un caso extremo donde los datos se comporten de una forma muy extraña, lo que podemos hacer es convertir la variable continua en una forma categórica, de manera que se parte la variable continua y se forman las categorías con dichos intervalos. Además para los modelos mixtos el hecho de que las variables predictoras no estén correlacionadas, lo que conocemos en otros cursos como el supuesto de no multicolinealidad, para que así los errores estándar no se inflen y las variables puedan explicar adecuadamente el modelo.
 
@@ -218,7 +230,7 @@ $$V(Y|\text{escuela}) = V(error)$$
 
 **Existen dos en el ejemplo de las escuelas:**
 
-$V(\varepsilon):$ Esta corresponde a una varianza por cada escuela, pero si hay homocesasticidad habría solo una. En un caso extremo se puede tener $V(\varepsilon|\text{Pública}) \neq V(\varepsilon|\text{Privada})$
+$V(\varepsilon):$ Esta corresponde a una varianza por cada escuela, pero si hay homocedasticidad habría solo una. En un caso extremo se puede tener $V(\varepsilon|\text{Pública}) \neq V(\varepsilon|\text{Privada})$
 
 $V(\mu|\text{Tipo de escuela}):$ Hay dos una para la escuela pública y otra para la privada. De igual forma si hay homocedasticidad solo habría una, es decir $V(\mu|\text{Pública})=V(\mu|\text{Privada})$
 
@@ -237,9 +249,11 @@ $$V(Y) = \sigma_\delta^2+\sigma^2_\varepsilon$$
 
 *Nota*: Esta suma nos sirve para ver en terminos relativos (%), la variabilidad, normalmente se usa para dar conclusiones. De tal manera que podemos tener estos dos casos $\sigma_\delta^2 <\sigma^2_\varepsilon$ ó $\sigma_\delta^2 > \sigma^2_\varepsilon$. En palabras simples, nos sirve para buscar quien es el culpable de generar mayor variabilidad. *Ver en el índice el ICC sección 7.3*
 
+\newpage
+
 **A continuación se representan las distribuciones por medio de una figura **
 
-```{r, echo=FALSE, fig.width=7, fig.height=5.5}
+```{r, echo=FALSE}
 # 1. Configuracion para curvas "pegadas"
 set.seed(123)
 x <- seq(0, 50, length=500)
@@ -283,10 +297,10 @@ donde:
 
 ### ¿Cuándo se nos habla de verificar la normalidad a que se refiere?
 
-Se refiere a evaluar el supuesto de normalidad en la distribución  $Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$, la explicación de esta la puede encontratrar en la parte de arriba. Si tenemos muy pocos efectos en las muestra y queremos probar normalidad, la debemos asumir porque para probar esto se debe tener una cantidad considerable de observaciones. Sin emabargo podemos unir todos los residuales para probar normalidad en el caso de que se cumple el supuesto de *Homocedasticidad*
+Se refiere a evaluar el supuesto de normalidad en la distribución  $Y|i\sim N(\mu_i,\sigma^2_\varepsilon)$, la explicación de esta la puede encontrar en la parte de arriba. Si tenemos muy pocos efectos en las muestra y queremos probar normalidad, la debemos asumir porque para probar esto se debe tener una cantidad considerable de observaciones. Sin embargo podemos unir todos los residuales para probar normalidad en el caso de que se cumple el supuesto de *Homocedasticidad*.
 
 
-```{r, echo=FALSE, fig.width=8, fig.height=6}
+```{r, echo=FALSE}
 # 1. Parametros estadisticos
 x <- seq(10, 50, length=500)
 mu_global <- 32      
@@ -329,7 +343,7 @@ points(punto_x_obs, punto_y_obs, pch=19, col="black", cex=1)
 
 # Leyenda
 legend("topright", 
-       legend=c("Media Global (mu)", "Media Grupal (mu_i)", "Dato Observado"),
+       legend=c("Media Global (mu)", "Media Grupal (mu_i)", "Efecto aleatorio"),
        col=c("red", "blue", "black"), lwd=2, bty="n")
 ```
 
@@ -337,7 +351,8 @@ legend("topright",
 
 + El modelo tiene solo un coeficiente **fijo** que es el **intercepto** o media general, y tiene un componente aleatorio que son los efectos de las unidades del segundo nivel. 
 
-+ Interesa determinar si hay efecto de las unidades del segundo nivel, pero no interesa estimar la magnitud de los mismos ya que son solo una muestra de una población mayor de unidades infinitas.
++ Interesa determinar si hay efecto de las unidades del segundo nivel, pero no interesa estimar la magnitud de los mismos,
+ya que son solo una muestra de una población mayor de unidades infinitas.
 
 + La variancia de cualquier observación se obtiene a partir de dos fuentes: la de unidad de nivel 2 a unidad de nivel 2 (inter sujeto) y la residual (intra sujeto).
 
@@ -358,7 +373,7 @@ $$H_1: \sigma_i > 0 $$
 + Formalmente: Siendo $\sigma^2_\varepsilon$ la varianza dentro de los grupos, y siendo $\sigma_\delta^2$ la varianza entre los grupos, el coeficiente de correlación intraclase $(\rho_I)$ es:
 
 $$\rho_I = \frac{\sigma_\delta^2}{\sigma_\delta^2+\sigma^2_\varepsilon}$$
-Esto nos dice que porcentaje de varibilidad se debe a las unidades del nivel 2. Si hay **baja** variabilidad intra clase $\rho_I \to 0$, quiere decir que las unidades del segundo nivel son muy similares, por el contrario si $\rho_I \to 1$, nos esta diciendo que son muy difentes.
+Esto nos dice que porcentaje de varibilidad se debe a las unidades del nivel 2. Si hay **baja** variabilidad intra clase $\rho_I \to 0$, quiere decir que las unidades del segundo nivel son muy similares, por el contrario si $\rho_I \to 1$, nos esta diciendo que son muy diferentes.
 
 *A continuación se le presenta un ejemplo sobre un cálculo en r*
 
@@ -373,15 +388,15 @@ Si se requiere sacar un intervalo de confianza para las varianzas, se recomienda
 
 # Modelo con Interacción
 
-Una inconsistencia en el factor del nivel 2, es lo que nos sospecha que haya interacción
+Una inconsistencia en el factor del nivel 2, es lo que nos da la sospecha que haya interacción
 
-El efecto de la i-ésimo del factor del nivel 2 se denota con: $\tau_i$  
+El efecto del i-ésimo del factor del nivel 2 se denota con: $\tau_i$  
 
-El efecto del j-ésima unidad de nivel 2 se denota con: $\delta_j$
+El efecto aleatorio de la j-ésima unidad de nivel 2 se denota con: $\delta_j$ con su distribución $\delta_j\sim\mathcal{N}(0,\sigma_\delta)$
 
-El efecto de interacción para la i-ésimo factor en la  j-ésima unidad de nivel 2 se denota con: 
+El efecto de interacción para el i-ésimo factor en la  j-ésima unidad de nivel 2 se denota con: $(\tau\delta)_{ij}$ 
 
-*A continuación el modelo es explicado, basandosé en el ejemplo de las máquinas vistas en clase*
+*A continuación el modelo es explicado, basándose en el ejemplo de las máquinas vistas en clase*
 
 
 La k-ésima muestra dentro del j-ésimo día, para la i-ésima máquina se puede expresar como:
@@ -403,6 +418,8 @@ $$E[Y|ij] = \mu_{ij} = \beta_0+\tau_i+\delta_i+(\tau\delta)_{ij}$$
 + Los efectos de interacción son infinitos, por lo que son aleatorios.
  
 + $\tau_i$ es fijo, ya que este depende de la restricción que elijamos (suma nula o referencia)
+
+\newpage
 
 ## Gráficos de interacción
 
@@ -457,25 +474,25 @@ xyplot(Y ~ Maquina, groups = Dia, data = datos,
 
 **Gráfico de puntos para la interacción**
 
-El siguiente gráfico normalmente se utliza debido a que es una cantidad de observaciones pequeña.
+El siguiente gráfico normalmente se utiliza, debido a que es una cantidad de observaciones pequeña.
 
 En este experimento se tiene un estudio con 2 niveles con un factor en el nivel 1 , lo que corresponde a lo que conocemos como un diseño de bloques.
 
-Tenenos dos varianzas: $\sigma_{\varepsilon}$ varianza del error la cual corresponde, a la de muestra a muestra dentro de un día y una muestra. Por otro lado $\sigma_{\delta}$ varianza de los efectos del día.
+Tenenos dos varianzas: $\sigma_{\varepsilon}$ varianza del error, la cual corresponde a la de muestra a muestra dentro de un día y una observación. Por otro lado $\sigma_{\delta}$ varianza de los efectos aleatorios del día.
 
-**En ambos gráficos podemos observar que las maquinas no son consistentes (cuando hay interacción), debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción que las maquinas son bastante consistentes.**
+**En ambos gráficos podemos observar que las maquinas no son consistentes, esto indica que se sospecha de una posible interacción, debido a que estas no dan los mismos resultados a lo largo de los días. Por otro lado para el caso sin interacción se da cuando las maquinas son bastante consistentes, como se puede ver en el gráfico de la derecha.**
 
-```{r, echo=FALSE}
+```{r,echo=FALSE}
 p1 <- dotplot(Trig_NoInt ~ Maquina, groups = Dia, data = datos,
               type = "p", 
               auto.key = list(columns = 4, title = "Día", cex = 0.8),
-              main = "Escenario Sin interacción",
+              main = "Escenario Con interacción",
               ylab = "Triglicéridos (mg/dl)", xlab = "Máquina")
 
 p2 <- dotplot(Trig_Int ~ Maquina, groups = Dia, data = datos,
               type = "p", 
               auto.key = list(columns = 4, title = "Día", cex = 0.8),
-              main = "Escenario B Con interacción",
+              main = "Escenario B Sin interacción",
               ylab = "Triglicéridos (mg/dl)", xlab = "Máquina")
 
 # 3. Dibujar en mosaico (1 fila, 2 columnas)
@@ -488,7 +505,7 @@ print(p2, position = c(0.5, 0, 1, 1))
 dotplot(Trig_NoInt ~ Maquina|Dia,xlab="día",ylab="triglicéridos", data = datos)
 ```
 
-## Modelo con interacción en r {lm_int}
+## Modelo con interacción en r
 
 ```{r, echo=FALSE}
 trigli=c(142.3, 144.0, 148.6, 146.9, 142.9, 147.4, 133.8,
@@ -501,7 +518,7 @@ maq=factor(rep(c("A","B","C","D"),4,each=2))
 ```
 
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 library(lme4)
 mod1=lmer(trigli~1+maq+(1|dia)) #Código de modelo sin interacción
 mod1_int=lmer(trigli~1+maq+(1|dia)+(1|dia:maq))
@@ -518,7 +535,9 @@ H_0 &: \sigma^2_{\tau \delta} = 0 \quad \text{(No existe interacción)} \\
 H_1 &: \sigma^2_{\tau \delta} > 0 \quad \text{(Existe interacción significativa)}
 \end{aligned}$$
 
-Esta hipótesis se puede realizar mediante el método realizado en la sección de [La prueba de la razón de verosimilitud](#sig_fact)
+Esta hipótesis se puede realizar mediante el método realizado en la sección de la prueba de la razón de verosimilitud
+
+\newpage
 
 *En r se realiza de la siguiente manera*
 
@@ -529,8 +548,12 @@ anova(mod1, mod1_int, test = "LRT")
 ```
 
 ```{r}
-summary(mod1)
+VarCorr(mod1)
+(7.0879)^2
+(6.5494)^2
 ```
+
+
 **Observe que la variancia de día a día es 50.24 y la variancia residual es 42.89.**
 
 ## Esperanza marginal del factor de la unidad de nivel 2
@@ -539,7 +562,9 @@ En un modelo sin interacción podemos tener la siguiente esperanza:
 
 $$E[E[Y|ij]] = \mu_{i*} = \beta_0+\tau_i$$
 
-## Componenetes de la varianza 
+*Nota:* Recuerede que en un modelo com imteracción podemos hacer análsis de manera marginal.
+
+## Componentes de la varianza 
 
 
 Se consideran tres fuentes de variabilidad:
@@ -558,7 +583,7 @@ $$V(Y|i) = \sigma_i^2 = \sigma_{\delta}^2+ \sigma_{\tau\delta}^2+\sigma_\varepsi
 
 # Prueba de razón de verosimilitud {#sig_fact}
 
-Definición de la verosimilitud creada en la clase: *La verosimilitud es que tan creíble la estimación de un parámetro, basado en los datos de la muestra. Con el objetivo de dar una medida de la credibilidad de la estimación.*
+Definición de la verosimilitud creada en la clase: *La verosimilitud es que tan creíble es la estimación de un parámetro, basado en los datos de la muestra. Con el objetivo de dar una medida de la credibilidad de la estimación.*
 
 Esta nos sirve para probar la hipótesis relativa a la variancia del componente aleatorio de interacción: 
 $H_0:\sigma_{\delta}^2 = 0$ contra la alternativa: $H_1:\sigma_{\delta}^2 > 0$.
@@ -566,7 +591,7 @@ $H_0:\sigma_{\delta}^2 = 0$ contra la alternativa: $H_1:\sigma_{\delta}^2 > 0$.
 Aunque la hipótesis se plantea en términos de una restricción para el parámetro, hay que tener presente que lo que se compara es la calidad del ajuste obtenido con **dos modelos anidados**.
 La prueba de la razón de verosimilitud (LRT) equivale a la diferencia de las devianzas de los dos modelos que se comparan (la fórmula está más abajo). 
 
-El estadístico LRT usa como distribución de referencia aproximada una chi-cuadrado con grados de libertad equivalente a la diferencia en el número de parámetros de ambos modelos.
+El estadístico LRT usa como distribución de referencia aproximada una chi-cuadrado con grados de libertad, equivalente a la diferencia en el número de parámetros de ambos modelos.
 
 *A continuación se le presenta la fórmula*
 
@@ -589,9 +614,9 @@ donde:
 + $\frac{\mathcal{L}_{\omega}}{\mathcal{L}_{\Omega}}$ es la razón de las verosimilitudes **Esto es el LRT**
 
 
-En este caso el valor-p obtenido debe tomarse con cautela ya que el parámetro que se prueba está en el borde del dominio de posibles valores para el parámetro.
+En este caso el valor-p obtenido debe tomarse con cautela, ya que el parámetro que se prueba está en el borde del dominio de posibles valores para el parámetro.
 
-El valor-p será conservador en el sentido de que será mayor que el valor-p que se obtendría en simulaciones.
+El valor-p, será conservador en el sentido de que será mayor que el valor-p que se obtendría en simulaciones.
 
 En el peor de los casos el valor-p será el doble de lo que debería ser. 
 
@@ -616,6 +641,8 @@ Para el **modelo 1**:
 + 2 parámetros fijos($\beta_0,\beta_1)$
 
 + 2 parámetros aleatorios ($\sigma^2_\delta,\sigma^2_\varepsilon$)
+
+\newpage
 
 Para el **modelo 2**:
 
@@ -644,6 +671,47 @@ Con esto podemos concluir que las medias condicionales son iguales para los dos 
 Si yo quiero probar el coeficiente $\delta_j$, para ver si es importante que se encuentre en el modelo no lo puedo hacer con la función `drop1()`, así como se puede hacer con el factor del ejemplo anterior. Por ello para probar la hipótesis al inicio de esta sección se necesita el LRT. Normalmente este caso en específico se usa para observar si es necesario realizar o utilizar
 bloques en un experimento.
 
+
+
+## Prueba RMLE a mano 
+
+```{r, echo=FALSE}
+trigli=c(142.3, 144.0, 148.6, 146.9, 142.9, 147.4, 133.8,
+133.2, 134.9, 146.3, 145.2, 146.3, 125.9, 127.6,
+108.9, 107.5, 148.6, 156.5, 148.6, 153.1, 135.5,
+138.9, 132.1, 149.7, 152.0, 151.4, 149.7, 152.0,
+142.9, 142.3, 141.7, 141.2)
+dia=factor(rep(1:4,each=8))
+maq=factor(rep(c("A","B","C","D"),4,each=2))
+```
+
+
+El siguiente ejemplo se basa en el experimento de las maquinas
+
+**Queremos ver la significancia del factor maquina**, esto nos lleva a la siguiente hipótesis:
+
+$$H_0: \mu_{1\bullet} = \mu_{2\bullet} = \mu_{3\bullet} = \mu_{4\bullet}$$
+
+Con esta hipótesis queremos decir que si la media para los 4 días es igual sin importar la maquina.
+
+Realizandolo con la función `drop1`, obtenemos lo siguiente:
+
+```{r}
+mod1=lmer(trigli~1+maq+(1|dia))
+drop1(mod1, test = "Chisq")
+```
+Para obtener ese valor de `Pr(Chi)` de forma manual tenemos que realizar el siguiente proceso:
+
+```{r}
+mod1=lmer(trigli~1+maq+(1|dia), REML = F) #Modelo grande (con el factor máquina)
+mod2=lmer(trigli~1+(1|dia), REML = F) #Modelo pequeño (sin el factor máquina)
+LRT=-2*logLik(mod2)+2*logLik(mod1) #Resta de devianzias
+gl = 3 # Son trés grados de libertad, porque son 3 coef en el modelo
+p = pchisq(LRT,gl, lower.tail = F) #Se coloca el resultado en la prueba chi respectiva
+cat("Prueba de razón de verosimilitud", LRT, "\nProbabilidad de la prueba chi-cuadrado es", p)
+```
+
+
 # Estimación de modelos mixtos en r  
 
 ```{r}
@@ -666,7 +734,7 @@ Con respecto al modelo `REML`, debido a que en los modelos mixtos se utlilizan m
 
 ## Estimaciones manuales mediante un modelo lineal 
 
-Para poder explicar este tema se usa el siguiente caso de **Colorantes** en donde se tiene un solo factor aleatorio que son lotes de producción, y se quiere verificar si la variabiliad existente entre los promedios de los lotes es mucho mayor que la variabilidad del error.
+Para poder explicar este tema se usa el siguiente caso de **Colorantes** en donde se tiene un solo factor aleatorio que son lotes de producción, y se quiere verificar si la variabilidad existente entre los promedios de los lotes es mucho mayor que la variabilidad del error.
 
 ```{r, eval=FALSE}
 mod2=lm(prod~lote,data=base)
@@ -693,7 +761,7 @@ $$\begin{aligned}
 &E[CMRes] = \sigma^2_{\varepsilon}
 \end{aligned}$$
 
-**Se empieza estimando $\sigma^2_epsilon$ con el CMRes y se sustituye en la primera ecuación:**
+**Se empieza estimando $\sigma^2_{epsilon}$ con el CMRes y se sustituye en la primera ecuación:**
 
 $$\begin{aligned}
 &CMLote = CMRes+n\sigma^2_\delta
@@ -705,56 +773,20 @@ $$\begin{aligned}
 &\hat{\sigma^2_\delta}=\frac{CMLote-CMRes}{n}
 \end{aligned}$$
 
+\newpage
+
 ## Intervalos de confianza para las varianzas 
 
 ```{r, eval=FALSE}
 confint(mod1)
 ```
 
-*Nota:* Se le llama `sigma` a la desviación estándar del error, `sig01` es la del lote. Para obtener la varianza recuerde elevar al cuadrado los resultados. Además note que los intervalos no son simétricos, debido  a que el $\pm$ en el intervalo de confianza de varianzas no se utliza. Si el limite inferior da cero quiere decir que el interavlo no se tuvo que haber realizado, debido a que la varianza puede ser cero.
-
-**Simulación de los deltas** (Forma1)
-
-```{r}
-sd.lote=42 #sigma delta
-n=6 #Número de lotes
-med=1500
-ef.lote=rnorm(n,0,sd.lote) #simulación de los deltas
-(muj=med+ef.lote)
-```
-**Simulación de los deltas** (Forma2, un poco más directa)
-
-
-```{r}
-sd.lote1=42 #sigma delta
-n=6 # Número de lotes
-med=1500
-(muj.2=rnorm(n,med,sd.lote1)) #simulación de los deltas
-```
-
-
-**Simulación de la respuesta**
-
-```{r}
-n = 6
-sd.res = 49.51
-r = 5 # Número de observaciones por lote
-mujs = rep(muj,each=r)
-y = rnorm(n*r,mujs,sd.res)
-```
-
+*Nota:* Se le llama `sigma` a la desviación estándar del error, `sig01` es la del lote. Para obtener la varianza recuerde elevar al cuadrado los resultados. Además note que los intervalos no son simétricos, debido  a que el $\pm$ en el intervalo de confianza de varianzas no se utiliza. Si el limite inferior da cero, quiere decir que el intervalo no se tuvo que haber realizado, debido a que la varianza puede ser cero.
 
 **Obtener los efectos alteatorios ($\delta$) de forma directa**
 
 ```{r, eval=FALSE}
 deltas = ranef(mod)
-```
-
-
-Para crear la variable Lote (la variable del nivel 2), se realiza de la siguiente manera
-
-```{r, eval=FALSE}
-Lote2 = factor(rep(1:n, each = r))
 ```
 
 ### Código para las diferencias entre intervalos de confianza
@@ -766,44 +798,7 @@ diff(ci)
 ```
 
 
-Con esta diferencia podemos ver potencia,el ancho del intervalo. Para ello se tiene que simular varias veces y guardar esos resultados, para analizar cada uno de los casos anteriores. Para al final sacar el promedio del ancho del intervalo. De manera que cambiando `r` y `n` se llegue a un ancho del intervalo deseado.
-
-### Simulación de intervalos de confianza
-
-```{r}
-n=6       # Número de Lotes (Nivel 2)
-r=5         # Unidades por Lote (Nivel 1)
-k=10    # Cuántas de iteraciones
-
-sd.res=49.51
-muj=1500     # Media global de referencia
-anchos=numeric(k) # Vector vacío para guardar los resultados, de forma más rápida
-
-for(i in 1:k) {
-  # 1. Generamos los efectos de los lotes
-  # Suponemos una desviación estándar entre lotes 
-  sd.lote=15 
-  efectos_lote=rnorm(n, 0, sd.lote)
-  
-  # 2. Generamos la respuesta 
-  mujs=rep(muj + efectos_lote, each = r)
-  y=rnorm(n * r, mujs, sd.res)
-  Lote2=factor(rep(1:n, each = r))
-  
-  # 3. Ajustamos el modelo y calculamos el IC
-  # Se usa Wald y parm para que sea rápido en las 100 iteraciones
-  mod1.3=lmer(y ~ 1 + (1|Lote2), control = lmerControl(calc.derivs = FALSE))
-  CI=confint(mod1.3, parm = "(Intercept)", method = "Wald")
-  
-  # 4. Guardamos la diferencia (el ancho)
-  anchos[i]=diff(as.vector(CI))
-}
-
-promedio_ancho=mean(anchos)
-
-print(c("El promedio del ancho es",round(promedio_ancho,3)))
-```
-
+Con esta diferencia podemos ver potencia,el ancho del intervalo. Para ello se tiene que simular varias veces y guardar esos resultados, para analizar cada uno de los casos anteriores. Para al final sacar el promedio del ancho del intervalo. De manera que cambiando `r` y `n` se llegue a un ancho del intervalo deseado. *Se encuentra una simulación de esto en la última sección*.
 
 # Intervalos de confianza para las diferencias de diferentes categorías
 
@@ -818,7 +813,7 @@ Estos intervalos los podremos realizar, siempre y cuando el modelo que estemos a
 Para este tema usaremos el modelo **sin interacción** presentado en la sección de Modelo con interacción en r
 
 ```{r}
-summary(mod1)
+fixef(mod1)# Se extraen los efectos fijos del modelo
 ```
 Observe que `maqB = 1.8`, esto quiere decir que la maquina B es 1.8 puntos mayor que la máquina A, esto es debido a que estamos con el modelo de tratamiento de referencia y esa medida corresponde al efecto de la maquina B que se calcula de la siguiente manera $\alpha_b = \mu_b-\mu_a$. Es importante resaltar que la máquina que tiene menor media es la D. Recuerde que la restricción de referencia es $\alpha_1 = 0$
 
@@ -826,13 +821,13 @@ Observe que `maqB = 1.8`, esto quiere decir que la maquina B es 1.8 puntos mayor
 confint(mod1)
 ```
 
-**Al observar el intervalo de 95% de confianza se tiene que la desviación estándar de día a día está entre 2.9 y 15.7. Esto confirma que esta fuente de variabilidad es importante. Por lo tanto, hay evidencia que hay fuentes de variabilidad que deben revisarse para que este modelo de espectofotómetro funcione mejor. Se esperaría mayor consitencia de uno a otro día.**
+**Al observar el intervalo de 95% de confianza se tiene que la desviación estándar de día a día está entre 2.9 y 15.7. Esto confirma que esta fuente de variabilidad es importante. Por lo tanto, hay evidencia que hay fuentes de variabilidad que deben revisarse para que este modelo de espectofotómetro funcione mejor. Se esperaría mayor consistencia de uno a otro día.**
 
 ## Hipótesis sobre la diferencias entre categorías
 
 Basado en el mismo ejemplo de la sección anterior queremos probar lo siguiente:
 
-$$H_0:\alpha_i = 0 \space \forall_i \text{ ó }  \alpha_2 = \alpha_3 = \alpha_3$$
+$$H_0:\alpha_i = 0  \space \forall_i \text{ ó } \space \alpha_2 = \alpha_3 = \alpha_3$$
 La función `drop1` nos sirve para probar si las medias de las 4 maquinas son iguales que es lo mismo que probar si los efectos de las 4 maquinas son iguales a cero.
 
 ```{r}
@@ -856,23 +851,43 @@ Restamos las devianzas de los modelos y ese valor lo colocamos en el siguiente c
 
 ## Intervalos de confianza mediante la función emmeans
 
-**Correción de Bomferroni**: El profesor recomienda realizar este ya que es más seguro, debido a que se trata de un modelo mixto
+**Correción de Bomferroni**: El profesor recomienda realizar este ya que es más seguro, debido a que se trata de un modelo mixto.
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 library(emmeans)
 em.mod1=emmeans(mod1,pairwise~maq,adjust="bonferroni")
 #emmeans(mod1,pairwise~factor_fijo,adjust="bonferroni")
-em.mod1
+em.mod1$contrasts
 ```
+
+### Intervalos de confianza cuando hay interacción 
 
 
 El `p-value` se compara contra $\alpha$, ya que la función hace la correción de una vez.
 
+```{r, eval=FALSE}
+em.mod1=emmeans(mod1,pairwise~maq|dia,adjust="bonferroni")
+#emmeans(mod1,pairwise~factor_fijo|otro_factor,adjust="bonferroni")
+#factor_fijo|otro_factor son las comparaciones considerando el otro factor
+```
+
+
 **Tuckey**
 
-```{r, echo=FALSE}
+```{r}
 em.mod2=emmeans(mod1,pairwise~maq) #Realizados mediante prueba tuckey
+em.mod2$contrasts
 ```
+Observe que el `p-value` cambia
+
+### Intervalos de confianza para diferencias de factores fijos sin interacción 
+
+```{r, eval=FALSE}
+em.mod1=emmeans(mod1,pairwise~maq,adjust="tuckey")
+#Intervalo par diferencias entre máquinas
+```
+
+
 
 ## Comparaciones para el nivel de significancia $\alpha$ cuando se usa emmeans (Bonferroni)
 
@@ -881,6 +896,7 @@ em.mod2=emmeans(mod1,pairwise~maq) #Realizados mediante prueba tuckey
 | :--- | :---: | :---: |
 | **Una cola** | $\frac{p}{2} < \alpha$ ó $p < 2\cdot\alpha$ | $p < \frac{\alpha}{d}$ |
 | **Dos colas** | $p < \alpha$ | $p < \frac{\alpha}{2d}$ |
+
 
 
 ### Proceso manual para la creación de intervalos de confianza
@@ -927,10 +943,8 @@ round(p*12,3) # Estas son las probabilidad que tira el emmeans
 
 ```{r}
 # Recuerde que el número de diferencias es 6 en este caso
-print("Comparación de dos colas")
-print(p < 0.05/12)
-print("Comparación de una colaa")
-print(p < 0.05/6)
+cat("Comparación de dos colas", p < 0.05/12 )
+cat("\nComparación de una cola",p < 0.05/6)
 ```
 
 
@@ -938,7 +952,7 @@ print(p < 0.05/6)
 
 **Podemos extraer los valores estimados de la función `emmeans`, para mejorar los intervalos de confianza**
 
-Podemos mejorar los intervalos, debido a que la función `mmeans`, toma en cuenta todas las diferencias posibles. Sin emabargo no todas las diferencias son significativas, por lo que se necesita aplicar el siguiente proceso para mejor su precisión.
+Podemos mejorar los intervalos, debido a que la función `emmeans`, toma en cuenta todas las diferencias posibles. Sin embargo, no todas las diferencias son significativas, por lo que se necesita aplicar el siguiente proceso para mejor su precisión.
 
 
 ```{r}
@@ -952,100 +966,834 @@ round(ic,3)
 
 
 
-# Simulación del experimento de las maquinas
 
-Esta simulación se realizó con el ejemplo de las maquinas vistó en clase
 
-## Simulación de los efectos
+
+
+
+# Parcelas divididas
+
+Cuando el diseño es de dos niveles con un factor en cada nivel, al mismo se le puede llamar como parcelas divididas. Un ejemplo de esto sería un experimento que quiere comparar el crecimiento de dos especies de papa en dos tipos de clima. En donde se siembran dos especies de papas en fincas que se encuentran en un clima frío y en otras que tienen un clima caliente.
+
+Aspectos importantes de este diseño:
+
++ El factor que clasifica a los bloques es el factor superior o factor de parcela.
+
++ El factor cuyos niveles están dentro del bloque es el factor de subparcela.
+
++ Este tipo de diseños se analizan con el enfoque de modelos mixtos, donde el efecto del bloque se considera aleatorio pues los bloques se extraen de una población mayor de bloques.
+
++ Estos diseños nacen en Agronomía y literalmente obedecen a una parcela agrícola que se divide. 
++ *Cuando se trata de un diseño en otro contexto se llama simplemente diseño multinivel con un factor en el nivel 1 y factor en el nivel 2.*
+
+\newpage
+
+## Cambio de categórica a numérica
+
+Observe el siguiente ejemplo basado en el experimento del papel
+
+```{r, echo=FALSE, warning=FALSE}
+library(gridExtra)
+# 1. Simulación con "Pico" en 170 y caída en 180
+set.seed(303)
+n_puntos <- 5
+metodos <- c("Método A", "Método B")
+temperaturas <- c("150°C", "160°C", "170°C", "180°C")
+
+datos_pico <- expand.grid(
+  Repeticion = 1:n_puntos,
+  Metodo = metodos,
+  Temperatura = factor(temperaturas, levels = temperaturas)
+)
+
+# Definimos los niveles de resistencia para crear el efecto visual:
+# Subida constante hasta 170 y caída fuerte en 180
+efecto_temp <- c("150°C" = 15, "160°C" = 18.5, "170°C" = 10, "180°C" = 12)
+
+# Generar la respuesta con el pico y ruido
+datos_pico$Resistencia <- efecto_temp[as.character(datos_pico$Temperatura)] + 
+  (as.numeric(datos_pico$Metodo) * 4) + # El Método B está por encima del A
+  rnorm(nrow(datos_pico), sd = 1.2)
+
+# 2. Gráfico Izquierda: Puntos agrupados (Dotplot)
+p1 <- dotplot(Resistencia ~ Temperatura, groups = Metodo, data = datos_pico,
+              pch = 16, cex = 0.85,
+              auto.key = list(columns = 2, title = "Método", cex = 0.8),
+              ylab = "Resistencia (kg/cm)", xlab = "Temperatura")
+
+# 3. Gráfico Derecha: Curvas con "Punto Óptimo"
+# Usamos un span pequeño (0.4) para que la curva capture el quiebre drástico
+p2 <- xyplot(Resistencia ~ Temperatura, groups = Metodo, data = datos_pico,
+             type = c("p", "smooth"), 
+             lwd = 3, 
+             span = 0.4, 
+             auto.key = list(columns = 2, title = "Método", cex = 0.8),
+             ylab = "Resistencia (kg/cm)", xlab = "Temperatura")
+
+# 4. Mostrar en mosaico
+grid.arrange(p1, p2, ncol = 2)
+```
+A la izquierda podemos ver los resultados del experimento, sin embargo podemos ver que la variable temperatura se encuentra como una categoría. Lo que se nos viene la siguiente pregunta: *¿Podemos convetirla en una variable numérica?*, por lo que tratamos de unir todas las respuesta, como lo podemos observar en el gráfico de la derecha, esto nos puede ocasionar un problema, ya que al realizar esto, estaríamos ignorando el cumplimiento del supuesto de linealidad, debido a que este no se cumple, no podemos convertir la variable *Temperatura* en una variable numérica. 
+
+\newpage
+
+**Observe esta otra situación:**
+
+```{r, echo=FALSE, warning=FALSE}
+
+# 1. Simulación de datos con 2 métodos y 4 temperaturas
+set.seed(789)
+n_puntos <- 5
+metodos <- c("Método A", "Método B")
+temperaturas <- c("150°C", "160°C", "170°C", "180°C")
+
+datos_exp <- expand.grid(
+  Repeticion = 1:n_puntos,
+  Metodo = metodos,
+  Temperatura = factor(temperaturas, levels = temperaturas)
+)
+
+# Generar Resistencia: Método B es un poco más resistente que A
+# y ambos suben con la temperatura
+datos_exp$Resistencia <- 15 + 
+  (as.numeric(datos_exp$Metodo) * 5) + 
+  (as.numeric(datos_exp$Temperatura) * 3) + 
+  rnorm(nrow(datos_exp), sd = 0.8) # sd pequeña para que los puntos se vean "muy unidos"
+
+# 2. Gráfico Izquierda: Puntos agrupados por Método (Muy unidos)
+p1 <- dotplot(Resistencia ~ Temperatura, groups = Metodo, data = datos_exp,
+              pch = 16, cex = 0.85,
+              auto.key = list(columns = 2, title = "Método", cex = 0.8),
+              ylab = "Resistencia (kg/cm)", xlab = "Temperatura")
+
+# 3. Gráfico Derecha: Puntos y Líneas de tendencia por Método
+p2 <- xyplot(Resistencia ~ Temperatura, groups = Metodo, data = datos_exp,
+             type = c("p", "a"), lwd = 2,
+             auto.key = list(columns = 2, title = "Método", cex = 0.8),
+             ylab = "Resistencia (kg/cm)", xlab = "Temperatura")
+
+# 4. Mostrar en mosaico
+grid.arrange(p1, p2, ncol = 2)
+```
+
+Para este caso, sí podemos convertir la temperatura en una variable categórica en una variable numérica debido a que parace que no hay problemas con el supuesto de linealidad.También es importante ver el comportamiento inverso, si los datos se conforman en grupos y no de manera continua, por lo que podemos realizar el cambio de una variable numérica a una categórica.
+
+
+## Sobre el diseño de bloques y parcelas 
+
+La ventaja de usar parcelas dividas o bloques, es que nosotros podemos medir cuanta variabilidad están ocasionando los bloques y parcelas, por lo que esta variabilidad la podemos extraer y con esto al final desinflamos la variabilidad, con esto podemos obtener predicciones más precisas. Por otro lado, cuando el diseño es totalmente aleatorio esa variabilidad de bloque a bloque no la puedo extraer, por lo que no la puedo eliminar del modelo, como consecuencia toda esa variabilidad no cuantificada se dirige a la varibilidad del error. También si hay una varianza del error mayor, esto nos obliga a utlizar una mayor cantidad de muestra para observar resultados en nuestro experimento.
+
+
+# Diseños multinivel
+
+## Diseño con 2 niveles y factor fijo en ambos niveles
+
+*Un fabricante de papel está interesado en tres métodos para preparar la pulpa y cuatro temperaturas de cocción de la pulpa. Aunque la temperatura es una variable continua, solo se van a estudiar 4 temperaturas.*
+
+*El fabricante desea estudiar el efecto del método y de la temperatura sobre la resistencia a la tensión del papel, que es el esfuerzo máximo a tensión obtenido durante una prueba hasta la ruptura bajo unas condiciones prescritas. El esfuerzo es expresado como la fuerza por unidad del ancho de la muestra puesta a prueba, medido en kg/cm. *
+
+*El experimento se lleva a cabo de la siguiente forma:*
+
++ *Produce tres lotes de pulpa con cada uno de los tres métodos que está estudiando en un orden aleatorio. En total produce 9 lotes de pulpa. *
+
++ *Cada vez que produce un lote lo divide en cuatro partes o muestras y realiza la cocción de cada muestra a una temperatura diferente.*
+
+Además es importante resaltar que este tipo de diseño es un diseño de parcelas dividas.
+
+1. Recordar realizar el análisis gráfico de interacción mediante el gráfico `xyplot()`
+
+*Ejemplo de código*
+
+```{r, eval=FALSE}
+library(lattice)  
+xyplot(res ~ metodo, groups = temp,type="a",auto.key=list(columns=4),
+       xlab="método",ylab="resistencia",data=base)
+```
+
+2. Realizar el modelo con la interacción
+
+
+```{r, include=FALSE}
+setwd("~/GitHub/Apuntes-Modelos-lineales-Avanzados/Manuales de Modelos Lineales Avanzados")
+load("papel.Rdata")
+str(base)
+base$metodo = factor(base$metodo)
+levels(base$metodo)=c("M1","M2","M3")
+base$temp = factor(base$temp)
+base$lote=factor(base$lote)
+```
+
+
+```{r, }
+library(lme4)
+mod1=lmer(res~metodo*temp+ (1|lote),data=base) #Lote es aleatorio y porque tiene diferentes observaciones adentro
+```
+
+3. Probar la hipótesis de interacción mediante la función `drop1`
 
 ```{r}
-sd.dia=7.1 # desviación estándar del día
-n=4 #número de días
-ef.dia=rnorm(n,0,sd.dia)
-med=147
-muj=med+ef.dia
-mean(muj)
+drop1(mod1,test="Chisq") #Se usa drop1, porque metodo y temp son fijos
 ```
-## Simulación de la respuesta con las medias
 
+*Nota:* Analice si existen valores que pueden estar afectando la hipótesis de interacción, por medio del gráfico `xyplot()`. Lo mismo lo puede analizar con el siguiente código:
+
+```{r, eval=FALSE}
+which(base$res == min(base$res)) #Ubicar el valor mínimo o máximo
+base2 = base[-26,] # Eliminar el valor
+mod2=lmer(res~metodo*temp+(1|lote),data=base2) #Hacer el modelo con la nueva base
+drop1(mod2,test="Chisq") #Probar de nuevo la hipótesis de interacción
+```
+
+### Análisis de diferencias de medias con ememeans
+
+
+1. Realizar la hipótesis de diferencias entre medias
+
+```{r}
+library(emmeans)
+a = emmeans(mod1, pairwise~temp|metodo, adjust="bonferroni")$contrasts
+# El código de arriba nos indica que se van a comparar las temperaturas dentro de cada método.
+# Esto se lo indicamos a r por medio del temp|metodo, si no hay interación se quita el método.
+a
+```
+
+Del resultado anterior podemos concluir lo siguiente:
+
+$$
+\begin{aligned}
+\text{Método 1} &: \quad \mathbf{200} \quad \underline{225 \quad 250 \quad 275} \\
+\text{Método 2} &: \quad \mathbf{200} \quad \underline{225 \quad 250 \quad 275} \\
+\text{Método 3} &: \quad \underline{200 \quad 225 \quad 250} \quad \mathbf{275}
+\end{aligned}
+$$
+
+
+donde la linea $\underline{\text{temperatura}}$, presenta que no hubieron diferencias signifiactivas entre ellas.
+
+Lo anterior tiene implicaciones en las conclusiones depende el método que se escoja. Por lo tanto **si hay que escoger una temperatura escogemos al 275**
+
+
+Ahora realizando el análisis desde el otro punto de vista, **desde cuál método escojo según la temperatura**
 
 
 ```{r}
-sd.res = 6.55 #desviación estándar observada de la respuesta
-n = 4 #número de observaciones
-r = 8 #número de replicas por día
-mujs = rep(muj,each=r) #simulamos la medias de cada uno de los días 
-y = rnorm(n*r,mujs,sd.res) # simulación de la respuesta 
-Dia = factor(rep(1:n, each = r)) # creamos la nueva variable día 
-tapply(y,Dia, mean) # cálculo de medias por día 
+b = emmeans(mod1, pairwise~metodo|temp, adjust="bonferroni")$contrasts
+b
 ```
-*Nota:* Conforme que `n` aumenta la media será más parecida a la que colocamos, en este caso usted puede colocar `n = 60` y lo que sucederá es que la media de los `mujs`, será casi igual a la que usted proporcionó.
+$$\text{Temp 200} \quad \underline{M1 \quad M2 \quad M3}$$
 
-##  Simulación de la respuesta con los efectos
-
-```{r}
-n = 6 #número de días
-k = 4 # número de máquinas
-r = 16 #número de replicas por día, este debe ser múltiplo de k
-alfa=c(0,-7.5,7.5,0) #efectos observados 
-alfai=rep(alfa,each=r/k,n) #Número de observaciones entre 4 días, n es el número de días
-```
-
-**Luego de simular los efectos de cada día, simulamos la respuesta y le sumamos los efectos.**
+$$\text{Temp 225} 
+\begin{cases} 
+\underline{M_3 \quad M_1} & \text{No hay diferencia} \\
+\underline{M_1 \quad M_2} & \text{No hay diferencia} \\
+M_3 \neq M_2 & \text{Diferencia significativa}
+\end{cases}$$
 
 
-```{r}
-y = rnorm(n*r,mujs,sd.res) #simulación de la respuesta 
-y1 = y+alfai # respuesta más el efecto simulado
-```
+$$\text{Temp 250} \quad \underline{M1 \quad M2 \quad M3}$$
 
-**Creamos una nueva variable día y una nueva variable maquina**
-
-```{r}
-maquina = factor(rep(1:k,each = r/k,n)) #Creación de la variable máquina
-Dia = factor(rep(1:n, each = r))# Creación de la variable Día 
-```
-
-**Se calculan la medias por maquina en cada día**
-
-```{r}
-tabla = tapply(y1, list(Día = Dia, Máquina = maquina), mean)
-print(tabla)
-```
+$$\text{Temp 275} \quad \underline{M1 \quad M2 \quad M3}$$
 
 
-**Realizados un nuevo modelo con las variables creadas anteriormente**
+Esto nos lleva a que podemos escoger cualquier método para las temperaturas 200, 250, 275. En cambio para la temperatura debemos escoger el método uno o dos ya que  este último es el mayor en esta temperatura, esto lo puede verificar viendo el `estimate`, para la temperatura 225.Sin embargo no tiene diferencias significativas con el método uno entonces da lo mismo escoger uno o dos. También lo podemos analizar mediante el gráfico `xyplot()`.
 
-```{r}
-mod2 = lmer(y1~maquina+(1|Dia))
+**Si quiero usar el resultado anterior, pero con dos colas**
+
+```{r, eval=FALSE}
+p_valores <- as.data.frame(a)$p.value # Extracción del p valor
+2*p_valores < 0.05 #Para comparar con una cola
 ```
 
 
 ```{r}
-summary(mod2)
+ic = confint(a)
+ic
 ```
+
+### Corrección de intervalos de confianza
+
+Como la función `emmeans` usa un nivel de significancia global, estos intervalos son más anchos. Para ello debemos reconstriurlos tomando en cuenta solo aquellas diferencias que son significativas. Esto lo debemos realizar para observar si esa diferencias es relevante para nuestro estudio u objetivo.
+
+Para realizar ese proceso tome como ejemplo, los coeficientes del siguiente modelo:
+
+
+```{r}
+round(summary(mod1)$coef[,1],2)
+```
+
+*Nota:* Recuerede que este análisis es marginal, solo para las temperaturas. Además utilice la función `contrasts(variable)`, para guiarse al momento de construir los vectores.
+
+
+```{r}
+c=summary(mod1)$coef[,1]
+c200=c(1,0,0,0,0,0,0,0,0,0,0,0)
+c225=c(1,0,0,1,0,0,0,0,0,0,0,0)
+c250=c(1,0,0,0,1,0,0,0,0,0,0,0)
+c275=c(1,0,0,0,0,1,0,0,0,0,0,0)
+c225.200=c225-c200
+c250.200=c250-c200
+c275.200=c275-c200
+c250.225=c250-c225
+c275.225=c275-c225
+c275.250=c275-c250
+cont=cbind(c225.200,c250.200,c275.200,c250.225,c275.225,c275.250)
+L=t(cont)%*%c
+ee=sqrt(diag(t(cont)%*%vcov(mod1)%*%cont))
+t=L/ee
+round(pt(t,18,lower.tail = F),5)
+```
+```{r}
+t = qt(1-0.05/12,18) # recuerde que el número de diferencias es 6, por lo que estamos haciendo intervalos de una cola 
+ic = cbind(L-t*ee,L+t*ee)
+round(ic,3)
+```
+## Diseño con 3 niveles
+
+Como variante del ejercicio anterior (experimento papel), suponga que la capacidad de la planta solo permite realizar 15 corridas por día y se sospecha que de un día a otro se pueden experimentar diferencias en la resistencia. Entonces el fabricante decide considerar los días como bloques y corre una réplica en cada uno de tres días. Lleva a cabo el experimento así:
+
++ Cada día  produce tres lotes de pulpa, cada lote con uno de los tres métodos que está estudiando en un orden aleatorio.
+
++ Cada lote se divide en cuatro partes o muestras y realiza la cocción de cada muestra con una temperatura diferente, asignada aleatoriamente.
+
+
+```{r, include=FALSE}
+load("papel2.Rdata")
+str(base)
+base$dia = factor(base$dia)
+base$metodo = factor(base$metodo)
+base$lote=factor(base$lote)
+base$lote1=factor(base$lote1)
+levels(base$metodo)=c("M1","M2","M3")
+base$temp = factor(base$temp)
+```
+### Gráfico de interacción
+
+```{r}
+xyplot(res ~ metodo|dia, groups = temp,type=c("p","a"),auto.key=list(columns=4),
+       xlab="método",ylab="resistencia",data=base)
+```
+
+### Creación del modelo en r 
+
+
+```{r, message=FALSE}
+#Estos dos códigos son los mismo
+mod1=lmer(res~metodo*temp+(1|dia/lote1),data=base)
+mod2 =lmer(res~metodo*temp+(1|dia)+(1|lote1), data = base) 
+```
+
+**Código para extraer las varianzas de los factores aleatorios**
+
+```{r}
+VarCorr(mod2)
+```
+
+**Hipótesis de interacción**
+
+```{r, message=FALSE}
+drop1(mod2,test="Chisq")
+```
+
+Como no hay interacción podemos realizar comparaciones marginales, es decir podemos comparar los métodos sin importar la temperatura o viceversa. Además nos pasamos un modelo que asume que no hay interacción.
+
+
+# Diseños Anidados
+
+*Esta sección se basa en el siguiente ejmplo*
+
+Una compañía manufacturera tiene tres escuelas de mecánica regionales, una en cada una de sus regiones de operación. Cada escuela tiene dos instructores que dan cursos de tres semanas a 15 mecánicos aproximadamente. La compañía está interesada en conocer el efecto de la escuela (factor A) y el instructor (factor B) en el aprendizaje logrado. Se hace un experimento en el que se forman grupos en cada región y se asigna cada grupo a uno de los instructores.  A cada instructor se le asignan dos grupos. 
+
+$$\text{Estructura del Experimento} 
+\begin{cases} 
+\text{Nivel 3 (Escuela)} & \to \text{Factor Principal (Regional)} \\
+\text{Nivel 2 (Instructor)} & \to \text{Anidado en Escuela} \\
+\text{Nivel 1 (Grupo)} & \to \text{Unidad Observacional (Mecánicos)} 
+\end{cases}$$
+
+
+## Definición de diseño a anidado
+
+En un diseño anidado, los niveles de un factor (el anidado) son únicos para cada nivel del factor superior. Esto significa que el *Instructor 1* de la Escuela A no es la misma persona que el *Instructor 1* de la Escuela B; comparten un nombre o etiqueta, pero son unidades distintas. Si son identicos en todos los de niveles de un factor no es anidado.
+
 ```{r, echo=FALSE}
-trigli=c(142.3, 144.0, 148.6, 146.9, 142.9, 147.4, 133.8,
-133.2, 134.9, 146.3, 145.2, 146.3, 125.9, 127.6,
-108.9, 107.5, 148.6, 156.5, 148.6, 153.1, 135.5,
-138.9, 132.1, 149.7, 152.0, 151.4, 149.7, 152.0,
-142.9, 142.3, 141.7, 141.2)
-dia=factor(rep(1:4,each=8))
-maq=factor(rep(c("A","B","C","D"),4,each=2))
-sd.res = 6.55
-n = 4
-r = 8
-mujs = rep(muj,each=r)
-y = rnorm(n*r,mujs,sd.res)
-Dia = factor(rep(1:n, each = r))
-alfa=c(0,-7.5,7.5,0)
-(alfai=rep(alfa,each=r/4,n))
-y1 = y+alfai
-tapply(y,Dia, mean)
+load("escuelas.Rdata")
+base$escuela=factor(base$escuela)
+base$instructor=factor(base$instructor)
+base$instructor1=factor(base$instructor1)
+levels(base$escuela)=c("Región K","Región D","Central")
 ```
+
+
+
+### Gráfico para representar gráficamente los datos y observar variabilidad
+
+```{r}
+dotplot(puntaje ~ instructor | escuela,xlab="instructor",
+layout = c(3,1),data=base)
+```
+
+
+*Nota:* El `layout` normalmente se pone en lugar del 3, la cantidad de columnas que se quieren ver.
+
+Debido a que este diseño es anidado, **no se analiza la interacción**, porque la interacción compara dos niveles (los mismos dos niveles), en cada nivel del otro factor, esto es debido a que todos son diferentes en cada uno de los niveles.
+
+La cantidad de niveles se debe analizar dentro de cada factor, en el ejemplo anterior se debe analizar dentro de cada región, por lo que en este caso hay 2 por región.
+
+*Observe el siguiente gráfico, para observar las diferencias entre escuelas*
+
+```{r}
+bwplot(puntaje~escuela,xlab="escuela",ylab="puntaje",data=base)
+```
+
+**Se nota que algunas escuelas tienen puntajes promedio más altos que otras, por lo que sí se esperaría un efecto de la escuela en el aprendizaje. En particular, se notan mayores diferencias entre la escuela Central y Región K. Sin embargo, aquí no se está aislando la variabilidad que producen los instructores, lo que hace que esas diferencias no sean tan claras.**
+
+### De un diseño anidado  a un multinivel
+
+*En un país extremadamente grande habián muchas escuelas de intructores y se selccionan 3 escuelas. Además se quiere generalizar el estudio para todas las escuelas, por lo que me interesa es observar la variabilidad entre estas. Dentro de cada escuela, hay una cantidad considerable de intructores, así que se seleccionaron en cada una de las escuelas elegidas anteriormente dos intructores, por lo que estos ya son una muestra del total de instructores y cada uno de esos dos intructores tiene dos grupos, los cuales son los que voy a observar para el estudio.*
+
+Note que no hay factores fijos, por lo que es  un diseño de dos niveles sin factores.
+
+Lo anterior es un ejemplo de un diseño multinivel, debido a que mi interés es ver la variabilidad entre escuelas.
+
+
+## Modelo del diseño anidado
+
+$$\mu_{ij} = \mu+\alpha_1C_1+\alpha_2C_2+\beta_{2(1)}B_{21}+\beta_{2(2)}B_{22}+\beta_{2(3)}B_{23}$$
+donde:
+
++ $\alpha_1$, $\alpha_2$, es el efecto de la región (escuela), la cual tiena la restricción $\alpha_3 = - \alpha_1-\alpha_2$ 
+
++ $\beta_{2(1)}$, $\beta_{2(2)}, \beta_{2(3)}$, es el efecto del instructor dentro de cada región. Las restricciones de cada nivel de forma resumida es $\beta_{2(i)} = -\beta_{1(i)}$
+
+*A continuación se le presentan las variables auxiliares*
+
+$$\mathbf{C} = \begin{array}{c|ccc}
+ & C_{1} & C_{2}  \\
+ \hline
+\text{Reg 1} & 1 & 0 \\
+\text{Reg 2} & 0 & 1 \\
+\text{Reg 3} & -1 & -1
+\end{array}
+\quad , \quad
+\mathbf{B} = \begin{array}{c|ccc}
+ & B_{21} & B_{22} & B_{23} \\
+\hline
+\text{I}_{1(1)} & -1 & 0 & 0 \\
+\text{I}_{2(1)} & 1 & 0 & 0 \\
+\text{I}_{1(2)} & 0 & -1 & 0 \\
+\text{I}_{2(2)} & 0 & 1 & 0 \\
+\text{I}_{1(3)} & 0 & 0 & -1 \\
+\text{I}_{2(3)} & 0 & 0 & 1
+\end{array}$$
+
+
+
+### Obtener manualmente los efectos de instructor
+
+Estos efectos representan la distancia de la media general de cada instructor hasta la media general de los instructores de esa escuela.
+
+
+```{r}
+medinst=with(base,tapply(puntaje,list(instructor,escuela),mean))
+medinst
+```
+
+
+```{r}
+medesc=with(base,tapply(puntaje,escuela,mean))
+medesc
+```
+
+
+```{r}
+bj.1=medinst[,1]-medesc[1]
+bj.2=medinst[,2]-medesc[2]
+bj.3=medinst[,3]-medesc[3]
+efinst=rbind(bj.1,bj.2,bj.3)
+efinst
+```
+
+
+### Obtención de manual de la suma de cuadrados de instructor dentro de cada escuela 
+
+$$SCInst =\sum_{i =1}^R\sum_{j = 1}^I2\beta_{j(i)}^2$$
+
+donde:
+
++ $R:$ cantidad de regiones 
+
++ $I:$ cantidad de instructores dentro de cada región
+
+
+$$CMInst = \frac{SCInst}{\sum_{i=1}^{R}(b_1-1)}$$
+
+donde
+
++ $b_i:$ número de intructores dentro de cada escuela
+
+
+```{r}
+with(base,table(instructor,escuela)) #Réplicas por tratamiento
+```
+
+```{r}
+r=2 #número de instructores por cada escuela
+scinst=sum(r*efinst^2)
+scinst
+```
+
+```{r}
+gl=(2-1)*3
+gl
+```
+
+```{r}
+cminst=scinst/gl
+cminst
+```
+
+El cuadrado medio de instructor dentro de escuela es 189.2. Esta es una medida de la variabilidad entre los promedios  obtenidos por los instructores de cada escuela.
+
+
+### Comparación de intructores dentro de cada escuela
+
+
+Como son independientes las comparaciones, no se necesita realizar correción, ya que lo que nos interesa es si existen diferencias entre ellos, pero dentro de cada grupo. Lo cual nos lleva a la siguiente hipótesis:
+
+$$
+\begin{aligned}
+H_0 &: \beta_{1(i)} = 0, \quad \forall i \\
+H_1 &: \text{Al menos un } \beta_{1(i)} \neq 0
+\end{aligned}
+$$
+
+
+
+$$
+\begin{aligned}
+H_0 &: \mu_{1(i)} = \mu_{2(i)}, \quad \forall i \\
+H_1 &: \text{Al menos un } \mu_{1(i)} \neq \mu_{2(i)}
+\end{aligned}
+$$
+
+
+
+```{r}
+mod2=lm(puntaje~escuela+instructor1,data=base)
+anova(mod2)
+```
+
+Note que en los `gl` dan (n-1), ya que el total de obervaciones eran 12 y sumando la columna de los `df` nos da como resultado 11. `instructor1` es la variable no anidada.Por lo tanto, lo correcto es que se haga con la variable normal.
+
+
+
+### Indicarle a R que es un modelo para un diseño anidado
+
+
+```{r}
+options(contrasts=c("contr.sum","contr.poly")) #Suma nula
+mod3=lm(puntaje~escuela+escuela/instructor,data=base)
+```
+
+
+**Estimaciones automáticas de los efectos**
+
+```{r}
+model.tables(aov(mod3))
+```
+
+
+```{r}
+anova(mod3)#da lo mismo que con el mod2
+```
+
+### Comparaciones entre instructores
+
+```{r,message=FALSE}
+(em2=emmeans(mod3,pairwise~instructor|escuela))$contrasts
+```
+
+Recuerde que las comparaciones se hacen con un $\alpha = 0.05$
+
+**Se realizan los intervalos de confianza**
+
+```{r}
+confint(em2)$contrasts
+```
+
+
+### Comparaciones entre escuelas
+
+
+```{r}
+TukeyHSD(aov(mod3),"escuela")
+```
+
+Observe que existe diferencias entre `Central-Región K`, por lo que se realiza un intervalo de confianza
+
+
+```{r}
+t=qt(1-0.05/2,6)
+round(c(8.75-t*1.87,8.75+t*1.87),2)
+```
+
+# Simulaciones
+
+## Simulación de intervalos de confianza
+
+```{r, eval=FALSE}
+sim_ancho <- function(n, r, k = 10, med = 1500, sd.lote = 42, sd.res = 49.51) {
+  # Los argumentos deberían ir aquí si no estamos en una función
+  lote <- rep(1:n, each = r) # Creación de la variable lote
+  res <- matrix(nrow = k, ncol = 3) # Creación de la matr´z de resultados 
+  
+  for(i in 1:k) {  
+    ef.lote <- rnorm(n, 0, sd.lote) # Simulación del efecto del lote
+    muj <- med + ef.lote # Media de cada lote 
+    mujs <- rep(muj, each = r) #Repetición de la media para cada réplica
+    y <- rnorm(n * r, mujs, sd.res) # Simulación de la respuesta 
+    modn <- lmer(y ~ (1 | lote)) # Creación del modelo con esa variable
+    ci <- confint(modn) # Intervalos de confianza para el modelo creado
+    res[i, ] <- diff(t(ci))# Cálculo de anchos de los intervalos y se guardan en la matriz
+    prom = apply(res, 2, mean)# Se cálcula la media de los resultados de la matriz
+  }
+  
+  return(list(prom,res))
+}
+```
+
+```{r, eval=FALSE}
+sim_ancho(6,5) #Ejemplo de uso de la función anterior
+```
+
+
+## Combinaciones múltiples del ancho del intervalo 
+
+```{r, eval=FALSE}
+sim_ancho_todos <- function(k = 10, med = 1500, sd.lote = 42, sd.res = 49.51) {
+  # Los parámetros pueden ir en esta parte cuando no se trate de una función
+  resultado_final <- data.frame()
+  for(n in 2:10) { #Número de lotes
+    for(r in 2:10) { #número de réplicas por lote
+      if(n * r <= 30) { # Número máximo de réplicas
+        lote <- rep(1:n, each = r) # Creación de la variable lote
+        res <- matrix(nrow = k, ncol = 3) #Creación de la matriz de resultados
+        for(i in 1:k) {  
+          ef.lote <- rnorm(n, 0, sd.lote)
+          muj <- med + ef.lote
+          mujs <- rep(muj, each = r)
+          y <- rnorm(n * r, mujs, sd.res)
+          modn <- lmer(y ~ (1 | lote))
+          ci <- confint(modn)
+          res[i, ] <- diff(t(ci))
+        }
+        prom <- apply(res, 2, mean)
+        resultado_final <- rbind(resultado_final,
+                                 data.frame(n = n,
+                                            r = r,
+                                            Ntotal = n * r,
+                                            ancho1 = prom[1],
+                                            ancho2 = prom[2],
+                                            ancho3 = prom[3]))
+      }
+    }
+  }
+  return(resultado_final)
+}
+```
+
+```{r, eval=FALSE}
+resultado <- sim_ancho_todos(k = 10)
+resultado
+```
+
+
+
+```{r, eval=FALSE}
+#encontrar el ancho mínimo de ancho1
+ancho_min <- min(resultado$ancho1)
+
+#encontrar en qué fila está
+fila_min <- which(resultado$ancho1 == ancho_min)
+
+#mostrar la combinación
+resultado[fila_min, ]
+```
+
+## Simulación de potencia para diferentes combinaciones de días y máquinas
+
+```{r, eval=FALSE}
+library(lme4)
+pot = function(n, r, nsim = 100){
+  if(r %% 4 != 0){ # Que tiene que ser divisible por 4
+    stop("r debe ser múltiplo de 4, porque hay 4 máquinas.")
+  }
+  # Parámetros de la simulación
+  sd.dia = 7.1
+  sd.res = 6.55
+  alfa = c(0, -5, 5, 0) # Aquí es donde se coloca el delta
+  rechazos = 0 # Creamos un contador para la cantidad de veces de rechazo
+  for(i in 1:nsim){
+    muj = 147 + rnorm(n, 0, sd.dia) #Simulación de la media de cada día
+    mujs = rep(muj, each = r)#Repetición de cada media según la cantidad de réplicas       
+    y = rnorm(n * r, mujs, sd.res) #Simulación de la respuesta
+    alfai = rep(alfa, each = r/4, times = n) #Simulación de los efectos
+    y1 = y + alfai #Simulación de la nueva respuesta
+    DIA = factor(rep(1:n, each = r)) #Creación de la variable día 
+    MAQ = factor(rep(c("A","B","C","D"), each = r/4, times = n))#Creación de la variable máquina
+    mod = try(lmer(y1 ~ MAQ + (1|DIA)), silent = TRUE)# Creación del modelo
+    if(!inherits(mod, "try-error")){ # Condición sobre si hay un error se ignora
+      tabla = try(drop1(mod, test = "Chisq"), silent = TRUE) #Guardar la tabla del drop1
+      if(!inherits(tabla, "try-error") && nrow(tabla) > 1){
+        pval = tabla$`Pr(Chi)`[2] #extraer la probabilidad
+        if(!is.na(pval) && pval < 0.05){ #Calcular la proporción de rechazos (potencia)
+          rechazos = rechazos + 1
+        }
+      }
+    }
+  }
+  rechazos / nsim
+}
+#Serie de pruebas
+pot(n=4, r=8)
+## [1] 0.66
+pot(n=6, r=8)
+## [1] 0.86
+pot(n=8, r=8)
+## [1] 0.94
+pot(n=10, r=8)
+## [1] 1
+pot(n=12, r=8)
+## [1] 1
+```
+
+
+
+## Simulación de potencia, para un experimento de tres niveles, sin interacción
+
+La simulación se basa en el experimento de papel visto en clase
+
+```{r, eval=FALSE}
+library(lme4)
+nsim <- 800 #número de simulaciones
+# Se crea el vector donde se guardará la potencia de las variables
+p_metodo <- numeric(nsim)
+p_temp <- numeric(nsim)
+# Se definen los parametros
+n_lotes <- 9
+n_met <- 3
+n_temp <- 4
+#Estos se obtienen del VarCorr(mod)
+sd.lote <- 1.7 
+sd.res <- 2.3619
+#Estos se obtienen del fixef(mod)
+mu <- 30.4722
+ef.met <- c(0, 3.41, -1.166)
+ef.temp <- c(0, 3.33, 5.888, 9.222)
+# Creación de las variables
+Lote <- factor(rep(1:n_lotes, each = n_met * n_temp))
+metodo <- factor(rep(rep(1:n_met, each = n_temp), n_lotes))
+temp <- factor(rep(1:n_temp, n_lotes * n_met))
+# Se creán los vectores para la simulación
+sdlote =c()
+sdres = c()
+# For para realizar la simulacion
+for (i in 1:nsim) {
+  #Simulación del efecto del lote y se guarda con el ancho de la variable lote con [LOte]
+  ef_lote_sim <- rnorm(n_lotes, 0, sd.lote)[Lote]
+  # Simulación de la respuesta
+  y <- mu +
+    ef.met[metodo] +
+    ef.temp[temp] +
+    ef_lote_sim +
+    rnorm(n_lotes * n_met * n_temp, 0, sd.res)
+  # Creación del modelo 
+  mod <- lmer(y ~ metodo + temp + (1 | Lote))
+  # Se obtiene las sd estimadas del modelo 
+  vc = VarCorr(mod)
+  vc = as.data.frame(vc)
+  sdlote[i] = vc[1,5] # Se guarda la sdlote en su respectivo vector
+  sdres[i] = vc[2,5]
+  # Se obtiene la significancia 
+  sig <- drop1(mod, test = "Chisq")
+  p_metodo[i] <- sig[2, 4]
+  p_temp[i] <- sig[3, 4]
+}
+cat("Potencia para Método:", mean(p_metodo < 0.05), "\n")
+cat("Potencia para Temperatura:", mean(p_temp < 0.05), "\n")
+# Salidas de la simulacion: vectores con las desviaciones estandar de lote y res. 
+varlote = sdlote^2
+varres = sdres^2
+# Media de cada distribucion: sigma cuadrado lote y sigma cuadrado  
+mean_lote = mean(varlote)
+mean_res = mean(varres)
+cat("El promedio de la varianza del lote es:", round(mean_lote,3), "\nEl promedio de la distribucion de sigmas cuadrados es", round(mean_res,3), "\nLa varianza del lote fijada es" , sd.lote^2, "\nEl sigma fijado es de:", sd.res^2)
+```
+
+
+## Simulación de base de datos de pinturas
+
+El objetivo de est simulación es generar una nueva base de datos, para 4 días con 3 tarros por día
+
+```{r, echo=FALSE}
+load("pinturas1.Rdata")
+base$aplicacion = factor(base$aplicacion)
+base$tarro = factor(base$tarro)
+base$dia = factor(base$dia)
+```
+
+**Primero debemos crear el modelo originial**
+
+```{r}
+mod1 = lmer(reflect~aplicacion+(1|tarro)+(1|dia), data = base)
+VarCorr(mod1)
+```
+
+
+```{r}
+med=tapply(base$reflect,base$aplicacion,mean) 
+med # medias de cada aplicación
+```
+
+**Procedemos a realizar la simulación**
+
+```{r}
+sd_res = 1.9743  
+sd_dia = 6.7305  
+sd_tarro = 3.4274  
+#Se crea la variable día 
+dia=factor(rep(c("d1","d2","d3","d4"),each=9)) 
+# Creamos la variable tarro 
+tarro = factor(rep(1:12,each = 3)) # 3 tarros por 4 días
+#Creamos la variable apliación
+aplicacion=factor(rep(1:3,12)) # A todos los tarros se les hiciern todas las aplicaciones
+#Simulamos el efecto del tarro
+ef_tarro = rnorm(12,0,sd_tarro)[tarro]
+#Simulamos el efecto del día
+ef_dia = rnorm(4,0,sd_dia)[dia]
+#Asignación de cada aplicación
+muj = med[aplicacion]
+#Simulamos el error
+epsilon=rnorm(36,0,sd_res)
+#Simulación de respuesta final
+reflect1 = muj + ef_tarro+ef_dia+epsilon
+```
+
+**Respuesta observada**
+
+```{r}
+dotplot(reflect~aplicacion|dia,groups=tarro,type=c("p","a"),base,ylim=c(55,95))
+```
+**Respuesta Similar**
+
+
+```{r}
+dotplot(reflect1~aplicacion|dia,groups=tarro,type=c("p","a"),ylim=c(55,95)) 
+```
+
 ## Gráfico para comparar la respuesta observada y simulada 
 
-```{r, warning=FALSE}
+```{r, eval=FALSE}
 library(ggplot2)
 library(gridExtra)
 p1 = qplot(maq,trigli,geom="boxplot",ylab="respuesta observada",
@@ -1060,11 +1808,4 @@ p4 = qplot(maq,y2,geom="boxplot",ylab="respuesta simulada\ncentrada",
 xlab="máquina", ylim=c(100,170))
 grid.arrange(p1,p2, p3,p4,ncol=2,nrow=2)
 ```
-```{r, eval=FALSE}
-# Este código se verá bonito en el manual, pero R NO lo ejecutará.
-modelo_complejo <- lm(y ~ x1 + x2, data = mis_datos)
-```
-
-
-
 

@@ -1,0 +1,906 @@
+---
+title: "Manual de Demografía y Bioestadística"
+author:
+  - name: "Almirall Fabián, Calvo Sebastián, Martínez Anderson, Zhu Justin"
+    affiliation: "Universidad de Costa Rica, Escuela de Estadística"
+date: last-modified
+lang: es
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Ver código R"
+    code-copy: true
+    embed-resources: true
+    smooth-scroll: true
+  pdf:
+    pdf-engine: pdflatex
+    dev: pdf
+    toc: true
+    number-sections: true
+    papersize: letter
+    geometry:
+      - top=25mm
+      - bottom=25mm
+      - left=30mm
+      - right=30mm
+---
+
+# Fundamentos y Conceptos Operativos
+
+La **demografía** es la ciencia que estudia a las poblaciones humanas en cuanto a su dimensión, estructura y evolución \[5\]. Se distingue de los estudios de población en que estos analizan determinantes y consecuencias desde disciplinas como la sociología o la economía.
+
+-   **Estado (**$Stock$): Población en un instante dado (fecha fija), medida comúnmente con censos.
+-   **Movimiento (**$Flujo$): Sucesos en un período (nacimientos, defunciones, migraciones), medidos con registros vitales.
+-   **Cohorte:** Conjunto de sujetos que comparten una característica en un período dado \[6\].
+-   **Bioestadística:** Aplicación de estadística en ciencias biológicas; su aplicación al estudio de enfermedades es la **epidemiología**.
+
+------------------------------------------------------------------------
+
+# Composición de la Población: Sexo y Edad
+
+El análisis de la estructura poblacional permite identificar subgrupos y dinámicas de dependencia.
+
+### Razón de Masculinidad ($RM$)
+
+Indica la cantidad de hombres por cada 100 mujeres \[7\].
+
+$$\text{RM} = \frac{N_{Masc}}{N_{Fem}} \times 100$$
+
+**Interpretación:** Si $RM = 90$, hay 90 hombres por cada 100 mujeres \[7\]. **Observación:** Al nacer suele ser $\approx 105$ y tiende a descender con la edad en poblaciones sin alta mortalidad materna.
+
+```{r}
+#| eval: true
+#| echo: false
+#| include: false
+
+library(readxl)
+library(tidyverse)
+# Colocar dirección cada vez que se corre todo
+setwd("~/GitHub/Apuntes-Modelos-lineales-Avanzados/Manuales de Demografía y Bioestadística")
+base = read_excel("razones_lab1.xlsx") 
+
+df_long <- base %>%
+  pivot_longer(
+    cols = c(`1973`, `1984`, `2000`, `2011`), 
+    names_to = "Anio", 
+    values_to = "Razon_Masculinidad"
+  ) %>%
+  mutate(Anio = as.numeric(Anio)) # Convertir año a número para el eje X
+```
+
+```r
+#| eval: false
+
+# Librerías
+library(ggplot2) 
+library(dplyr)
+#o bien puede cargar library(tidyverse) 
+ggplot(df_long, aes(x = Edadsimple, y = Razon_Masculinidad, color = factor(Anio)))+
+  geom_line(size = 1) +
+  geom_point() +
+  labs(
+    title = "Razón de masculinidad en Costa Rica en los años \n1973,1984, 2000, 2011
+",
+    x = "Edad Simple",
+    y = "Razón de Masculinidad",
+    color = "Año"
+  ) +
+  theme_minimal()
+```
+
+```{r, warning=FALSE}
+#| eval: true
+#| echo: true
+#| include: true
+
+# Librerías
+library(ggplot2) 
+library(dplyr)
+# o bien puede cargar library(tidyverse) 
+
+ggplot(df_long, aes(x = Edadsimple, y = Razon_Masculinidad, color = factor(Anio)))+
+  geom_line(size = 1) +
+  geom_point() +
+  labs(
+    title = "Razón de masculinidad en Costa Rica en los años \n1973, 1984, 2000, 2011",
+    x = "Edad Simple",
+    y = "Razón de Masculinidad",
+    color = "Año"
+  ) +
+  theme_minimal()
+```
+
+### Pirámides de Población
+
+```r
+ggplot(df_final, aes(x = Edadsimple, y = Poblacion, fill = Sexo)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_flip()
+```
+
+### Razones de Dependencia
+
+Relacionan la población dependiente ($0-14$ y $65+$ años) con la población en edades laborales ($15-64$ años).
+
+$$\begin{aligned} \text{Razón de dependencia} &= \frac{N_{0-14} + N_{65+}}{N_{15-64}} \times 100 \\[15pt] \text{Razón de dependencia joven} &= \frac{N_{0-14}}{N_{15-64}} \times 100 \\[15pt] \text{Razón de dependencia mayor} &= \frac{N_{65+}}{N_{15-64}} \times 100 \\[15pt] \text{Razón de envejecimiento} &= \frac{N_{65+}}{N_{0-14}} \times 100 \end{aligned}$$
+
+**Ejemplos de Interpretación:**
+
+-   **Dependencia = 91:** Hay 91 personas dependientes (jóvenes y mayores) por cada 100 en edad laboral.
+-   **Envejecimiento = 82:** Hay 82 personas mayores por cada 100 jóvenes.
+
+### Otros Indicadores de Estructura
+
+-   **Razón de Longevidad:** $\text{R}_{Long} = \frac{N_{75+}}{N_{65+}} \times 100$
+-   **Razón Niño/Mujer (**$RNM$): Medida indirecta de fecundidad. $$\text{RNM} = \frac{N_{0-4}}{NF_{15-49}} \times 100$$
+
+------------------------------------------------------------------------
+
+# Calidad de la Información (Declaración de la Edad)
+
+La calidad se ve afectada por omisión diferenciada, preferencia de dígitos o exageración de la edad.
+
+### Índice de Whipple ($IW$)
+
+Mide la atracción hacia dígitos finales (0 y 5) asumiendo una distribución uniforme.
+
+$$\begin{aligned}
+I_W (\text{General}) &= \frac{5 \times (N_{25} + N_{30} + N_{35} + N_{40} + N_{45} + N_{50} + N_{55} + N_{60})}{N_{23-62}} \times 100 \\[25pt]
+I_W (\text{Solo dígito 0}) &= \frac{10 \times (N_{30} + N_{40} + N_{50} + N_{60})}{N_{30-69}} \times 100 \\[25pt]
+I_W (\text{Solo dígito 5}) &= \frac{10 \times (N_{25} + N_{35} + N_{45} + N_{55})}{N_{25-64}} \times 100
+\end{aligned}$$
+
+| Rango de IW | Clasificación de la información |
+|:------------|:--------------------------------|
+| 100 a 104   | Muy precisa                     |
+| 105 a 109   | Precisa                         |
+| 110 a 124   | Aproximada                      |
+| 125 a 174   | Deficiente                      |
+| 175 o más   | Muy deficiente                  |
+
+```r
+indice_whipple <- base %>% 
+  filter(Edadsimple >= 23 & Edadsimple <= 62) %>%
+  group_by(Año) %>% # Agrupamos por año 
+  summarise(
+    # Numerador: Suma de poblaciones en edades terminadas en 0 o 5
+    sum_0_5 = 5*sum(Total[Edadsimple %in% seq(25, 60, by = 5)]), 
+    
+    # Denominador: Población total del rango
+    p_total_rango = sum(Total),
+    
+    # Cálculo final
+    Whipple = (sum_0_5 / (p_total_rango)) * 100
+  )
+```
+
+### Índice de Myers ($IM$)
+
+Analiza la preferencia hacia cada dígito del 0 al 9; su supuesto principal es la **linealidad**.
+
+$$M_j = (j + 1) \times v_j + (10 - j) \times v'_j$$ $$I_M = 100 \times \sum_{j=0}^{9} \left| \frac{M_j}{\sum M_j} - 0.1 \right|$$
+
+| Rango de IM | Concentración de un dígito |
+|:------------|:---------------------------|
+| 0 a 4.99    | Baja concentración         |
+| 5 a 14.99   | Mediana concentración      |
+| 15 a 29.99  | Alta concentración         |
+| 30 a más    | Muy alta concentración     |
+
+```r
+# Rango de edades: 10 a 79
+rango_myers <- base %>%
+  filter(Edadsimple >= 10 & Edadsimple <= 79) %>%
+  mutate(Digito = Edadsimple %% 10) # Extrae el último dígito de la edad
+
+# 1. Calculamos la población por dígito en dos bloques
+# Bloque A: Edades 10 o más | Bloque B: Edades 20 o más
+myers_calculo <- rango_myers %>%
+  group_by(Año, Digito) %>%
+  summarise(
+    v_j = sum(Total[Edadsimple >= 10]),
+    v_jprima = sum(Total[Edadsimple >= 20 ])
+  ) %>%
+  mutate(
+    # 2. Aplicamos los Pesos de Myers
+    j_mas_uno = Digito + 1,
+    diez_menos_j = 10 - Digito,
+    # 3. Población "Mezclada" (Blended Population)
+    m_j = (v_j * j_mas_uno) + (v_jprima * diez_menos_j)
+  )
+
+# 4. Cálculo del Índice Final por Año
+indice_myers_final <- myers_calculo %>%
+  group_by(Año) %>%
+  mutate(
+    Suma_Total_Mezclada = sum(m_j),
+    Porcentaje_Real = abs((m_j / Suma_Total_Mezclada)-0.1)) %>% 
+  summarise(indice = sum(Porcentaje_Real)*100)
+```
+
+------------------------------------------------------------------------
+
+# Medidas Demográficas Relativas y Estandarización
+
+-   **Tasa Operativa:** $Tasa = \frac{\text{Eventos en } t}{P_{mid} \text{ en } t}$ \[13\].
+-   **Probabilidad de muerte (**$q_0$): $q_0 = \frac{D_{0, cohorte X}}{B_{cohorte X}}$ \[14\].
+-   **Tasa Bruta de Natalidad (**$TBN$): $\frac{Nacimientos}{P_{mid}} \times 1000$ \[14\].
+-   **Tasa Bruta de Mortalidad (**$TBM$): $\frac{Defunciones}{P_{mid}} \times 1000$ \[14\].
+-   **Estandarización Directa (**$TBM_{est}$): $TBM_{est} = \sum_{x=0}^{\omega} f_x \times m_x$ \[15\].
+
+------------------------------------------------------------------------
+
+# Dinámica Demográfica y Modelos de Crecimiento
+
+## Suavizamiento
+
+Existen métodos específicos de suavizamiento para corregir irregularidades en los datos demográficos.
+
+## Prorrateo
+
+Técnica utilizada para redistribuir proporcionalmente datos no especificados.
+
+## Componentes de cambio demográfico
+
+$$N_{t+k} = N_t + B_{t,t+k} - D_{t,t+k} + I_{t,t+k} - E_{t,t+k}$$ Usando el Saldo Neto Migratorio: $$(SNM): N_{t+k} = N_{t} + B_{t,t+k} - D_{t,t+k} + SNM_{t,t+k}$$
+
+------------------------------------------------------------------------
+
+## Modelos de crecimiento
+
+### Modelo de crecimiento aritmético
+
+**Cálculo de tasa:** $r_a = \frac{1}{t} \times \left( \frac{N_F}{N_0} - 1 \right)$
+
+```r
+# Cálculo de la tasa r 
+r <- (1/t)*((N_final/N_0)-1)   
+# Estimación 
+N_t = N_pivote * (1 + r*t_prima)  
+```
+
+### Modelo de crecimiento geométrico
+
+**Cálculo de tasa:** $rg = (\frac{N_F}{N_0})^{1/t} - 1$
+
+```r
+r = (N_final/N_0)^(1/t) - 1 
+N_t = N_pivote * (1 + r)^t_prima
+```
+
+### Modelo de crecimiento exponencial
+
+**Cálculo de tasa:** $re = \frac{1}{t} \ln(\frac{N_F}{N_0})$
+
+```r
+r = log(N_final / N_0) * (1/t) 
+N_t = N_pivote * exp(r * t_prima)
+```
+
+### Modelo de crecimiento logístico
+
+$$N_t = N_I + \frac{N_F}{1 + \exp\left( \frac{t_I - t}{\phi} \right)}$$
+
+------------------------------------------------------------------------
+
+# Cálculo del t
+
+Se deben calcular los tiempos transcurridos ($t$) y los tiempos desde el pivote ($t'$) mediante:
+
+$$t = (Año_f - Año_0) - \frac{1}{12}(Mes_f - Mes_0) - \frac{1}{365.25}(Día_f - Día_0)$$
+
+```r
+#| label: calculo-t-lubridate 
+library(lubridate) 
+fecha0 = ymd("2020-01-01") 
+fecha_obj = ymd("2030-07-01") 
+# Cálculo de t en años decimales 
+t = as.numeric(difftime(fecha_obj, fecha0, units = "days")) / 365.25 
+```
+---
+
+# Suavizamiento
+
+## Gráfco en escala logarítimca
+
+```r
+ggplot(data=data1,aes(y=tasas,x=edades,color=sexo))+
+  geom_line()+scale_y_log10()+coord_cartesian(ylim = c(0.0000001, 1))
+```
+
+En este tipo de suavizamiento, se podría observar mucho ruido blanco, este se ocasiona debido a que el logaritmo cuando es cero (osea que no habría muertes), es infinito.
+
+
+### Primer método para la solución ante ruido blanco 
+
+Para solucionar esto se deben prorratear los datos tomando en cuenta los dos años anteriores y dos años después con respecto al año de defunción que estamos prorrateando, por ejemplo si estamos en el años 2017, se deben tomar en cuenta los años del 2015 hasta el 2019.
+
+```r
+def2H.sin.prorrateo <- c(defGuana1519$Hombre[1:90],sum(defGuana1519$Hombre[91:110]))
+def2M.sin.prorrateo <- c(defGuana1519$Mujer[1:90],sum(defGuana1519$Mujer[91:110]))
+
+dist2H <- def2H.sin.prorrateo/sum(def2H.sin.prorrateo)# Se crea la distribución relativa
+dist2M <- def2M.sin.prorrateo/sum(def2M.sin.prorrateo)
+
+def2H <- def2H.sin.prorrateo+dist2H*defGuana1519$Hombre[111] # Se hace el prorrateo
+def2M <- def2M.sin.prorrateo*dist2M*defGuana1519$Mujer[111]
+```
+
+
+
+### Segundo método para la solución ante ruido blanco
+
+La otra forma de solucionar el ruido blanco es por medio de promedios moviles
+
+```r
+
+def3H <- def2H
+def3M <- def2M
+
+
+for (i in 4:88) {
+  
+  def3H[i] <- mean(def2H[i-2:i+2])
+  def3M[i] <- mean(def2M[i-2:i+2])
+  
+}
+
+
+```
+
+## Logito de Brass
+
+$$\log\left(\frac{m_x^{des}}{1-m_x^{des}}\right)=\hat{\beta_0}+\hat{\beta_1}\log\left(\frac{m_x^{s}}{1-m_x} \right)$$
+```r
+logito_obs_H <- log(tasa3H[-91]/(1-tasa3H[-91])) #Se realiza con la tasa suavizada
+logito_base_H<- log(TVH2010$mxaju/(1-TVH2010$mxaju)) #Se hace con las tasa de origen
+
+
+mod1H <- lm(logito_obs_H~logito_base_H) #Se creo el modelo se regresión 
+mod1H$fitted #Se calculan los valores ajustados 
+mxsuavH <- exp(mod1H$fitted)/(1+exp(mod1H$fitted)) # Se coloca una exponencial para obtener el valor 
+
+tasasuavH=c(mxsuavH,tasa3H[91])
+
+dfH <- data.frame(edad=(0:90),tasa3H,tasasuavH)
+
+suavH <- ggplot(dfH,aes(x=edad,y=tasasuavH))+
+  geom_line()+scale_y_log10()+geom_line(aes(x=edad,y=tasa3H))
+suavH
+```
+
+
+## El modelo Gompertz 
+
+
+También se puede usar un modelo.  En demografía y actuariado, se usa el modelo Gompertz o el Gompertz-Makeham.
+
+El modelo Gompertz supone que  $m_x = \alpha* exp(\beta*edad)$, 
+
+Esto es equivalente a:  $\log(m_x)=\log(\alpha)+\beta*edad$, lo cual se puede estimar con un modelo de regresión lineal por mínimos cuadrados en donde $\log(m_x)=\bar{Y}$, $\log(\alpha)=\beta_0$, $\beta=\beta_1$, y $edad=x$.
+
+
+En mortalidad humana no se recomienda usar el modelo para edades más jóvenes, y hay un debate entre los demógrafos si el modelo de Gompertz se puede ajustar con edades superiores a 90.  Aquí vamos a usar el modelo para las edades entre 10 y 89 años con las tasas suavizadas con promedios móviles.  Se agregan después manualmente las tasas de 0 a 9 años, y la tasa de 90 años.
+
+*Modelo de Gompertz en r*
+
+
+```r
+edad.mod.gomp <- 10:89
+mod.gompertz.H <- lm(log(tasa3H[11:90])~edad.mod.gomp)
+mod.gompertz.M <- lm(log(tasa3M[11:90])~edad.mod.gomp)
+```
+
+
+Luego de obtener los valores con el modelo los suaviza
+
+```r
+tasa5H <- c(tasa3H[0:10],exp(mod.gompertz.H$fitted),tasa3H[91])
+tasa5M<- c(tasa3M[0:10],exp(mod.gompertz.H$fitted),tasa3M[91])
+```
+
+## Loess
+
+```r
+mod.loess.H <- loess(data=data2H,tasas ~ edades)
+mod.loess.M <- loess(data=data2M,tasas ~ edades)
+```
+
+```r
+tasa6Ha <- c(predict(mod.loess.H),tasa2H[91])
+tasa6Ma <- c(predict(mod.loess.M),tasa2M[91])
+```
+
+## Loess con más suavizamiento
+
+```r
+min.logmx.H <- min(log(tasa2H[tasa2H>0])) #Se obtiene el mínimo para cada sexo 
+min.logmx.M <- min(log(tasa2M[tasa2M>0]))
+
+logtasa6Hb <- ifelse(tasa2H==0,min.logmx.H,log(tasa2H)) #Para aquellos valores que son cero se reemplazan por el mínimo
+logtasa6Mb <- ifelse(tasa2M==0,min.logmx.M,log(tasa2M))
+
+##Con el default de loewss
+mod.loess.H <- loess(data=data6Hb,logtasa ~ edades)
+mod.loess.M <- loess(data=data6Mb,logtasa ~ edades)
+
+
+tasa6Hb <- c(exp(predict(mod.loess.H)),tasa2H[91])
+tasa6Mb <- c(exp(predict(mod.loess.M)),tasa2M[91])
+```
+---
+
+# Estimación de la regresión logística
+
+**Código del gráfico**
+
+```{r, echo=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggpubr)
+library(ggplot2)
+
+year <- 2002:2010
+N <- c(1995000,2000000,2010000,2060000,2125000,2175000,2205000,2218000,2225000)
+
+data <- data.frame(cbind(year,N))
+
+```
+
+
+```{r, warning=FALSE}
+ggplot(data=data, aes(x=year, y=N)) +
+  geom_line()+
+  geom_point()+labs(title="Gr 1. Tamaño de Población",x="Año",y="Población")
+```
+
+
+```{r, message=F}
+logistica.ejemplo <-
+  nls(N ~ NI+NF / (1 + exp((tI -year) / phi)),
+      data = data,
+      start = list(NI=1900000,NF = 2250000, tI = 2004, phi = 1),
+      algorithm="port")
+options(scipen=999)
+summary(logistica.ejemplo)
+```
+Recuerde que: 
+
++ `phi` siempre se encuentra entre 0 y 1
+
++ `tI:` Es el año en el que empieza a crecer la curva, vea que en el gráfico anterior emepiza en 2004
+
++ `NI:` Es la población del año donde esa curva empieza a cambiar.
+
+
++ `NF:` Es la población donde la curva se comienza a estabilizar vea que en `2250000`
+
+
+# Fecundidad 
+
+**Conceptos**
+
++ Fecundidad: “El número promedio de nacimientos por mujer (o por persona)”
+
++ Natalidad:   Indica la frecuencia de nacimientos en una población global durante un período de tiempo definido.  
+
+
+## Fórmulas de las tasa
+
+
+Para la explicación de las siguientes fórmulas se usaran los siguientes datos:
+
+Estos corresponde a la cantidad de nacimientos según la edad de la madre y la población por edades quinquenales.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(flextable)
+library(officer)
+
+# 1. Datos base
+datos_pob <- data.frame(
+  Grupo = c("De 15 a 19", "De 20 a 24", "De 25 a 29", "De 30 a 34", 
+            "De 35 a 39", "De 40 a 44", "De 45 a 49"),
+  Hombres = c(2319, 6090, 6995, 5787, 3467, 897, 55),
+  Mujeres = c(2243, 5803, 6627, 5691, 3345, 845, 40),
+  Total = c(4562, 11893, 13622, 11478, 6812, 1743, 95)
+)
+
+# 2. Flextable sin fuentes específicas (Eliminamos Arial)
+tabla_estilo <- flextable(datos_pob) %>%
+  # Configuramos etiquetas de encabezado
+  set_header_labels(
+    Grupo = "Grupo",
+    Hombres = "Hombres",
+    Mujeres = "Mujeres",
+    Total = "Total"
+  ) %>%
+  # Agregamos la fila superior de agrupación
+  add_header_row(
+    values = c("Grupo de Edad", "Distribución por Sexo"), 
+    colwidths = c(1, 3)
+  ) %>%
+  # 3. Estilo base (SIN LLAMAR A font())
+  theme_booktabs() %>%
+  font(fontname = "", part = "all") %>%
+  autofit() %>%
+  align(align = "center", part = "all") %>%
+  align(j = 1, align = "left", part = "all") %>%
+  colformat_double(big.mark = ",", digits = 0) %>%
+  # 4. Formato visual simple
+  bg(part = "header", bg = "#F2F2F2")
+# 
+# %>%
+#   theme_booktabs() %>%
+#   # FORZAR FUENTE ESTÁNDAR (Opcional: puedes comentar esta línea)
+#   font(fontname = NULL, part = "all") %>% 
+#   autofit() %>%
+#   align(align = "center", part = "all") %>%
+#   align(j = 1, align = "left", part = "all") %>%
+#   colformat_double(big.mark = ",", digits = 0) %>%
+#   # Estética limpia en blanco/gris para evitar errores de color en LaTeX
+#   bg(bg = "#f0f0f0", part = "header") %>%
+#   bold(part = "header")
+
+# Para asegurar que no haya rastro de Arial en las propiedades internas
+
+datos_nac = datos_pob
+
+tabla_estilo
+
+```
+
+
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+# 1. Asegurar que los datos estén cargados
+datos_extensos <- data.frame(
+  Grupo = c("Total", "0 - 4", "5 - 9", "10 - 14", "15 - 19", "20 - 24", 
+            "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49", 
+            "50 - 54", "55 - 59", "60 - 64", "65 - 69", "70 - 74", 
+            "75 - 79", "80 - 84", "85 - 89", "90 - 94", "95 - 99", "100 años y +"),
+  Total = c(5135912, 280328, 363893, 378855, 380855, 397973, 424762, 439454, 
+            430470, 372006, 307214, 282183, 281986, 249706, 195649, 139877, 
+            94686, 60059, 34648, 15986, 5018, 302),
+  Hombres = c(2565812, 142383, 185342, 193411, 194055, 202224, 215188, 222393, 
+              216126, 185329, 152707, 139319, 139103, 122291, 94861, 66460, 
+              44446, 27148, 14755, 6248, 1910, 112),
+  Mujeres = c(2570099, 137945, 178551, 185444, 186800, 195748, 209574, 217061, 
+              214344, 186677, 154507, 142864, 142884, 127414, 100788, 73417, 
+              50240, 32911, 19893, 9738, 3108, 190)
+)
+
+# 2. Construcción de la Flextable sin fuentes problemáticas
+ft <- flextable(datos_extensos) %>%
+  # PASO 1: Definir etiquetas (siempre primero)
+  set_header_labels(
+    Grupo = "Edades",
+    Total = "Total",
+    Hombres = "Hombres",
+    Mujeres = "Mujeres"
+  ) %>%
+  # PASO 2: Agregar fila superior de agrupación
+  add_header_row(
+    values = c("Grupos de edades", "Población por Sexo"), 
+    colwidths = c(1, 3)
+  ) %>%
+  # 3. Estilo base (SIN LLAMAR A font())
+  theme_booktabs() %>%
+  font(fontname = "", part = "all") %>% 
+  autofit() %>%
+  align(align = "center", part = "all") %>%
+  align(j = 1, align = "left", part = "all") %>%
+  colformat_double(big.mark = ",", digits = 0) %>%
+  # 4. Formato visual simple
+  bg(part = "header", bg = "#F2F2F2")
+
+# %>%
+#   # PASO 3: Estilos y limpieza de fuentes
+#   theme_booktabs() %>%
+#   font(fontname = NULL, part = "all") %>% # Usa la fuente sans-serif genérica del documento
+#   autofit() %>%
+#   align(align = "center", part = "all") %>%
+#   align(j = 1, align = "left", part = "all") %>%
+#   colformat_double(big.mark = ",", digits = 0) %>%
+#   # Colores discretos para evitar errores de sombreado en LaTeX
+#   bold(i = 1, bold = TRUE) %>%
+#   bg(i = 1, bg = "#FFF2CC", part = "body") %>%
+#   bold(part = "header") %>%
+#   bg(part = "header", bg = "#F2F2F2")
+
+# Guardar para uso posterior
+datos_pob = datos_extensos
+
+ft
+```
+
+
+
+1. Tasa Bruta de Natalidad (TBN):
+
+
+$$TBN = \frac{\text{Promedio de Nacimientos del período } t}{\text{Población a mitad del período } t} \times 1000$$
+
+*Ejemplo donde se usa de la fórmula*
+
+```{r}
+quinquenales_pob = datos_pob %>% 
+  filter(Grupo %in% c("15 - 19", "20 - 24", "25 - 29", "30 - 34", "35 - 39", "40 - 44", "45 - 49")) 
+        
+# 1.'datos_nac' tiene el total de nacimientos
+nacimientos_totales <- sum(datos_nac$Total) 
+
+# 2. Cálculo de la Tasa Bruta de Natalidad (TBN)
+poblacion_total <- 5135912
+TBN <- (nacimientos_totales / poblacion_total) * 1000
+
+print(paste("La TBN es:", round(TBN, 2), "por mil habitantes"))
+```
+
+
+
+2. Relación (ó Razón) Niño-Mujer (RNM):
+
+$$RNM = \frac{\text{Población de 0 a 4 años}}{\text{Mujeres en edad fértil (de 15 a 49 años) a mitad del período } t} \times 100$$
+
+
+3. Tasa de Fecundidad General (TFG):
+
+
+$$TFG = \frac{\text{Promedio de Nacimientos del período } t}{\text{Mujeres en edad fértil (de 15 a 49 años) a mitad del período } t} \times 100$$
+
+*Ejemplo donde se usa de la fórmula*
+
+```{r}
+# 1. Sumamos el total de mujeres en edad fértil (Denominador para TFG)
+total_mujeres_fertil <- sum(quinquenales_pob$Mujeres)
+
+# 2. Cálculo de la Tasa de Fecundidad General (TFG)
+# Se multiplica por 1,000 para la interpretación demográfica estándar
+TFG <- (nacimientos_totales / total_mujeres_fertil) * 1000
+
+print(paste("La TFG es:", round(TFG, 2), "por mil mujeres"))
+```
+
+
+
+4. Tasas específicas de fecundidad (${}_n f_x$):
+
+$${}_n f_x = \frac{\text{Promedio de Nacimientos de mujeres entre la edad } x \text{ y } x+n-1 \text{ en el período } t}{\text{Población femenina a la edad } x \text{ a mitad del período } t}$$
+*Ejemplo donde se usa de la fórmula*
+
+```{r}
+resultados_fecundidad <- quinquenales_pob %>%
+  mutate(
+    Nacimientos = datos_nac$Total, # Extraemos los nacimientos del otro objeto
+    TEF = (Nacimientos / Mujeres) 
+  ) %>% 
+  select(Grupo,TEF)
+
+# 2. Ver el resultado
+print(resultados_fecundidad)
+```
+
+
+
+5. Tasa Global de Fecundidad (TGF):
+
+
+$$TGF_{\text{período}} = n \times \sum_{x=15}^{\omega} {}_n f_x, \quad \text{para todo } x \in \{15, 15+1n, 15+2n, \dots\}$$
+
+
++ Es el indicador más frecuentemente utilizado.
+
++ No es técnicamente una tasa, pero un valor esperado basado en una cohorte sintética.  
+
++ Se interpreta como el número promedio de hijos que esperaría tener una mujer (o un hombre) al final de su vida reproductiva si se mantienen las tasas de fecundidad por edad observadas durante el período. 
+
++ Cuando se interpretan las TGFs, es común crear  dos grandes grupos de países o poblaciones:  las poblaciones con fecundidad por encima del reemplazo ($TGF>2.1$ hijos por mujer), y poblaciones con fecundidad por debajo del reemplazo $(TGF \leq 2.1)$. *El 2.1 implica que si una población mantiene este nivel de fecundidad durante un período largo de tiempo, la población mantendrá más o menos el mismo tamaño (en ausencia de migración y con cambios leves en la mortalidad).*
+
+*Ejemplo donde se usa de la fórmula*
+
+
+```{r}
+TGF = 5*sum(resultados_fecundidad$TEF)
+
+cat("Se espera que una mujer al final de su vida fértil tenga en promedio", round(TGF,2), "hijos si se mantiene constantes las tasas observadas en el año ****")
+```
+
+
+
+6. Tasa Bruta de Reproducción (TBR):
+
+Representa el número de hijas (nacimientos femeninos) que tendría una mujer de una cohorte hipotética.
+
+
+
+$$TBR_{\text{período}} = n \times \sum_{i=15}^{49} {}_n f_x^f$$
+*Donde* ${}_n f_x^f$ es la tasa específica de fecundidad de nacimientos de mujeres por edad.
+
+*Ejemplo donde se usa de la fórmula*
+
+
+```{r}
+resultados_tbr <- quinquenales_pob %>%
+  mutate(
+    Nacimientos = datos_nac$Mujeres, # Extraemos los nacimientos del otro objeto
+    TBR = (Nacimientos / Mujeres) 
+  ) %>% 
+  select(Grupo,TBR)
+
+print(resultados_tbr)
+```
+```{r}
+TGR = 5*sum(resultados_tbr$TBR) #Tasa GLOBAL DE REPRODUCCIÓN
+cat("Se espera que una mujer al final de su vida fértil tenga en promedio", round(TGR,2), "hijas si se mantiene constantes las tasas observadas en el año ****")
+```
+
+
+6.1 Relación con la TGF (Aproximación)
+
+Una forma común de calcularla cuando no se tienen los datos por sexo es mediante la razón de masculinidad al nacer (RMN):
+
+$$TBR = \frac{TGF}{1 + RMN} \cong \frac{TGF}{1 + 1.05} = \frac{TGF}{2.05}$$
+
+*Ejemplo donde se usa de la fórmula*
+
+```{r}
+#La TGF la obtuvimos anteriormente
+
+TBR = TGF*(100/205)
+round(TBR,2) #Compare con el resultado anterior
+```
+
+
+7. Tasa Neta de Reproducción (TNR):
+
+A diferencia de la TBR, la TNR sí toma en cuenta la mortalidad de las mujeres desde el nacimiento hasta el final de su vida reproductiva.
+
+$$TNR_{\text{período}} = n \times \sum_{i=15}^{49} \left( \frac{{}_n L_x^f}{l_0^f} \cdot {}_n f_x^f \right) = \frac{1}{1 + RMN} \left[ n \times \sum_{i=15}^{49} \left( \frac{{}_n L_x^f}{l_0^f} \cdot {}_n f_x \right) \right]$$
+Donde:
+\begin{itemize}
+    \item $TNR$: Tasa Neta de Reproducción.
+    \item $n$: Longitud del intervalo de edad (usualmente 1 o 5 años).
+    \item ${}_n f_x^f$: Tasa específica de fecundidad femenina para el intervalo de edad $[x, x+n)$. Solo considera nacimientos de niñas.
+    \item ${}_n L_x^f$: Número de años vividos por la cohorte femenina de la tabla de vida entre las edades $x$ y $x+n$.
+    \item $l_0^f$: Radix o cohorte inicial de la tabla de vida femenina (habitualmente 100,000).
+    \item $\frac{{}_n L_x^f}{l_0^f}$: Probabilidad de que una niña recién nacida sobreviva hasta el intervalo de edad $[x, x+n)$.
+    \item $RMN$: Relación de masculinidad al nacer (proporción de nacimientos de hombres por cada mujer, suele rondar 1.05).
+\end{itemize}
+
+
+Para el ejemplo de este cálculo se usará la siguiente tabla de vida
+
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+# 1. Aseguramos el objeto de datos (basado en image_83a584.png)
+tabla_vida_data <- data.frame(
+  x = c("0", "5", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95", "100 y +"),
+  dx = c(898, 65, 76, 135, 211, 237, 285, 408, 596, 835, 1189, 1844, 2898, 4273, 6126, 9644, 14628, 18259, 18247, 12997, 6148),
+  lx = c(100000, 99102, 99038, 98962, 98827, 98616, 98379, 98094, 97686, 97090, 96255, 95066, 93222, 90324, 86051, 79924, 70280, 55652, 37393, 19146, 6148),
+  Lx = c(497756, 495350, 494999, 494472, 493607, 492489, 491183, 489449, 486939, 483362, 478301, 470719, 458865, 440937, 414938, 375512, 314831, 232612, 141346, 63235, 9222),
+  Tx = c(8321783, 7825922, 7330582, 6835567, 6341062, 5847431, 5354939, 4863719, 4374208, 3887183, 3403714, 2925225, 2454165, 1994801, 1553268, 1137360, 759995, 443224, 209744, 69401, 9222),
+  ex = c(83.22, 78.97, 74.02, 69.07, 64.16, 59.29, 54.43, 49.58, 44.78, 40.04, 35.36, 30.77, 26.33, 22.08, 18.05, 14.23, 10.81, 7.96, 5.61, 3.62, 1.50)
+)
+
+# 2. Construcción de la flextable (Orden estricto y sin fuentes externas)
+ft_vida <- flextable(tabla_vida_data) %>%
+  # PASO 2: Agregar fila superior de agrupación
+  add_header_row(
+    values = c("Edades", "Funciones de la Tabla de Vida (Mujeres)"), 
+    colwidths = c(1, 5)
+  ) %>%
+  # 3. Estilo base (SIN LLAMAR A font())
+  theme_booktabs() %>%
+  font(fontname = "", part = "all") %>% 
+  autofit() %>%
+  align(align = "center", part = "all") %>%
+  align(j = 1, align = "left", part = "all") %>%
+  colformat_double(big.mark = ",", digits = 0) %>%
+  # 4. Formato visual simple
+  bg(part = "header", bg = "#F2F2F2")
+
+# %>%
+#   # PASO 3: Formato visual y limpieza de fuentes para evitar errores en LuaLaTeX
+#   theme_booktabs() %>% 
+#   font(fontname = NULL, part = "all") %>% 
+#   bg(bg = "white", part = "all") %>% 
+#   align(align = "center", part = "all") %>%
+#   # Formato de números con separadores de miles
+#   colformat_double(j = 2:5, big.mark = ",", digits = 0) %>%
+#   colformat_double(j = 6, digits = 2) %>%
+#   # Ajustes finales de estilo
+#   autofit() %>%
+#   bold(part = "header")
+
+# 3. Mostrar el resultado
+ft_vida
+```
+
+
+```{r}
+# 1. Filtramos los años-persona vividos (Lx) para el rango fértil
+quinquenales_Lx <- tabla_vida_data %>% 
+  filter(x %in% c("15", "20", "25", "30", "35", "40", "45")) %>% 
+  select(x, Lx)
+
+# 2. Cálculo de la TNR por grupo
+tnr_valores <- resultados_tbr$TBR * quinquenales_Lx$Lx / (5 * 100000)
+
+TNR_tabla <- data.frame(
+  Grupo = quinquenales_Lx$x,
+  `TNR por Grupo` = round(tnr_valores, 4)
+)
+
+# 3. Calcular la TNR Global (la suma de los aportes de cada grupo)
+TNR_Global <- 5*sum(tnr_valores)
+
+print(TNR_tabla)
+cat("\nSe espera que una mujer al final de sus vida fértil tenga en promedio", round(TNR_Global,2), "hijas que llegan a sobrevivir a la edad reproductiva, si se mantienen las tasas observadas, para el año ****")
+```
+
+
+
+## Curvas de fecundidad
+
+Para analizar fecundidad, se acostumbra también graficar las tasas específicas de fecundidad por edad (si son por grupos quinquenales de edad, se grafica la tasa en la edad media).  
+
+A partir del gráfico, se determina la forma de la curva.  
+
+Generalmente se definen tres curvas básicas que muestran el patrón de la fecundidad de una población:
+
++ Cúspide temprana:   La máxima fecundidad se presenta en el grupo de edades 20-24 años.
+
++ Cúspide dilatada:  La máxima fecundidad se presenta entre los dos grupos de edades 20-24 y 25-29. 
+
++ Cúspide tardía:  La máxima fecundidad se presenta en el grupo de edades 25-29 años. 
+
+
+
+## Edad Media de la Fecundidad ($\bar{M}$)
+
+Este indicador mide la edad promedio a la que las mujeres tienen a sus hijos, asumiendo que todas las edades tienen el mismo peso poblacional (es decir, se calcula sobre las tasas específicas).
+
+
+$$\bar{M}_{\text{período}} = \frac{\sum_{x=15}^{49} (\bar{X} \cdot {}_n f_x)}{\sum_{x=15}^{49} ({}_n f_x)} = \frac{\sum_{x=15}^{49} ((x + n/2) \cdot {}_n f_x)}{\sum_{x=15}^{49} ({}_n f_x)}$$
+
+*donde*
+
++ $\bar{M}_{\text{período}}$: Edad media de la fecundidad en el período $t$.
+
++ $\bar{X}$: Punto medio de la clase de edad (marca de clase). Se calcula como $x + \frac{n}{2}$.
+
++ $x$: Edad inicial del intervalo.
+
++ $n$: Amplitud del intervalo de edad (usualmente 5 años).
+
++ ${}_n f_x$: Tasa específica de fecundidad para el intervalo de edad $[x, x+n)$.
+
+
+# Tasa intrínseca de crecimiento e incercia poblacional
+
+
+## Relación entre la TNR y la Tasa de Crecimiento ($r$)
+
+Si suponemos un modelo de crecimiento exponencial, sabemos que la fórmula de la tasa de crecimiento es:
+
+$$r_e = \frac{1}{t} \cdot \ln\left(\frac{N_1}{N_0}\right)$$
+
+Si denominamos $N(M)$ al tamaño de la generación de las madres, y $N(0)$ al tamaño de la generación de las hijas, entonces:
+
+$$TNR \cong \frac{N(0)}{N(M)}$$
+
+Planteando que la $TNR$ es una tasa de crecimiento y que $M$ (edad media a la reproducción) es el tiempo en que una generación de mujeres se reproduce, entonces:
+
+$$r = \frac{1}{M} \cdot \ln(TNR)$$
+
+Ejemplo de cálculo: 
+
+Suponga que la $TNR$ es de 1.25 y la edad media a la reproducción ($M$) es de 22 años, entonces:
+
+$$r = \frac{1}{M} \cdot \ln(TNR) = \frac{1}{22} \cdot \ln(1.25) = 0.0101$$
+
+Interpretación: Esta cifra quiere decir que, si las tasas de fecundidad y mortalidad se mantienen constantes, la tasa de crecimiento de una población será de 0.0101, o sea de 1.01%.
