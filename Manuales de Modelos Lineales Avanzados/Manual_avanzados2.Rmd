@@ -1,6 +1,8 @@
 ---
 title: "Manual para el curso Modelos Lineales Avanzados (XS-0125) Segundo Examen"
-author: "Anderson Martínez, Sebastián Calvo, Justin Zhu, Fabián Almirall"
+author: |
+  | **Autor:** Anderson Martínez <br>
+  | **Colaboradores:** Sebastián Calvo, Justin Zhu, Fabián Almirall
 output:
   pdf_document:
     toc: true
@@ -10,7 +12,6 @@ output:
     toc: true
     toc_depth: '3'
 ---
-
 # Variables continuas como predictores
 
 Este tipo de variables sería como si en el ejemplo de `Papel` que lo analizamos en el caso anterior tuviera el factor de temperatura, como una variable númerica, no como una categoría. Dado esto, para estos casos es crucial el **supuesto de linealidad**.
@@ -55,7 +56,7 @@ ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
   scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) + # Colores personalizados
   labs(
     title = "Número de  Lote",
-    x = "Temperatura (°C)",
+    x = "Temperatura ()",
     y = "Resistencia",
     color = "Lote"
   ) +
@@ -76,9 +77,9 @@ ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
   facet_wrap(~ lote) +
   scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) +
   labs(
-    title = "Relación Lineal: Resistencia vs Temperatura",
+    title = "Resistencia vs Temperatura",
     subtitle = "Ajuste lineal por Lote (Variable Continua)",
-    x = "Temperatura (°C)",
+    x = "Temperatura ",
     y = "Resistencia"
   ) +
   theme_bw() +
@@ -218,7 +219,7 @@ ggplot(df_lineas, aes(x = temp, y = res, color = metodo)) +
   labs(
     title = "Representación de los Efectos Fijos del Método",
     subtitle = expression(paste("Distancia del intercepto definida por ", alpha[i], " = ", mu[i], " - ", mu)),
-    x = "Temperatura (°C)",
+    x = "Temperatura ()",
     y = "Resistencia"
   ) +
   theme_minimal() +
@@ -282,7 +283,7 @@ ggplot() +
                                 "Metodo 3" = "#4DAF4A")) +
   labs(
     title = "Modelo Lineal con Interacción Método × Temperatura",
-    x = "Temperatura (°C)",
+    x = "Temperatura ()",
     y = "Resistencia",
     color = "Método"
   ) +
@@ -359,7 +360,7 @@ ggplot() +
                                 "Metodo 3" = "#4DAF4A")) +
   labs(
     title = "Interacción Lote × Método",
-    x = "Temperatura (°C)",
+    x = "Temperatura ()",
     y = "Resistencia",
     color = "Método"
   ) +
@@ -430,7 +431,7 @@ ggplot() +  # Líneas de los Lotes (Mismo origen, distinta pendiente)
   #scale_color_manual(values = c("Metodo 1" = "#E41A1C", "Metodo 2" = "#377EB8", "Metodo 3" = "#4DAF4A")) +
   labs(
     title = "Interacción Lote × Temperatura",
-    x = "Temperatura (°C)",
+    x = "Temperatura ()",
     y = "Resistencia",
     color = "Método"
   ) +
@@ -493,7 +494,7 @@ ggplot() +
   labs(
     title = "Efecto de Interacción Lote × Temperatura",
     subtitle = "Delta representa la distancia de la pendiente del lote respecto a la media",
-    x = "Temperatura (°C)", y = "Resistencia", color = "Lote"
+    x = "Temperatura ()", y = "Resistencia", color = "Lote"
   ) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"),
@@ -635,7 +636,7 @@ graficar_persp <- function(rho, titulo) {
   persp(x, y, z, 
         theta = 30, phi = 30, # Ángulos de visión
         expand = 0.5, 
-        col = "lightblue", 
+        col = "blue", 
         shade = 0.5,
         ticktype = "detailed",
         main = titulo,
@@ -679,4 +680,158 @@ par(mfrow = c(1, 1))
 
 
 *Nota: Cuando la diferencia es significativa, pero no relevante, esto se debe a la poca variabilidad y cuando una muestra es muy grande*
+
+# Correlación  de los interceptos
+
+Tenemos la siguiente ecuación del lote k-ésimo:
+
+$$\mu_{k} = (\beta_0+\alpha_j+\delta_k)+(\beta_1+\gamma_j+\lambda_k)T$$
+
+Lo que se quiere observar si $\delta_k$ y $\lambda_k$, están correlacionados, para ello tenemos que calcular las diferentes rectas para cada lote s
+
+```{r}
+beta0=beta1=c()
+for(i in 1:9) { # Ojo que son 9 lotes
+mod=lm(res~temp,base[base$lote==i,]) #Los lotes está enumerado del 1 al 9
+beta0[i]=mod$coef[1]
+beta1[i]=mod$coef[2]
+}
+plot(beta1,beta0,pch=18,col=4)
+abline(lm(beta0~beta1))
+```
+
+Observe que conforme el intercepto baja, la pendiente aumenta, por lo que se puede sospechar una correlación negativa fuertes entre $\beta_0$ y $\beta_1$. Lo mismo lo podemos verificar con el siguiente código:
+
+```{r}
+cor(beta0,beta1)
+```
+
+Observe que la correlación es -0.95, esto nos confirma lo visto en el gráfico anterior. En términos del experimento de `papel`, esto nos dice que un lote que comienza con baja resistencia al principio tiene un crecimiento más rápido en la resistencia, comparado con un lote que comienza con alta resistencia, esto tiene sentido debido que si se tiene baja resistencia al principio el margen de mejora va a ser mayor, en comparación que cuando se empieza con una buena resistencia.
+
+## Mover la variable para descubirir el intercepto
+
+Para obtener verdaderamente de donde comienza el intercepto, lo que hacemos es mover la variable de modo que el intercepto verdaderamente represente el inicio de la variable, como por ejemplo en el experimento de papel debido a que la temperatura comienza en 200, restamos esos 200 para que comienze en cero. Es importante aclarar que esto nos funciona, para variables que tiene un mínimo.**Esto nos va a afectar la correción entre interceptos, por lo que se recomiendo hacer cuando tenga sentido.**
+
+*Ejemplo del proceso de mover la variable*
+
+$$
+\begin{aligned}
+temp1 &= temp - 200 \\
+\text{Si } temp = 200 &\implies temp1 = 0 \\
+\text{Si } temp = 225 &\implies temp1 = 25 \\
+\text{Si } temp = 250 &\implies temp1 = 50 \\
+\text{Si } temp = 275 &\implies temp1 = 75
+\end{aligned}
+$$
+
+## hipótesis de la correlación
+
+$$H_0: \rho = 0 $$
+
+**Modelo correlacionado, ya que los coeficietes ($\beta_0$ y $\beta_1$) están juntos dentro del lote.**
+
+```{r, message=FALSE}
+library(lme4)
+mod1=lmer(res~1+metodo*temp+(1+temp|lote),data=base)
+```
+
+
+**Modelo no correlacionado, se le pone el, 0 para que ignore el intercepto.**
+
+```{r, warning=FALSE}
+mod2=lmer(res~1+metodo*temp+(1|lote)+(0+temp|lote),data=base)
+# Se puede colocar 0 o -1, par ignorar el intercepto
+```
+
+
+**Comparación del modelo**
+
+
+```{r}
+anova(mod1,mod2,test="LRT")
+```
+
+Observe que no se rechaza la hipótesis, por lo que nos asumimos que no hay correlación.
+
+**Luego lo que queremos es ver la interacción, por lo que se prueba la siguiente hipótesis**
+
+
+
+
+$$H_0:\sigma_{\lambda} = 0$$
+
+```{r, warning=FALSE}
+mod2=lmer(res~1+metodo*temp+(1|lote)+(0+temp|lote),data=base)
+mod3=lmer(res~metodo*temp+(1|lote),base)
+anova(mod2,mod3)
+```
+
+
+No se rechaza la hipótesis, por lo que no son diferentes las pendientes entre los lotes de un mismo método. Cuando hay muy pocas unidades en el nivel 2 es muy díficil encontrar diferencias entre las pendientes.
+
+
+**Ahora queremos ver si hay interacción, pero en la parte fija**
+
+```{r}
+drop1(mod3,test="Chisq")
+```
+
+No resulta significativa la interacción entre temperatura y método, por lo que asumimos que no hay, con esto podemos decir que podemos comparar los métodos sin importar la temperatura.
+
+
+**Luego se pone a prueba la significancia de la temperatura**
+
+$$H_0:\beta_1 = 0$$
+
+```{r}
+mod4=lmer(res~metodo+temp+(1|lote),base)
+drop1(mod4,test="Chisq")
+```
+
+
+Debido a que p < 0.001, podemos decir que el coefiente de temperatura es diferente de 0.
+
+
+
+
+
+```{r}
+fixef(mod4)
+```
+
+**El coeficiente de temperatura se interpreta para un aumento de temperatura que tenga sentido, por ejemplo, 25 grados. Entonces por cada 25 grados que aumente la temperatura se espera que la resistencia promedio aumente (0.1209x25=3.02) 3.02 kg/cm, en cualquiera de los 3 métodos.**
+
+
+```{r}
+confint(mod4)[6,]*25
+```
+
+
+**El aumento en la resistencia es entre 2.34 y 3.70 kg/cm por cada 25 grados que aumente la temperatura, en cualquiera de los 3 métodos**
+
+
+```{r}
+library(emmeans)
+emmeans(mod4,pairwise~metodo,adjust="bonferroni")$contrast
+```
+
+*Nota: Si el intervalo es significativo, pero no es relevante, esto sucede cuando la muestra es muy grande.*
+
+
+# Ejemplo de las playas
+
+
+```{r}
+load("riqueza.Rdata")
+base$riq = apply(base[, 2:76] > 0,1,sum)# Se suma por fila, para contar el número de especies
+```
+
+## Gráfico para ver linealidad
+
+```{r}
+xyplot(riq~NAP|playa,pch=18,
+ylab="riqueza promedio",type=c("p","r"),data=base)
+```
+
+En la mayoría de las playas, los puntos siguen una tendencia bastante lineal, por lo que parece acertado seguir con una regresión lineal.
 
