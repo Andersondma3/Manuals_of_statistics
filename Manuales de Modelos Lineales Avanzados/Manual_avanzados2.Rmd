@@ -835,3 +835,97 @@ ylab="riqueza promedio",type=c("p","r"),data=base)
 
 En la mayoría de las playas, los puntos siguen una tendencia bastante lineal, por lo que parece acertado seguir con una regresión lineal.
 
+
+**El modelo para este experimento es el siguiente:**
+
+
+$$y_{NAP,k,l} = \beta_0+\beta_1NAP+\delta_k+\gamma_{k,NAP}+\varepsilon_{NAP,k,l}$$
+
+$\gamma_{k,NAP}:$ Este nos indica que cada playa tendrá una pendiente diferente
+
+$\delta_k:$ Cuánto sube la riqueza promedio, respecto a la media general cuando $NAP = 0$, en la playa k-ésima.
+
+$\gamma_{k}:$ Cuánto cambia la pendiente de NAP de la playa k-ésima con respecto a la pendiente general.
+
+$y_{NAP,k,l}:$ Representa la observación de un NAP particular, en una playa, de una cierta observación.
+
+*Nota: En los efectos aleatorios, le media cero, representa el modelo de suma nula*.
+
+
+$\text{Si }   \rho \neq 0 \implies (\delta_k, \gamma_k) \sim \mathcal{N}_2 \left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \boldsymbol{\Sigma} \right), \text{por lo que no tiene sentido eliminar } \gamma_k$
+
+
+$\text{Si }   \rho = 0 \implies \delta_k \sim \mathcal{N} (0,\sigma_\delta)$ y $\gamma_k \sim \mathcal{N} (0,\sigma_\gamma)$
+
+
+*En r esto lo probamos de la siguiente manera*
+
+```{r, warning=FALSE}
+# mod1 es con \rho = 0 
+mod1=lmer(riq~1+NAP+(1+NAP|playa),data=base) # 1+NAP|playa, pendiente e intercepto de cada playa
+# mod2 es con \rho \diff = 0
+mod2=lmer(riq~1+NAP+(1|playa)+(0+NAP|playa),data=base)
+```
+
+```{r}
+anova(mod1,mod2,test="LRT")
+```
+Observe que si existe correlación entre el `NAP` y la `playa`
+
+
+**Ahora lo que queremos probar es la signficancia del `NAP`, por lo que probamos la siguiente hipótesis:**
+
+$$H_0: \beta_1 = 0 $$
+
+```{r}
+drop1(mod1, test = "Chisq")#Recuerde que beta1 es fijo   
+```
+
+
+Debido a que p = 0.001 < 0.05, esto nos dice que el `NAP`, tiene un efecto lineal en la respuesta promedio, como las lineas son decrecientes, entonces podemos afirmar que conforme sube el `NAP`, baja la riqueza promedio. Lo anterior lo sabemos por el signo del coeficiente.
+
+```{r}
+fixef(mod1)[2]
+```
+Esto nos indica que conforma el `NAP` aumenta una unidad, la riqueza promedio baja 2.83 unidades
+
+**Dado el resultado anterior, obtenemos su intervalo de confianza**
+
+```{r, warning=FALSE}
+confint(mod1)
+```
+
+
+En este caso `.sig03`, corresponde a $\sigma_\gamma$, note que llega hasta infinito, esto se debe a la poca cantidada de datos y a una playa que contiene un valor de influencia que puede estar generando problemas. Una solución ante esto puede ser, recolectar más muestra o también recolectar más datos con diferentes tipos de NAP, en cada playa.
+
+En la parte aleatoria, .sig01 es la desviación estándar de los interceptos aleatorios, `.sig02` es la correlación entre interceptos y pendientesy `.sigma` es la desviación estándar del error. Es evidente que el intervalo para la correlación no incluye al cero pues va de -1 a -0.36, lo que indica que sí hay una correlación importante entre los interceptos y las pendientes.
+
+El intercepto representa la riqueza promedio cuando el NAP es cero, es decir cuando se ubica en el nivel medio de la marea, entonces, entre más alta es la riqueza promedio al nivel medio de la marea, se va a tener un mayor decrecimiento en la riqueza al aumentar el NAP, lo cual tiene sentido.
+
+Se puede dar una interpretación al coeficiente fijo de NAP que corresponde a la pendiente general fija. Aquí se puede decir que como medida general de la tendencia (sin tomar en cuenta una playa particular), al aumentar el NAP en una unidad, la cantidad de especies disminuye en promedio entre 1.3 y 4.4 especies, con 95% de confianza. Además, el intercepto general está entre 3.97 y 9.18 lo cual representa el rango en que se espera que se encuentre el número de especies promedio cuando se ubica en el nivel medio de la marea.
+
+
+## ¿Cómo encontrar una pendiente relevante?
+
+Encontrar un valor relevante a partir de los datos es engañoso, para ello se necesitará la ayuda del criterio de un experto. Por ejemplo si el experto nos indica que dos poblaciones deben tener una diferencia de 2 unidades y en el estudio que se realiza una población tiene una riqueza promedio de 8 y otra con una población con una riqueza promedio de 10. Entonces eso quiere decir que al aumentar una distancia una desviación estándar de `NAP`, la riqueza debe aumentar dos unidades en promedio, esto nos lleva a que $\beta_1 = \frac{2}{\sigma}$. 
+
+
+## Código de gráfico de interceptos y pendientes para identificadores únicos 
+
+Este código es un ejemplo de un estudio de medidas repetidas
+
+```{r, eval=FALSE}
+beta0=beta1=c()
+ind=as.numeric(names(table(base$sujeto)))
+for(i in 1:18) {
+mod=lm(reac~dias,base[base$sujeto==ind[i],])
+beta0[i]=mod$coef[1]
+beta1[i]=mod$coef[2]
+}
+plot(beta1,beta0,pch=18)
+abline(lm(beta0~beta1))
+```
+   
+   
+   
+ 
