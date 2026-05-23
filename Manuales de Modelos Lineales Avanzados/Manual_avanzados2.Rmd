@@ -29,7 +29,7 @@ Para dicho experimentop teníamos dos niveles:
 *A continuación se le brinda un ejemplo de gráfico de la temperatura como categoría*
 
 
-```{r,echo=FALSE, message=FALSE}
+```{r,echo=FALSE,fig.width=6.5,fig.height=3.5,fig.align='center',warning=FALSE,message=FALSE}
 library(ggplot2)
 library(dplyr)
 
@@ -56,7 +56,7 @@ ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
   scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) + # Colores personalizados
   labs(
     title = "Número de  Lote",
-    x = "Temperatura ()",
+    x = "Temperatura",
     y = "Resistencia",
     color = "Lote"
   ) +
@@ -66,7 +66,7 @@ ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
 *A continuación se le brinda un ejemplo de gráfico de la temperatura como númerica*
 
 
-```{r,warning=FALSE, message=FALSE, echo=FALSE}
+```{r, echo=FALSE, message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center', warning=FALSE}
 ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
   geom_point(size = 2, alpha = 0.6) + # Puntos de datos observados
   
@@ -175,7 +175,7 @@ donde:
  
 
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE}
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center'}
 # 1. Definición de parámetros
 mu <- 35
 beta <- 0.08
@@ -234,7 +234,7 @@ Cuando no hay interacción los $\alpha$, representan la diferencias entre las me
 
 **Nota: Puede ser que salga una pregunta de crear este gráfico en el examen, por ello el código queará visible y comentado**
 
-```{r}
+```{r, fig.width=6.5, fig.height=3.5, fig.align='center'}
 # 1. Simulación de datos con Interacción (Pendientes diferentes)
 set.seed(2026)
 temp_cont <- seq(200, 275, length.out = 50)
@@ -301,7 +301,7 @@ No habría interacción entre lote y método, cuando dentro de un mismo método 
 *A continuación se le presenta  el caaso contrario, el cual es un gráfico de cuando se presenta interacción entre lote y método, pero no entre método y temperatura*
 
 
-```{r}
+```{r, fig.width=6.5, fig.height=3.5, fig.align='center'}
 # 1. Simulación (Mantenemos tu lógica exacta)
 set.seed(2026)
 temp_cont <- seq(200, 275, length.out = 50)
@@ -382,7 +382,7 @@ En muchas ocasiones nuestro objetivo no se centra en la parte aleatoria, sin emb
 
 Existe otro caso, donde no tiene sentido tener el intercepto en el modelo el cual se debe observar de la siguiente manera.
 
-```{r, message=FALSE}
+```{r, message=FALSE,fig.width=6.5, fig.height=3.5, fig.align='center'}
 # 1. Simulación de datos: Interacción Lote x Temperatura
 set.seed(2026)
 temp_cont <- seq(200, 275, length.out = 50)
@@ -444,7 +444,7 @@ ggplot() +  # Líneas de los Lotes (Mismo origen, distinta pendiente)
 ```
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,fig.width=6.5, fig.height=3.5, fig.align='center'}
 
 # 1. Simulación de un solo método con interacción en la pendiente
 set.seed(2026)
@@ -512,7 +512,7 @@ base$lote=factor(base$lote)
 
 
 
-```{r}
+```{r,fig.width=6.5, fig.height=3.5, fig.align='center'}
 library(lattice)
 xyplot(res~temp|lote,type=c("r","p"),xlab="temperatura",
 ylab="resistencia",data=base)
@@ -529,7 +529,7 @@ apply(table(base$metodo, base$lote) > 0,1,sum)
 
 *A continuación se gráfican los lotes dentro de cada método*
 
-```{r}
+```{r,fig.width=6.0, fig.height=3.0, fig.align='center'}
 xyplot(res~temp|metodo,groups=lote,type=c("r"),xlab="temperatura",
 ylab="resistencia",layout=c(3,1),data=base)
 ```
@@ -538,7 +538,7 @@ En este caso note que las pendientes de los lotes no son iguales dentro de cada 
 
 *A continuación se gráfican las lineas de cada método*
 
-```{r}
+```{r,fig.width=6.5, fig.height=3.5, fig.align='center'}
 xyplot(res~temp,groups=metodo,type=c("r"),xlab="temperatura",
 ylab="resistencia",data=base,auto.key = T)
 ```
@@ -613,7 +613,7 @@ $$\rho = \frac{\sigma_{\delta\lambda}}{\sigma_\delta\sigma_\lambda} \implies\sig
 
 *A continuación se gráfica, como se ve* $\rho$ *según cada caso*
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,fig.width=6.5, fig.height=3.5, fig.align='center', warning=FALSE}
 library(mvtnorm)
 
 # Configuración de la matriz de gráficos (1 fila, 3 columnas)
@@ -689,7 +689,7 @@ $$\mu_{k} = (\beta_0+\alpha_j+\delta_k)+(\beta_1+\gamma_j+\lambda_k)T$$
 
 Lo que se quiere observar si $\delta_k$ y $\lambda_k$, están correlacionados, para ello tenemos que calcular las diferentes rectas para cada lote s
 
-```{r}
+```{r,fig.width=6.5, fig.height=3.5, fig.align='center'}
 beta0=beta1=c()
 for(i in 1:9) { # Ojo que son 9 lotes
 mod=lm(res~temp,base[base$lote==i,]) #Los lotes está enumerado del 1 al 9
@@ -828,7 +828,7 @@ base$riq = apply(base[, 2:76] > 0,1,sum)# Se suma por fila, para contar el núme
 
 ## Gráfico para ver linealidad
 
-```{r}
+```{r,message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center'}
 xyplot(riq~NAP|playa,pch=18,
 ylab="riqueza promedio",type=c("p","r"),data=base)
 ```
@@ -914,7 +914,7 @@ Encontrar un valor relevante a partir de los datos es engañoso, para ello se ne
 
 Este código es un ejemplo de un estudio de medidas repetidas
 
-```{r, eval=FALSE}
+```{r, eval=FALSE,fig.width=6.5, fig.height=3.5, fig.align='center'}
 beta0=beta1=c()
 ind=as.numeric(names(table(base$sujeto)))
 for(i in 1:18) {
@@ -925,7 +925,277 @@ beta1[i]=mod$coef[2]
 plot(beta1,beta0,pch=18)
 abline(lm(beta0~beta1))
 ```
+# Análisis del experimento de ortodoncia 
+
+A continuación se le brinda el contexto del experimento:
+
+*Se realizó un estudio para dar seguimiento al crecimiento óseo de la maxila o mandíbula de 27 niños (16 hombres y 11 mujeres) desde los 8 a los 14 años.  Cada dos años se midió la distancia entre la pituitaria y la escotadura pterygomaxilar, dos puntos que son fácilmente identificados con rayos X. Esta distancia se utiliza para conocer el grado de maduración esquelética del individuo y está medida en milímetros.  Se compara el ritmo de crecimiento de esta distancia entre hombres y mujeres.*
    
    
+Antes de iniciar el análisis completo, se tiene que mover la variable `edad`, ya que el punto de inicio de este estudio es cuando la persona tiene 8 años, por lo que le restamos 8 a la variable original, para de esa manera obtener el inicio en 0 de la variable `edad` . Esto lo hacemos porque no tiene lógica realizar el modelo para un niño de 0 años. También que ninguno de nuestros datos tiene ese valor, por lo que no es correcto extrapolar en dicha situación.   
    
+```{r}
+load("ortodoncia.Rdata")
+base$edad1=base$edad-8
+```
+
+
+1. Análisis del supuesto de linealidad
+
+Recuerde que primero análizamos la linealidad. Además lo que nos interesa es ver como nuestra variable respuesta va en crecimiento, debido al contexto en el que se encuentra este experimento, ya que no tiene sentido que una persona se le disminuya la mandíbual conforme va aumentando su edad
+
+```{r,fig.width=6.5, fig.height=3.5, fig.align='center'}
+library(lattice)
+xyplot(distancia~edad1|sujeto,pch=18,
+xlab="tiempo a partir de 8 años",
+ylab="distancia promedio",type=c("p","r"),data=base,
+layout=c(9,3))
+```
+
+Se puede observar en el gráfico que no hay problemas con la linealidad de nuestra variable, talvez en alguno niños se puede ver mucha variabilidad y datos extraños, pero eso no nos afecta para poder decir que se cumple este supuesto.
+
+2. Luego de ver la linealidad, pasamos a analizar los interceptos para cada sujeto 
+
+```{r}
+beta0=beta1=c()
+length(table(base$sujeto))
+```
+
+
+```{r,message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center'}
+suj=as.numeric(base$sujeto)
+for(i in 1:27) {
+mod=lm(distancia~edad1,base[suj==i,])
+beta0[i]=mod$coef[1]
+beta1[i]=mod$coef[2]
+}
+plot(beta0,beta1,pch=18, col=4)
+```
+
+
+```{r}
+cor(beta0,beta1)
+```
+En general se ve que las pendientes no van decreciendo conforme aumenta el intercepto. La correlación es -0.2 la cual no es muy alta. No parece haber una relación fuerte entre la distancia a los 8 años y la pendiente de cada niño o niña.
+
+3. Análisis de interacción entre distintos factores
+
+
+Para el siguiente gráfico, se observan todas la pendientes de cada niño o niña, pero se separan por cada sexo
+
+```{r,fig.width=6.5, fig.height=3.5, fig.align='center'}
+xyplot(distancia~edad1|sexo,group=sujeto,pch=18,data=base,
+xlab="tiempo a partir de 8 años",
+ylab="distancia promedio",type=c("r"))
+```
+
+Es un poco complicado analizar con este gráfico debido a la gran cantidad de lineas , lo que se hace en este tipo de situaciones es realizar los gráficos con las lineas promedio para cada uno de los sexos, tal y como se observa a continuación:
+
+```{r,fig.width=6.5, fig.height=3.5, fig.align='center'}
+xyplot(distancia~edad1,group=sexo,col=c(2,4),
+xlab="tiempo a partir de 8 años",
+ylab="distancia promedio",type="r",data=base,
+key=list(corner=c(0,1),lines=list(col=c(4,2),lty=1),
+text=list(c("masculino","femenino"))))
+```
+
+En los gráficos se puede ver que las líneas de crecimiento solo para hombres o solo para mujeres muestran pendientes muy parecidas dentro de cada grupo. Además, haciendo solo la línea de tendencia para hombres y mujeres (segundo gráfico) se nota un crecimiento más alto para los hombres. Podría ser que la interacción fija entre edad y sexo sea significativa. De todas formas se puede apreciar cómo independientemente de la edad, la distancia promedio para los hombres es siempre mayor que la de las mujeres.
+
  
+4. Análisis con el modelo 
+
+Una vez realizado el análisis gráfico de la interacción, tenemos el siguiente modelo:
+
+
+
+$$Y_{ikl,E} = \beta_0+\beta_1E+\alpha_i+\gamma_iE+\delta_k+\tau_kE +\varepsilon_{ikl}$$
+*Usando el modelo de suma nula*
+
+donde;:
+
++ $\beta_0:$ Intercepto del modelo
+
++ $\beta_1:$ Pendiente de edad
+
++ $\alpha_i:$ Efecto i-ésimo sexo, con la restricción $\alpha_1 = -\alpha_2$
+
++ $\gamma_i:$ Efecto i-ésimo de interacción entre la edad y el sexo, donde $\gamma_1 = -\gamma_2$
+
++ $\delta_k:$ Efecto aleatorio del k-ésimo niño (sujeto), el cual se distribuye como $\mathcal{N}(0,\sigma_\delta)$
+
++ $\tau_k$ Efecto de k-ésimo de la interacción entre la edad y el niño (sujeto), el cual se distribuye como $\mathcal{N}(0,\sigma_\tau)$ DUDA
+
+
+
+Recuerde que lo primero que se elimina del modelo es la interacción entre factores aleatorios, dicha prueba de hipótesis corresponde a $H_0: \rho = 0$, para realizar se debe hacer lo siguiente:
+
+```{r, message=FALSE}
+library(lme4)
+options(contrasts=c("contr.sum","contr.poly")) #Suma nula 
+mod1=lmer(distancia~edad1*sexo+(1+edad1|sujeto),data=base) #Modelo con correlación
+mod2=lmer(distancia~edad1*sexo+(1|sujeto)+(0+edad1|sujeto),data=base) #Modelo sin correlación
+anova(mod1,mod2)
+```
+
+
+Como la probabilidad asociada al comparar los dos modelos es alta (0.96), no se rechaza la hipótesis que dice que no hay correlación entre pendientes e interceptos. Se escoge el mod2 para continuar con el análisis. 
+
+Después se hace un modelo que no tenga las pendientes aleatorias (`mod3`) y se compara con el modelo que sí tenía esas pendientes (`mod2`)
+
+```{r}
+mod3=lmer(distancia~edad1*sexo+(1|sujeto),data=base)
+anova(mod3,mod2)
+```
+
+
+Nuevamente la probabilidad asociada a la prueba es alta (0.36), esto nos lleva a escoger el modelo más simple que descarta pendientes específicas para cada sujeto. **Esto no indica que las pendientes son iguales para todos los sujetos de un mismo sexo**.
+
+
+Ahora se verifica si la interacción entre edad y sexo es significativa. Para esto se hace un modelo similar al mod3 pero donde se ha quitado la interacción entre edad y sexo (`mod4`). Como son factores fijos realizamos un `drop1`
+
+```{r}
+drop1(mod3,test="Chisq")
+```
+
+Al obtener una probabilidad tan baja (0.013), se rechaza la hipótesis de no interacción. Como la interacción sí es significativa, se concluye que la tasa de crecimiento de la distancia no es la misma en niños que en niñas. *Se concluye que la tasa de crecimiento de la distancia no es la misma en niños que en niñas.* Debido a que las lineas promedio para cada sexo, son distintas, tal y como se vió en el gráfico que se hizo anteriormente.
+
+5. Construcción del modelo para cada sexo en específico. Para realizar ello primero debemos ver como está códificado, para sexo en nuestro modelo 
+
+```{r}
+contrasts(base$sexo)
+```
+
+**Hombres**
+
+$\mu_{H,E} = (\beta_0-\alpha_1)+(\beta_1-\gamma_1)E$
+
+**Mujeres**
+
+
+$\mu_{H,E} = (\beta_0+\alpha_2)+(\beta_1+\gamma_2)E$
+
+
+6. Estimaciones la ecuación de la linea para cada sexo
+
+Primero debemos obtener la estimación de los efectos fijos del modelo 
+
+```{r}
+round(fixef(mod3),3)
+```
+
+**Hombres**
+
+$\hat{y}_H = (21.912+0.703)+(0.632+0.152)E = 22.615+0.784E$
+
+
+**Mujeres**
+
+$\hat{y}_M = (21.912-0.703)+(0.632-0.152)E = 21.209+0.480E$
+
+
+**Interpretación:** De forma puntual, se puede decir que en los hombres, por cada año, la distancia aumenta en promedio 0.784mm, mientras que en las mujeres, esta distancia aumenta en promedio 0.48mm por año. Se puede ver que la tasa de aumento para los niños es mayor.
+
+
+**Opción con el modelo de tratamiento de referencia**
+
+El modelo general en este caso es:
+
+$$\mu_{E} = \beta_0+\beta_1E+\alpha_2+\gamma_2E$$
+
+**Recuerde** que este modelo tiene las restricciones $\alpha_1 = 0$ y $\gamma_1 = 0$
+
+```{r}
+options(contrasts=c("contr.treatment","contr.poly"))
+```
+
+Observe la siguiente codificación
+
+```{r}
+contrasts(base$sexo)
+```
+```{r}
+mod3=lmer(distancia~edad1*sexo+(1|sujeto),data=base)
+round(fixef(mod3),3)
+```
+
+Dados estos coeficientes tenemos las nuevas ecuaciones para cada sexo:
+
+**Hombres**
+
+$\hat{y}_H = (21.209+1.407)+(0.480+0.305)E = 22.615+0.784E$
+
+
+**Mujeres**
+
+$\hat{y}_M = 21.209+0.480E$
+
+
+Observe que dan iguales a los que obtuvimos con el modelo de suma nula, por lo que cualquier modelo que se use nos lleva a las mismas ecuaciones
+
+
+## Estimación puntual para los 14 años en cada sexo
+
+Realizandolo desde los coeficientes del modelo
+
+```{r}
+22.615-21.209
+```
+
+```{r}
+22.615-21.209+(0.784-0.480)*6
+# Se coloca un 6, debido a que movimos la variable (edad-8)
+```
+
+
+**Cálculo por medio de los vectores**
+
+Tenemos estas dos ecuaciones de los modelos:
+
+**Hombres**
+
+$\mu_{H,E} = (\beta_0-\alpha_1)+(\beta_1-\gamma_1)E$ , recuerde que $\alpha_2 = -\alpha_1$
+
+**Mujeres**
+
+
+$\mu_{M,E} = (\beta_0+\alpha_1)+(\beta_1+\gamma_1)E$
+
+Si restamos estas dos ecuaciones y llegamos a este resultado:
+
+$$-2\alpha_1-2\gamma_1E$$
+Con lo anterior obtenemos el siguiente vector:
+
+$$(0,\, 0,\, -2,\, 0,-2E)$$
+
+```{r,echo=FALSE}
+options(contrasts=c("contr.sum","contr.poly"))
+mod3=lmer(distancia~edad1*sexo+(1|sujeto),data=base)
+```
+
+Recordemos que para este caso queremos ver esa diferencia eentre hombres y mujeres es cuando el valor de `edad1 = 6` (14 años).
+
+```{r}
+c(0,0,-2,-12)%*%fixef(mod3)
+#Note que da el mismo resultado que el proceso realizado anteriormente 
+```
+
+La distancia a los 8 años está dada por los interceptos de las ecuaciones escritas anteriormente. A los 8 años la distancia promedio para los hombres es 22.615mm y para las mujeres 21.209mm, entonces el promedio de esta distancia es 1.406mm mayor para los hombres que para las mujeres. A los 14 años esta diferencia aumenta considerablemente, ya que ahora la distancia promedio para los hombres es 3.23mm mayor que para las mujeres.
+
+7. Cálculo de intervalo de confianza
+
+```{r}
+h = c(0,0,-2,-12)
+df = 25 #PREGUNTAR COMO SE OBTIENE
+L = h%*%fixef(mod3)
+ee = t(h)%*%vcov(mod3)%*%h
+t = qt(1-0.05/2,25)
+ic = cbind(L-t*ee,L+t*ee)
+ic
+```
+
+
+Una conclusión que podemos dar de este estudio es la siguiente: *desde que los niños entran al estudio a los 8 años se tiene una diferencia importante en la distancia media estudiada entre hombres y mujeres; sin embargo, con el tiempo, al ir creciendo esta distancia también se acentúan las diferencias.*
+
+
+
+
