@@ -14,30 +14,74 @@ output:
 ---
 # Variables continuas como predictores
 
-Este tipo de variables sería como si en el ejemplo de `Papel` que lo analizamos en el caso anterior tuviera el factor de temperatura, como una variable númerica, no como una categoría. Dado esto, para estos casos es crucial el **supuesto de linealidad**.
+Este tipo de variables sería como si en el ejemplo de `Papel` que lo analizamos en el manual anterior tuviera el factor de temperatura, como una variable númerica, no como una categoría. Dado esto, para estos casos es crucial el **supuesto de linealidad**.
 
 ## Comparación del diseño de papel, cuando la variable temperatura es númerica o categórica
 
-Para dicho experimentop teníamos dos niveles:
+Para dicho experimento se tienen dos niveles:
 
 + Nivel 1: El número de muestras , este tiene como factor la temperatura. *Es importante notar que la temperatura puede ser un factor o una variable continua.*
 
 
-+ NIvel 2: El lote, este tiene como factor el método.
++ Nivel 2: El lote, este tiene como factor el método.
 
+\newpage
 
 *A continuación se le brinda un ejemplo de gráfico de la temperatura como categoría*
 
 
-```{r,echo=FALSE,fig.width=6.5,fig.height=3.5,fig.align='center',warning=FALSE,message=FALSE}
+```{r, echo=FALSE, message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center'}
 library(ggplot2)
 library(dplyr)
+
+set.seed(123)
+temperaturas <- c(200, 225, 250, 275)
+lotes <- c(1, 2, 3)
+n_muestras <- 4 
+
+df_simulado_factor <- expand.grid(
+  temp = temperaturas,
+  lote = as.factor(lotes),
+  replica = 1:n_muestras
+) %>%
+  mutate(
+    # Convertimos explícitamente a factor para el gráfico
+    temp_factor = as.factor(temp),
+    
+    # La simulación sigue una lógica de efectos por nivel
+    res = 25 + (as.numeric(lote) * 2) + (as.numeric(temp_factor) * 2.5) + rnorm(n(), 0, 1.5)
+  )
+
+# Gráfico 1: Puntos con Temperatura como Factor en el eje X
+ggplot(df_simulado_factor, aes(x = temp_factor, y = res, color = lote)) +
+  geom_point(size = 2.25, alpha = 0.8, position = position_jitter(width = 0.1)) + 
+  facet_wrap(~ lote) + 
+  scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) + 
+  labs(
+    title = "Temperatura como Variable Categórica (Factor)",
+    x = "Niveles de Temperatura",
+    y = "Resistencia"
+  ) +
+  theme_bw() +
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5, face = "bold"))
+
+```
+
+
+
+*A continuación se le brinda un ejemplo de gráfico de la temperatura como númerica*
+
+
+```{r, echo=FALSE, message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center', warning=FALSE}
+
 
 # 1. Simulación de datos basada en image_664bac.png
 set.seed(123)
 temperaturas <- c(200, 225, 250, 275)
 lotes <- c(1, 2, 3)
 n_muestras <- 4 # Puntos por combinación
+
+
 
 df_simulado <- expand.grid(
   temp = temperaturas,
@@ -48,25 +92,6 @@ df_simulado <- expand.grid(
     # Simulación de resistencia en el rango [26, 45]
     res = 25 + (as.numeric(lote) * 2) + (temp * 0.03) + rnorm(n(), 0, 1.5)
   )
-
-# 2. Gráfico con colores por lote y sin medias
-ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
-  geom_point(size = 2.25, alpha = 0.8) + # Solo los puntos de datos
-  facet_wrap(~ lote) + # Un panel por lote
-  scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) + # Colores personalizados
-  labs(
-    title = "Número de  Lote",
-    x = "Temperatura",
-    y = "Resistencia",
-    color = "Lote"
-  ) +
-  theme_bw() +
-  theme(legend.position = "none",plot.title = element_text(hjust = 0.5)) # Quitamos la leyenda porque ya está el título en el panel
-```
-*A continuación se le brinda un ejemplo de gráfico de la temperatura como númerica*
-
-
-```{r, echo=FALSE, message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center', warning=FALSE}
 ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
   geom_point(size = 2, alpha = 0.6) + # Puntos de datos observados
   
@@ -91,7 +116,7 @@ ggplot(df_simulado, aes(x = temp, y = res, color = lote)) +
 ```
 
 
-Para convertir la variable temperatura a una variable númerica, es super importante que se cumpla el **suspuesto de linealidad**, para poder realizar este cambió en el análisis. Si sucede que los puntos tienen otra forma, como una cuadrática, logarítmica etc. Se necesitarian más datos, para asegurarlo, en cambió con la linealidad, esto no sucede así, debido a que es usual que con 4 datos está se pueda observar correctamente. Es importante resaltar que la linealidad se debe cumplir dentro de la unidad de nivel 2, en nuestro ejemplo sería, en cada lote. Si sucede el caso de que en todos los lotes, los datos están muy desordenos, es altamente recomendado trabajarlo como factor.Por último, si tenemos muchas observaciones dentro de cada lote, lo recomendable es realizar agrupaciones, para tener un mayor control de la variable.
+Para convertir la variable temperatura a una variable númerica, es super importante que se cumpla el **suspuesto de linealidad**, para poder realizar este cambió en el análisis. Si sucede que los puntos tienen otra forma, como una cuadrática, logarítmica etc. Se necesitarian más datos, para asegurarlo, en cambió con la linealidad, esto no sucede así, debido a que es usual que con 4 datos está se pueda observar correctamente. Es importante resaltar que la linealidad se debe cumplir dentro de la unidad de nivel 2, en nuestro ejemplo sería, en cada lote. Si sucede la situación de que en todos los lotes, los datos están muy desordenos, es altamente recomendado trabajarlo como factor.Por último, si tenemos muchas observaciones dentro de cada lote, lo recomendable es realizar agrupaciones, para tener un mayor control de la variable.
 
 
 ## Modelos para variables continuas en modelos mixtos
@@ -108,10 +133,10 @@ $$y_{ijkl} = \beta_0+\alpha_i+\beta_j+(\alpha\beta)_{ij}+\delta_k+\varepsilon_{i
 
 donde:
 
-+ **Los factores fijos corresponden a :** $\beta_0:$ Es el intercepto,$\alpha_i:$ Efécto del método,$\beta_j:$ Efecto de la temperatura y el efecto de interación entre estos factores $(\alpha\beta)_{ij}$
++ **Los factores fijos corresponden a :** $\beta_0:$ Es el intercepto, $\alpha_i:$ Efécto del método,$\beta_j:$ Efecto de la temperatura y el efecto de interación entre estos factores $(\alpha\beta)_{ij}$
 
 
-+ **Las distribuciones de los factores aleatorios, asociadas al modelo corresponden a :** $\delta_k\sim\mathcal{N}(0,\sigma^2_2\delta)$. De $\varepsilon\sim\mathcal{N}(0,\sigma^2_2\varepsilon)$, también esta la distribución $Y_{ij}\sim\mathcal{N}(\mu_j,\sigma^2_2\varepsilon)$. Por último, sabemos que $\delta_k = \mu_k-\mu$, de esto obtenemos que $\mu_j\sim\mathcal{N}(0,\sigma^2_2\delta)$ 
++ **Las distribuciones de los factores aleatorios, asociadas al modelo corresponden a :** $\delta_k\sim\mathcal{N}(0,\sigma^2_\delta)$. De $\varepsilon\sim\mathcal{N}(0,\sigma^2_\varepsilon)$, también esta la distribución $Y_{ij}\sim\mathcal{N}(\mu_j,\sigma^2_\varepsilon)$. Por último, sabemos que $\delta_k = \mu_k-\mu$, de esto obtenemos que $\mu_j\sim\mathcal{N}(0,\sigma^2_\delta)$ 
 
 
 ### Modelo con interacción de una variable númerica
@@ -121,7 +146,7 @@ Para este modelo debemos pensar que la temperatura no es un factor, sino quna va
 
 $$y_{iTjkl} = \beta_0+\alpha_i+\gamma_1T+\omega_iT+\delta_{k(i)}+\lambda_{k(i)}T+\varepsilon_{ijkl}$$
 
-Utilizando tratamiento de referencia
+*Utilizando tratamiento de referencia*
 
 donde:
 
@@ -142,7 +167,7 @@ donde:
 
 + $\beta_0:$ Es el intercepto del modelo.
 
-+ $\gamma_1:$ Es la pendiente.
++ $\gamma_1:$ Es la pendiente de temperatura.
 
 + $\delta_{k(1)}:$ Efecto del lote dentro del método 1, este se ubica en el intercepto, el cual se distribute como $\delta_{k(1)}\sim\mathcal{N}(0,\sigma^2_\delta)$
 
@@ -151,7 +176,7 @@ donde:
 
 **Modelo para el método 2**
 
-$$y_{2Tjkl} = (\beta_0+\alpha_2)+(\gamma_1+\omega_2)T+\varepsilon_{ijkl}$$
+$$y_{2Tjkl} = (\beta_0+\alpha_2)+(\gamma_1+\omega_2)T+\delta_{k(2)}+\lambda_{k(2)}T+\varepsilon_{ijkl}$$
 
 donde:
 
@@ -165,7 +190,7 @@ donde:
 **Modelo para el método 3**
 
 
-$$y_{3Tjkl} = (\beta_0+\alpha_3)+(\gamma_1+\omega_3)T+\varepsilon_{ijkl}$$
+$$y_{3Tjkl} = (\beta_0+\alpha_3)+(\gamma_1+\omega_3)T+\delta_{k(3)}+\lambda_{k(3)}T+\varepsilon_{ijkl}$$
 
 donde:
 
@@ -179,10 +204,10 @@ donde:
 # 1. Definición de parámetros
 mu <- 35
 beta <- 0.08
-alphas <- c(-4, 0, 4)
+alphas <- c(-4, 0, 4) # Efec
 x_start <- 200 # Inicio del eje visible
 
-df_lineas <- data.frame(
+df_lineas <- data.frame( #Creación de los datos, para la simulación del gráfico
   temp = rep(seq(200, 275, length.out = 100), 3),
   metodo = rep(c("Método 1", "Método 2", "Método 3"), each = 100),
   alpha_val = rep(alphas, each = 100)
@@ -219,7 +244,7 @@ ggplot(df_lineas, aes(x = temp, y = res, color = metodo)) +
   labs(
     title = "Representación de los Efectos Fijos del Método",
     subtitle = expression(paste("Distancia del intercepto definida por ", alpha[i], " = ", mu[i], " - ", mu)),
-    x = "Temperatura ()",
+    x = "Temperatura",
     y = "Resistencia"
   ) +
   theme_minimal() +
@@ -234,56 +259,52 @@ Cuando no hay interacción los $\alpha$, representan la diferencias entre las me
 
 **Nota: Puede ser que salga una pregunta de crear este gráfico en el examen, por ello el código queará visible y comentado**
 
-```{r, fig.width=6.5, fig.height=3.5, fig.align='center'}
-# 1. Simulación de datos con Interacción (Pendientes diferentes)
-set.seed(2026)
-temp_cont <- seq(200, 275, length.out = 50)
-metodos <- c("Metodo 1", "Metodo 2", "Metodo 3")
 
-df_interaccion <- expand.grid(
+```{r, fig.width=6.5, fig.height=3.5, fig.align='center'}
+# 1. Simulación de datos con Interacción 
+set.seed(2026) 
+temp_cont <- seq(200, 275, length.out = 50) 
+metodos <- c("Metodo 1", "Metodo 2", "Metodo 3") 
+df_interaccion <- expand.grid( 
   temp = temp_cont,
   metodo = metodos,
   lote_id = 1:4
 ) %>%
   mutate(
     lote_unico = as.factor(paste(metodo, "Lote", lote_id)),
-    # INTERACCIÓN: Cada método tiene una pendiente (beta) distinta
     beta = case_when(
-      metodo == "Metodo 1" ~ 0.04,
-      metodo == "Metodo 2" ~ 0.44, # Pendiente más pronunciada
-      metodo == "Metodo 3" ~ -0.20 # Pendiente negativa
+      metodo == "Metodo 1" ~ 0.10,   # Pendiente positiva leve
+      metodo == "Metodo 2" ~ 1.76,   # Pendiente NEGATIVA muy fuerte (Cruza hacia abajo)
+      metodo == "Metodo 3" ~ 3.2    # Pendiente POSITIVA muy fuerte (Sube rápido)
     ),
-    # Efecto del lote (desplazamiento vertical constante = no interacción lote x temp)
+    # Efecto del lote (desplazamiento vertical)
     efecto_lote = lote_id * 2.5,
-    # Resultado lineal exacto (sin ruido para que sean líneas rectas puras)
-    res = 18 + efecto_lote + (beta * temp)
+    # Modificamos el intercepto base para que el cruce ocurra en el centro del gráfico
+    res = 200 + efecto_lote + (beta * (temp - 235)) 
   )
-
 # 2. Cálculo de la línea de la media por método
 df_medias <- df_interaccion %>%
   group_by(metodo, temp) %>%
   summarise(res_media = mean(res), .groups = 'drop')
-
 # 3. Gráfico Único
 ggplot() +
-  # Líneas de los Lotes (delgadas, color según método)
+  # Líneas de los Lotes
   geom_line(data = df_interaccion, 
             aes(x = temp, y = res, color = metodo, group = lote_unico), 
-            size = 0.7, alpha = 0.4) +
+            size = 0.7, alpha = 0.3) +
   
-  # LÍNEAS DE LA MEDIA (más gruesas y de un color sólido para contrastar)
-  # Usamos 'grey20' o un color oscuro para que resalte sobre los colores de los lotes
+  # LÍNEAS DE LA MEDIA
   geom_line(data = df_medias, 
             aes(x = temp, y = res_media, group = metodo, color = metodo), 
-            size = 1) +
+            size = 1.3) +
   
-  # Estética y Etiquetas
-  scale_color_manual(values = c("Metodo 1" = "#E41A1C", 
-                                "Metodo 2" = "#377EB8", 
-                                "Metodo 3" = "#4DAF4A")) +
+  scale_color_manual(values = c("Metodo 1" = "red4", 
+                                "Metodo 2" = "skyblue3", 
+                                "Metodo 3" = "green4")) +
   labs(
-    title = "Modelo Lineal con Interacción Método × Temperatura",
-    x = "Temperatura ()",
+    title = "Modelo Lineal con Interacción Fuerte Método × Temperatura",
+    subtitle = "El efecto de la temperatura depende del método utilizado",
+    x = "Temperatura",
     y = "Resistencia",
     color = "Método"
   ) +
@@ -294,6 +315,7 @@ ggplot() +
     legend.position = "bottom"
   )
 ```
+
 
 
 No habría interacción entre lote y método, cuando dentro de un mismo método las lineas son paralelas, como se pudo observar en el gráfico anterior. Por lo que en este caso $\sigma_{\lambda} = 0$ 
@@ -360,7 +382,7 @@ ggplot() +
                                 "Metodo 3" = "#4DAF4A")) +
   labs(
     title = "Interacción Lote × Método",
-    x = "Temperatura ()",
+    x = "Temperatura",
     y = "Resistencia",
     color = "Método"
   ) +
@@ -382,7 +404,7 @@ En muchas ocasiones nuestro objetivo no se centra en la parte aleatoria, sin emb
 
 Existe otro caso, donde no tiene sentido tener el intercepto en el modelo el cual se debe observar de la siguiente manera.
 
-```{r, message=FALSE,fig.width=6.5, fig.height=3.5, fig.align='center'}
+```{r, message=FALSE,fig.width=6.5, fig.height=3.5, fig.align='center', echo=FALSE}
 # 1. Simulación de datos: Interacción Lote x Temperatura
 set.seed(2026)
 temp_cont <- seq(200, 275, length.out = 50)
@@ -430,8 +452,8 @@ ggplot() +  # Líneas de los Lotes (Mismo origen, distinta pendiente)
             color = "black", size = 1.2) +
   #scale_color_manual(values = c("Metodo 1" = "#E41A1C", "Metodo 2" = "#377EB8", "Metodo 3" = "#4DAF4A")) +
   labs(
-    title = "Interacción Lote × Temperatura",
-    x = "Temperatura ()",
+    title = "Interacción Lote × Temperatura (sin intercepto)",
+    x = "Temperatura",
     y = "Resistencia",
     color = "Método"
   ) +
@@ -518,7 +540,7 @@ xyplot(res~temp|lote,type=c("r","p"),xlab="temperatura",
 ylab="resistencia",data=base)
 ```
 
-Observe que en este caso, en la mayoría hya linealiad, en algunos hay otros comportamuientos, pero los mismos no son consistentes. Además con solo cuatro puntos no podemos asegurar ningún otro tipo de comportamiento, por lo que asumimos que se cumple el supuesto de linealidad.
+Observe que en este caso, en la mayoría hay linealiad, en algunos hay otros comportamuientos, pero los mismos no son consistentes. Además con solo cuatro puntos no podemos asegurar ningún otro tipo de comportamiento, por lo que asumimos que se cumple el supuesto de linealidad.
 
 
 *De la siguiente forma, obtenemos cuantos lotes por cada método tenemos *
@@ -533,6 +555,8 @@ apply(table(base$metodo, base$lote) > 0,1,sum)
 xyplot(res~temp|metodo,groups=lote,type=c("r"),xlab="temperatura",
 ylab="resistencia",layout=c(3,1),data=base)
 ```
+
+\newpage
 
 En este caso note que las pendientes de los lotes no son iguales dentro de cada método, por lo que se podría sospechar de una posible interacción entre lote y temperatura.
 
@@ -666,16 +690,16 @@ par(mfrow = c(1, 1))
 
 2. $H_0: \sigma_\lambda = 0$. En ocasiones si no hay correlación este paso puede omitirse.
 
-2.5. $H_0: \sigma_{\delta}:$ Hay que tener cuiadado, porque depende del sieño este no se puede eliminar
+3. $H_0: \sigma_{\delta}:$ Hay que tener cuidado, porque **depende del sieño este no se puede eliminar**
 
-3. $H_0: \gamma_j = 0$
+4. $H_0: \gamma_j = 0$
 
 + Rechazo: Hay interacción entre método y temperatura, *Ver el gráfico de la sección de arriba*. 
 
-+ No rechazo: No hay interacción entre método y temperatura ,*Ver el gráfico de la sección de arriba*. Luego de estos realizamos las hipótesis de los demás factores fijos $(H_0:\alpha_i = 0)$ Si son significativos realizamos los intervalos de confianza, si sucede el caso contrario se debe anailizar potencia.
++ No rechazo: No hay interacción entre método y temperatura ,*Ver el gráfico de la sección de arriba*. Luego de estos realizamos las hipótesis de los demás factores fijos $(H_0:\alpha_i = 0)$. Si son significativos realizamos los intervalos de confianza, si sucede el caso contrario se debe anailizar potencia.
 
 
-4. $H_0: \beta_1 = 0$
+5. $H_0: \beta_1 = 0$
 
 
 
@@ -724,8 +748,7 @@ temp1 &= temp - 200 \\
 \end{aligned}
 $$
 
-## hipótesis de la correlación
-
+## Análisis del experimento
 $$H_0: \rho = 0 $$
 
 **Modelo correlacionado, ya que los coeficietes ($\beta_0$ y $\beta_1$) están juntos dentro del lote.**
@@ -810,15 +833,16 @@ confint(mod4)[6,]*25
 **El aumento en la resistencia es entre 2.34 y 3.70 kg/cm por cada 25 grados que aumente la temperatura, en cualquiera de los 3 métodos**
 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(emmeans)
 emmeans(mod4,pairwise~metodo,adjust="bonferroni")$contrast
 ```
 
 *Nota: Si el intervalo es significativo, pero no es relevante, esto sucede cuando la muestra es muy grande.*
 
+\newpage
 
-# Ejemplo de las playas
+# Análisis del estudio de las playas
 
 
 ```{r}
@@ -896,9 +920,9 @@ confint(mod1)
 ```
 
 
-En este caso `.sig03`, corresponde a $\sigma_\gamma$, note que llega hasta infinito, esto se debe a la poca cantidada de datos y a una playa que contiene un valor de influencia que puede estar generando problemas. Una solución ante esto puede ser, recolectar más muestra o también recolectar más datos con diferentes tipos de NAP, en cada playa.
+En este caso `.sig02`, corresponde a $\sigma_\gamma$, note que llega hasta infinito, esto se debe a la poca cantidad de datos y a una playa que contiene un valor de influencia que puede estar generando problemas. Una solución ante esto puede ser, recolectar más muestra o también recolectar más datos con diferentes tipos de NAP, en cada playa.
 
-En la parte aleatoria, .sig01 es la desviación estándar de los interceptos aleatorios, `.sig02` es la correlación entre interceptos y pendientesy `.sigma` es la desviación estándar del error. Es evidente que el intervalo para la correlación no incluye al cero pues va de -1 a -0.36, lo que indica que sí hay una correlación importante entre los interceptos y las pendientes.
+En la parte aleatoria, `.sig01` es la desviación estándar de los interceptos aleatorios, `.sig03` es la correlación entre interceptos y pendientes `.sigma` es la desviación estándar del error. Es evidente que el intervalo para la correlación no incluye al cero pues va de -1 a -0.36, lo que indica que sí hay una correlación importante entre los interceptos y las pendientes.
 
 El intercepto representa la riqueza promedio cuando el NAP es cero, es decir cuando se ubica en el nivel medio de la marea, entonces, entre más alta es la riqueza promedio al nivel medio de la marea, se va a tener un mayor decrecimiento en la riqueza al aumentar el NAP, lo cual tiene sentido.
 
