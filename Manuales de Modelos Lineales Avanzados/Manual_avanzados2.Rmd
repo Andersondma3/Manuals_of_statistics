@@ -154,7 +154,7 @@ donde:
 
 + $\alpha_i:$ Efecto del método, con las restricciones $\alpha_1 = 0$.
 
-+ $\delta_{k(i)}:$ Efecto del lote del i-ésimo método, el cuál tiene la distribuación $\delta_k\sim\mathcal{N}(0,\sigma^2_2\delta)$.
++ $\delta_{k(i)}:$ Efecto del lote del i-ésimo método, el cuál tiene la distribuación $\delta_k\sim\mathcal{N}(0,\sigma^2_\delta)$.
 
 + $\lambda_{k(i)}:$ Es lo que aumenta o disminuye la pendiente de ese lote, con respecto a la pendiente general del método i-ésimo, lo cual es lo mismo que decir que el efecto de interacción entre lote y temperatura, el mismo se distribuye como  $\lambda_{k(1)}\sim\mathcal{N}(0,\sigma^2_\lambda)$.
 
@@ -596,7 +596,7 @@ Note que mediante las restas de estas ecuaciones cuando $T = 0$, obtenemos los $
 Se tiene el siguiente modelo:
 
 
-$$y_{iTjkl} = \beta_0+\beta_1T+\alpha_i+\gamma_jT+\omega_iT+\delta_{k(i)}+\lambda_{k(i)}T+\varepsilon_{ijkl}$$
+$$y_{iTjkl} = \beta_0+\beta_1T+\alpha_i+\gamma_jT+\delta_{k(i)}+\lambda_{k(i)}T+\varepsilon_{ijkl}$$
 donde:
 
 Usando tratamiento de referencia
@@ -608,7 +608,7 @@ Usando tratamiento de referencia
 + $\gamma_j;$ Efecto j-ésimo de interacción entre el método y temperatura, con la restricción $\gamma_1 = 0$, este significa cuánto aumenta la temperatura con respecto al método 1. 
 
 
-+ $\delta_k:$ Efecto del lote con respecto a la linea media del método al que corresponde, en el intercepto, el cuál se distribuye como $\delta_k~\sim\mathcal{N}(0,\sigma_\delta^2)$. *Recuerde que en la sección anterior hay una representación gráfica de este efecto*.
++ $\delta_k:$ Efecto del lote con respecto a la linea media del método al que corresponde en el intercepto, el cuál se distribuye como $\delta_k~\sim\mathcal{N}(0,\sigma_\delta^2)$. *Recuerde que en la sección anterior hay una representación gráfica de este efecto*.
 
 + $\lambda_{k(i)}:$ Es el efecto de interacción entre lote y temperatura, el cual significa cuánto cambia la pendiente del k-ésimo lote con respecto a la pendiente general del i-ésimo método.Este se distribuye como  $\lambda_{k(i)}\sim\mathcal{N}(0,\sigma_\lambda)$
 
@@ -690,7 +690,7 @@ par(mfrow = c(1, 1))
 
 2. $H_0: \sigma_\lambda = 0$. En ocasiones si no hay correlación este paso puede omitirse.
 
-3. $H_0: \sigma_{\delta}:$ Hay que tener cuidado, porque **depende del sieño este no se puede eliminar**
+3. $H_0: \sigma_{\delta}:$ Hay que tener cuidado, porque **depende del sueño este no se puede eliminar**
 
 4. $H_0: \gamma_j = 0$
 
