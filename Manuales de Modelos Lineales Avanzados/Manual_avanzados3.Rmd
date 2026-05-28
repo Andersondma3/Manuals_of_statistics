@@ -1,0 +1,14 @@
+---
+title: "Manual para el curso Modelos Lineales Avanzados (XS-0125) Tercer Examen"
+author: |
+  | **Autor:** Anderson Martínez <br>
+  | **Colaboradores:** Sebastián Calvo, Justin Zhu, Fabián Almirall
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  word_document:
+    toc: true
+    toc_depth: '3'
+---
