@@ -140,7 +140,7 @@ donde:
 
 ### Modelo con interacción de una variable númerica
 
-Para este modelo debemos pensar que la temperatura no es un factor, sino quna variable númerica, que cumple con el supuesto de linealidad. Dado lo anterior, el modelo resultante queda de la siguiente manera:
+Para este modelo debemos pensar que la temperatura no es un factor, sino una variable númerica, que cumple con el supuesto de linealidad. Dado lo anterior, el modelo resultante queda de la siguiente manera:
 
 
 $$y_{iTjkl} = \beta_0+\alpha_i+\gamma_1T+\omega_iT+\delta_{k(i)}+\lambda_{k(i)}T+\varepsilon_{ijkl}$$
@@ -153,9 +153,9 @@ donde:
 
 + $\alpha_i:$ Efecto del método, con las restricciones $\alpha_1 = 0$.
 
-+ $\gamma_1T:$ Es la pendiente base (fija) del método de referencia
++ $\gamma_1T:$ Es la pendiente base (fija) del método de referencia.
 
-+ $\omega_iT:$ Es el ajuste fijo que se le hace a la pendiente según el método en el que estés.
++ $\omega_iT:$ Es el ajuste fijo que se le hace a la pendiente según el método en el que esté.
 
 + $\delta_{k(i)}:$ Efecto del lote del i-ésimo método, el cuál tiene la distribuación $\delta_k\sim\mathcal{N}(0,\sigma^2_\delta)$.
 
@@ -549,7 +549,7 @@ xyplot(res~temp|lote,type=c("r","p"),xlab="temperatura",
 ylab="resistencia",data=base)
 ```
 
-Observe que en este caso, en la mayoría hay linealiad, en algunos hay otros comportamuientos, pero los mismos no son consistentes. Además con solo cuatro puntos no podemos asegurar ningún otro tipo de comportamiento, por lo que asumimos que se cumple el supuesto de linealidad.
+Observe que en este caso, en la mayoría hay linealidad, en algunos hay otros comportamientos, pero los mismos no son consistentes. Además con solo cuatro puntos no podemos asegurar ningún otro tipo de comportamiento, por lo que asumimos que se cumple el supuesto de linealidad.
 
 
 *De la siguiente forma, obtenemos cuantos lotes por cada método tenemos *
@@ -564,8 +564,6 @@ apply(table(base$metodo, base$lote) > 0,1,sum)
 xyplot(res~temp|metodo,groups=lote,type=c("r"),xlab="temperatura",
 ylab="resistencia",layout=c(3,1),data=base)
 ```
-
-\newpage
 
 En este caso note que las pendientes de los lotes no son iguales dentro de cada método, por lo que se podría sospechar de una posible interacción entre lote y temperatura.
 
@@ -669,7 +667,7 @@ graficar_persp <- function(rho, titulo) {
   persp(x, y, z, 
         theta = 30, phi = 30, # Ángulos de visión
         expand = 0.5, 
-        col = "blue", 
+        col = "lightblue", 
         shade = 0.5,
         ticktype = "detailed",
         main = titulo,
@@ -743,7 +741,7 @@ Observe que la correlación es -0.95, esto nos confirma lo visto en el gráfico 
 
 ## Mover la variable para descubirir el intercepto
 
-Para obtener verdaderamente de donde comienza el intercepto, lo que hacemos es mover la variable de modo que el intercepto verdaderamente represente el inicio de la variable, como por ejemplo en el experimento de papel debido a que la temperatura comienza en 200, restamos esos 200 para que comienze en cero. Es importante aclarar que esto nos funciona, para variables que tiene un mínimo.**Esto nos va a afectar la correción entre interceptos, por lo que se recomiendo hacer cuando tenga sentido.**
+Para obtener verdaderamente de donde comienza el intercepto, lo que hacemos es mover la variable de modo que el intercepto verdaderamente represente el inicio de la variable, como por ejemplo en el experimento de papel debido a que la temperatura comienza en 200, restamos esos 200 para que comience en cero. Es importante aclarar que esto nos funciona, para variables que tiene un mínimo.**Esto va a afectar la correlación entre interceptos, por lo que se recomienda hacer cuando tenga sentido.**
 
 *Ejemplo del proceso de mover la variable*
 
@@ -760,7 +758,7 @@ $$
 ## Análisis del experimento
 $$H_0: \rho = 0 $$
 
-**Modelo correlacionado, ya que los coeficietes ($\beta_0$ y $\beta_1$) están juntos dentro del lote.**
+**Modelo correlacionado, ya que los coeficientes ($\beta_0$ y $\beta_1$) están juntos dentro del lote.**
 
 ```{r, message=FALSE}
 library(lme4)
