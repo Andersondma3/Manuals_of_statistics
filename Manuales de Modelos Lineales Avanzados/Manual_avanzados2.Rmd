@@ -30,7 +30,7 @@ Para dicho experimento se tienen dos niveles:
 *A continuación se le brinda un ejemplo de gráfico de la temperatura como categoría*
 
 
-```{r, echo=FALSE, message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center'}
+```{r, echo=FALSE, message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center', warning=FALSE}
 library(ggplot2)
 library(dplyr)
 
@@ -144,7 +144,7 @@ donde:
 Para este modelo debemos pensar que la temperatura no es un factor, sino quna variable númerica, que cumple con el supuesto de linealidad. Dado lo anterior, el modelo resultante queda de la siguiente manera:
 
 
-$$y_{iTjkl} = \beta_0+\alpha_i+\gamma_1T+\omega_iT+\delta_{k(i)}+\lambda_{k(i)}T+\varepsilon_{ijkl}$$
+$$y_{iTjkl} = \beta_0+\alpha_i+\gamma_1T+\omega_iT+\delta_{k(i)}+\lambda_{k(i)}T+\varepsilon_{ikl}$$
 
 *Utilizando tratamiento de referencia*
 
@@ -152,11 +152,22 @@ donde:
 
 + $\beta_0:$ Es el intercepto del modelo.
 
++ $\gamma_1:$ pendiente del tiempo 
+
++ $\omega_i:$ Efecto de interacción entre el i-ésimo método y la temperatura
+
 + $\alpha_i:$ Efecto del método, con las restricciones $\alpha_1 = 0$.
 
 + $\delta_{k(i)}:$ Efecto del lote del i-ésimo método, el cuál tiene la distribuación $\delta_k\sim\mathcal{N}(0,\sigma^2_\delta)$.
 
 + $\lambda_{k(i)}:$ Es lo que aumenta o disminuye la pendiente de ese lote, con respecto a la pendiente general del método i-ésimo, lo cual es lo mismo que decir que el efecto de interacción entre lote y temperatura, el mismo se distribuye como  $\lambda_{k(1)}\sim\mathcal{N}(0,\sigma^2_\lambda)$.
+
+*A continuación se le presenta este modelo en r*
+
+```{r,eval=FALSE}
+mod=lmer(res~1+metodo*temp+(1+temp|lote),data=base)
+```
+
 
 
 **Modelo para el método 1**
@@ -204,41 +215,37 @@ donde:
 # 1. Definición de parámetros
 mu <- 35
 beta <- 0.08
-alphas <- c(-4, 0, 4) # Efec
-x_start <- 200 # Inicio del eje visible
+alphas <- c(-4, 0, 4) 
+x_start <- 200 
 
-df_lineas <- data.frame( #Creación de los datos, para la simulación del gráfico
+df_lineas <- data.frame(
   temp = rep(seq(200, 275, length.out = 100), 3),
   metodo = rep(c("Método 1", "Método 2", "Método 3"), each = 100),
   alpha_val = rep(alphas, each = 100)
 ) %>%
   mutate(res = mu + alpha_val + (beta * (temp - 237.5)))
 
-# 2. Gráfico con alpha en el intercepto (inicio del eje)
+# 2. Gráfico
 ggplot(df_lineas, aes(x = temp, y = res, color = metodo)) +
-  geom_line(size = 1.1) +
+  geom_line(linewidth = 1.1) + 
+  
   # Referencia de la Gran Media (Global Mean)
   geom_segment(aes(x = 200, xend = 275, y = mu + (beta * (200 - 237.5)), 
                    yend = mu + (beta * (275 - 237.5))), 
-               color = "black", linetype = "dotted") +
+               color = "black", linetype = "dotted", inherit.aes = FALSE) +
   
-  # --- MODIFICACIÓN DE PARÁMETROS PARA EL INTERCEPTO ---
-  # Dibujamos las llaves justo en x = 200 (el intercepto del gráfico)
-  annotate("segment", x = 200, xend = 200, y = 32, yend = 28, # Alpha 1
-           arrow = arrow(ends = "both", length = unit(0.15, "cm")), color = "red") +
-  annotate("text", x = 203, y = 30, label = "alpha[2]", parse = TRUE, color = "red") +
+  # --- SOLUCIÓN: Usar geom_segment directo para las flechas ---
+  # Alpha 1 (Método 1 vs Media Global)
+  geom_segment(aes(x = 200, xend = 200, y = 28, yend = 32), 
+               arrow = arrow(ends = "both", length = unit(0.15, "cm")), 
+               color = "#377EB8", inherit.aes = FALSE) +
+  annotate("text", x = 203, y = 30, label = "alpha[1]", parse = TRUE, color = "#377EB8") +
   
- annotate("segment", 
-         x = 198, xend = 198,        # 'x' menor para que esté más atrás
-         y = 36, yend = 28,          # 'y' menores para que esté abajo
-         arrow = arrow(ends = "both", length = unit(0.15, "cm")), 
-         color = "darkgreen") +
- annotate("text", 
-         x = 195,                    # 'x' un poco antes del segmento para no traslapar
-         y = 33.5,                     # 'y' central entre 32 y 28
-         label = "alpha[3]", 
-         parse = TRUE, 
-         color = "darkgreen")+
+  # Alpha 3 (Método 3 vs Media Global)
+  geom_segment(aes(x = 198, xend = 198, y = 28, yend = 36), 
+               arrow = arrow(ends = "both", length = unit(0.15, "cm")), 
+               color = "darkgreen", inherit.aes = FALSE) +
+  annotate("text", x = 195, y = 32, label = "alpha[3]", parse = TRUE, color = "darkgreen") +
   
   scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A")) +
   labs(
