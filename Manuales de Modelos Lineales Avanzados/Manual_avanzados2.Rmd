@@ -121,7 +121,7 @@ Para convertir la variable temperatura a una variable númerica, es super import
 
 ## Modelos para variables continuas en modelos mixtos
 
-Una vez teniendo en cuenta las diferencias entre una variable categórica y una continua, a continuacón se le presentan ambos modelos:
+Una vez teniendo en cuenta las diferencias entre una variable categórica y una continua, a continuación se le presentan ambos modelos:
 
 *Los siguientes modelos, se contruyen basados en el ejemplo del experimento Papel*
 
@@ -133,11 +133,10 @@ $$y_{ijkl} = \beta_0+\alpha_i+\beta_j+(\alpha\beta)_{ij}+\delta_k+\varepsilon_{i
 
 donde:
 
-+ **Los factores fijos corresponden a :** $\beta_0:$ Es el intercepto, $\alpha_i:$ Efécto del método,$\beta_j:$ Efecto de la temperatura y el efecto de interación entre estos factores $(\alpha\beta)_{ij}$
++ **Los factores fijos corresponden a :** $\beta_0:$ Es el intercepto, $\alpha_i:$ Efecto del método,$\beta_j:$ Efecto de la temperatura y el efecto de interación entre estos factores $(\alpha\beta)_{ij}$
 
 
-+ **Las distribuciones de los factores aleatorios, asociadas al modelo corresponden a :** $\delta_k\sim\mathcal{N}(0,\sigma^2_\delta)$. De $\varepsilon\sim\mathcal{N}(0,\sigma^2_\varepsilon)$, también esta la distribución $Y_{ij}\sim\mathcal{N}(\mu_j,\sigma^2_\varepsilon)$. Por último, sabemos que $\delta_k = \mu_k-\mu$, de esto obtenemos que $\mu_j\sim\mathcal{N}(0,\sigma^2_\delta)$ 
-
++ **Las distribuciones de los factores aleatorios, asociadas al modelo corresponden a :** $\delta_k\sim\mathcal{N}(0,\sigma^2_\delta)$. De $\varepsilon\sim\mathcal{N}(0,\sigma^2_\varepsilon)$, también esta la distribución $Y_{ij}\sim\mathcal{N}(\mu_j,\sigma^2_\varepsilon)$. Por último, sabemos que $\delta_k = \mu_k-\mu$, de esto obtenemos que $\mu_j\sim\mathcal{N}(0,\sigma^2_\delta)$
 
 ### Modelo con interacción de una variable númerica
 
@@ -153,6 +152,10 @@ donde:
 + $\beta_0:$ Es el intercepto del modelo.
 
 + $\alpha_i:$ Efecto del método, con las restricciones $\alpha_1 = 0$.
+
++ $\gamma_1T:$ Es la pendiente base (fija) del método de referencia
+
++ $\omega_iT:$ Es el ajuste fijo que se le hace a la pendiente según el método en el que estés.
 
 + $\delta_{k(i)}:$ Efecto del lote del i-ésimo método, el cuál tiene la distribuación $\delta_k\sim\mathcal{N}(0,\sigma^2_\delta)$.
 
@@ -224,9 +227,15 @@ ggplot(df_lineas, aes(x = temp, y = res, color = metodo)) +
   
   # --- MODIFICACIÓN DE PARÁMETROS PARA EL INTERCEPTO ---
   # Dibujamos las llaves justo en x = 200 (el intercepto del gráfico)
-  annotate("segment", x = 200, xend = 200, y = 32, yend = 28, # Alpha 1
-           arrow = arrow(ends = "both", length = unit(0.15, "cm")), color = "red") +
-  annotate("text", x = 203, y = 30, label = "alpha[2]", parse = TRUE, color = "red") +
+  annotate("segment", x = 200, xend = 200, 
+           y = 32, yend = 28, # Alpha 1
+           arrow = arrow(ends = "both", length = unit(0.15, "cm")), 
+           color = "darkblue") +
+  annotate("text", x = 203, 
+           y = 30, 
+           label = "alpha[2]", 
+           parse = TRUE, 
+           color = "darkblue") +
   
  annotate("segment", 
          x = 198, xend = 198,        # 'x' menor para que esté más atrás
