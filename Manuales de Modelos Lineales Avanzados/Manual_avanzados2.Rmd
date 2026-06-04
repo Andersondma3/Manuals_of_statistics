@@ -781,7 +781,7 @@ mod2=lmer(res~1+metodo*temp+(1|lote)+(0+temp|lote),data=base)
 anova(mod1,mod2,test="LRT")
 ```
 
-Observe que no se rechaza la hipótesis, por lo que nos asumimos que no hay correlación.
+Observe que no se rechaza la hipótesis, por lo que asumimos que no hay correlación.
 
 **Luego lo que queremos es ver la interacción, por lo que se prueba la siguiente hipótesis**
 
@@ -888,6 +888,7 @@ $\text{Si }   \rho \neq 0 \implies (\delta_k, \gamma_k) \sim \mathcal{N}_2 \left
 
 $\text{Si }   \rho = 0 \implies \delta_k \sim \mathcal{N} (0,\sigma_\delta)$ y $\gamma_k \sim \mathcal{N} (0,\sigma_\gamma)$
 
+\newpage
 
 *En r esto lo probamos de la siguiente manera*
 
