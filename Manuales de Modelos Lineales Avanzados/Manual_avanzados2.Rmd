@@ -417,7 +417,7 @@ Observe que para este caso hay interacción entre lote y método, ya que las pen
 
 *La representación del gráfico anterior en el modelo es la siguiente*
 
-$$y_{iTjkl} = \beta_0+\alpha_i+\gamma_1T+\lambda_{k(i)}+\delta_{k(i)}+\varepsilon_{ijkl}$$
+$$y_{iTjkl} = \beta_0+\alpha_i+\gamma_1T+\delta_{k(i)}+\lambda_{k(i)}+\varepsilon_{ijkl}$$
 Note que $\omega_i$, no se encuentra en el modelo.
 
 
@@ -491,7 +491,7 @@ ggplot() +  # Líneas de los Lotes (Mismo origen, distinta pendiente)
 
 *La representación del gráfico anterior en el modelo es la siguiente*
 
-$$y_{iTjkl} = \gamma_1T+\omega_iT+\lambda_{k(i)}+\delta_{k(i)}+\varepsilon_{ijkl}$$
+$$y_{iTjkl} = \gamma_1T+\omega_iT+\delta_{k(i)}+\lambda_{k(i)}+\varepsilon_{ijkl}$$
 Note que $\beta_0+\alpha_i$, no se encuentra en el modelo esto debido a que no hay intercepto.
 
 
