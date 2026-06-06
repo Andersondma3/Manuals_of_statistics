@@ -1248,6 +1248,86 @@ ic
 
 Una conclusión que podemos dar de este estudio es la siguiente: *desde que los niños entran al estudio a los 8 años se tiene una diferencia importante en la distancia media estudiada entre hombres y mujeres; sin embargo, con el tiempo, al ir creciendo esta distancia también se acentúan las diferencias.*
 
+# Prueba para observar donde hay diferencia entre pendientes
+
+```{r, echo=FALSE}
+options(contrasts=c("contr.treatment","contr.poly"))
+```
 
 
+```{r,message=FALSE}
+load("dientes.Rdata")
+mod1=lmer(libcaacum~cem*dia+(1+dia|diente1),base) 
+drop1(mod1,test="Chisq") 
+```
+Note que si hay direncias entre pendientes. Una vez teniendo esto en cuenta construimos los vectores apartir del siguiente modelo
+
+
+```{r}
+b=fixef(mod1)
+b
+```
+*A continuación se construyen los vectores*
+
+```{r}
+p1=c(0,0,0,1,0,0) 
+p2=c(0,0,0,1,1,0) 
+p3=c(0,0,0,1,0,1) 
+p=cbind(p1,p2,p3) 
+t(p)%*%b
+```
+```{r}
+v12=p1-p2 
+v13=p1-p3 
+v23=p2-p3 
+ 
+h=cbind(v12,v13,v23) 
+L=t(h)%*%b 
+L 
+```
+
+```{r}
+ee=sqrt(diag(t(h)%*%vcov(mod1)%*%h)) 
+q=L/ee 
+prob=pt(q,21,lower.tail=F) 
+# Para obtener los grados de libertad haga un emmeans y los obtiene de ahí 
+round(prob,2) 
+```
+```{r}
+prob<0.05/3 # Prueba de una cola
+```
+
+# Comparación de promedios en un momento específico de la covariable
+
+*Esto se basa en el modelo presentado anteriormente*
+
+```{r}
+d=15 #dias
+m1=c(1,0,0,d,0,0) 
+m2=c(1,1,0,d,d,0) 
+m3=c(1,0,1,d,0,d) 
+m12=m1-m2 
+m13=m1-m3 
+m23=m2-m3 
+h=cbind(m12,m13,m23) 
+L=t(h)%*%b 
+L 
+```
+
+```{r}
+ee=sqrt(diag(t(h)%*%vcov(mod1)%*%h)) 
+q=abs(L)/ee
+prob=pt(q,21,lower.tail=F) 
+round(prob,2)
+```
+```{r}
+prob<0.05/3 
+```
+
+```{r}
+t=qt(1-0.05/2,21) # los gl se obtienen de un emmmeas
+lim=L[-1]-t*ee[-1] 
+ 
+round(lim,2)
+```
 
