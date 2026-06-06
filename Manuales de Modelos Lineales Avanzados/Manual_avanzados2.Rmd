@@ -30,7 +30,7 @@ Para dicho experimento se tienen dos niveles:
 *A continuación se le brinda un ejemplo de gráfico de la temperatura como categoría*
 
 
-```{r, echo=FALSE, message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center'}
+```{r, echo=FALSE, message=FALSE, fig.width=6.5, fig.height=3.5, fig.align='center', warning=FALSE}
 library(ggplot2)
 library(dplyr)
 
@@ -576,7 +576,7 @@ ylab="resistencia",data=base,auto.key = T)
 
 Apesar de que se observe una pequeña interacción, no es tan fuerte como la que se vió en el gráfico anterior. *Es importante resaltar que esto lo estamos haciendo debido a que la temperatura es bastante lineal*.
 
-**Nota:** La ventaja de que la temperatura sea númerica y super lineal, es se puede usar para interpolar valores para cualquier temperatura.
+**Nota:** La ventaja de que la temperatura sea númerica y super lineal, es que se puede usar para interpolar valores para cualquier temperatura.
 
 **Las ecuaciones de las rectas para cada método son las siguientes**
 
@@ -870,9 +870,9 @@ En la mayoría de las playas, los puntos siguen una tendencia bastante lineal, p
 **El modelo para este experimento es el siguiente:**
 
 
-$$y_{NAP,k,l} = \beta_0+\beta_1NAP+\delta_k+\gamma_{k,NAP}+\varepsilon_{NAP,k,l}$$
+$$y_{NAP,k,l} = \beta_0+\beta_1NAP+\delta_k+\gamma_{k}NAP+\varepsilon_{NAP,k,l}$$
 
-$\gamma_{k,NAP}:$ Este nos indica que cada playa tendrá una pendiente diferente
+$\gamma_{k}:$ Este nos indica que cada playa tendrá una pendiente diferente
 
 $\delta_k:$ Cuánto sube la riqueza promedio, respecto a la media general cuando $NAP = 0$, en la playa k-ésima.
 
@@ -893,9 +893,9 @@ $\text{Si }   \rho = 0 \implies \delta_k \sim \mathcal{N} (0,\sigma_\delta)$ y $
 *En r esto lo probamos de la siguiente manera*
 
 ```{r, warning=FALSE}
-# mod1 es con \rho = 0 
+# mod1 es con \rho diferente de 0 
 mod1=lmer(riq~1+NAP+(1+NAP|playa),data=base) # 1+NAP|playa, pendiente e intercepto de cada playa
-# mod2 es con \rho \diff = 0
+# mod2 es con \rho = 0
 mod2=lmer(riq~1+NAP+(1|playa)+(0+NAP|playa),data=base)
 ```
 
