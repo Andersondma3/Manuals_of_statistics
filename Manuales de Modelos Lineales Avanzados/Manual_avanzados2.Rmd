@@ -329,6 +329,12 @@ ggplot() +
 
 No habría interacción entre lote y método, cuando dentro de un mismo método las lineas son paralelas, como se pudo observar en el gráfico anterior. Por lo que en este caso $\sigma_{\lambda} = 0$ 
 
+
+*La representación del gráfico anterior en el modelo es la siguiente*
+
+$$y_{iTjkl} = \beta_0+\alpha_i+\gamma_1T+\omega_iT+\delta_{k(i)}+\varepsilon_{ijkl}$$
+Note que $\lambda_{k(i)}$, no se encuentra en el modelo.
+
 *A continuación se le presenta  el caaso contrario, el cual es un gráfico de cuando se presenta interacción entre lote y método, pero no entre método y temperatura*
 
 
@@ -405,7 +411,15 @@ ggplot() +
 
 
 
-Observe que para este caso hay interacción entre lote y método, ya que las pendientes de todos los lotes son muy distintas, pero para el caso de método y temperatura no hay interacción debido a que las pendientes son las mismas. Para esta situación el $\delta_k= \mu_{k(i)}-\mu_{(i)}$, debido a que este diseño es anidado y por la interacción se tiene que considerar el método en el que se encuentra, ya que los lotes son únicos para cada método.Por último, si hay interación entonces $\sigma_{\lambda}^2 \neq 0$
+
+Observe que para este caso hay interacción entre lote y método, ya que las pendientes de todos los lotes son muy distintas, pero para el caso de método y temperatura no hay interacción debido a que las pendientes son las mismas. Para esta situación el $\delta_k= \mu_{k(i)}-\mu_{(i)}$, debido a que este diseño es anidado y por la interacción se tiene que considerar el método en el que se encuentra, ya que los lotes son únicos para cada método.Por último, si hay interación entonces $\sigma_{\lambda}^2 \neq 0$.
+
+
+*La representación del gráfico anterior en el modelo es la siguiente*
+
+$$y_{iTjkl} = \beta_0+\alpha_i+\gamma_1T+\lambda_{k(i)}+\delta_{k(i)}+\varepsilon_{ijkl}$$
+Note que $\omega_i$, no se encuentra en el modelo.
+
 
 
 En muchas ocasiones nuestro objetivo no se centra en la parte aleatoria, sin embargo siempre se debe analizar primero, comenzando con la interacción aleatorio, como en este ejemplo es $\lambda_{k(i)}$.
@@ -475,6 +489,12 @@ ggplot() +  # Líneas de los Lotes (Mismo origen, distinta pendiente)
 ```
 
 
+*La representación del gráfico anterior en el modelo es la siguiente*
+
+$$y_{iTjkl} = \gamma_1T+\omega_iT+\lambda_{k(i)}+\delta_{k(i)}+\varepsilon_{ijkl}$$
+Note que $\beta_0+\alpha_i$, no se encuentra en el modelo esto debido a que no hay intercepto.
+
+
 ```{r, echo=FALSE,fig.width=6.5, fig.height=3.5, fig.align='center'}
 
 # 1. Simulación de un solo método con interacción en la pendiente
@@ -525,7 +545,7 @@ ggplot() +
   labs(
     title = "Efecto de Interacción Lote × Temperatura",
     subtitle = "Delta representa la distancia de la pendiente del lote respecto a la media",
-    x = "Temperatura ()", y = "Resistencia", color = "Lote"
+    x = "Temperatura", y = "Resistencia", color = "Lote"
   ) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"),
