@@ -1339,3 +1339,42 @@ lim=L[-1]-t*ee[-1]
 round(lim,2)
 ```
 
+\newpage
+
+# Alfabeto Griego en LaTeX
+
+A continuación se presenta una guía rápida con las letras del alfabeto griego, su visualización compilada y el código correspondiente tanto para minúsculas como para mayúsculas.
+
+| Nombre | Minúscula | Código Minúscula | Mayúscula | Código Mayúscula |
+| :--- | :---: | :--- | :---: | :--- |
+| Alpha | $\alpha$ | `$\alpha$` | $\mathrm{A}$ | `$\mathrm{A}$` o `A` |
+| Beta | $\beta$ | `$\beta$` | $\mathrm{B}$ | `$\mathrm{B}$` o `B` |
+| Gamma | $\gamma$ | `$\gamma$` | $\Gamma$ | `$\Gamma$` |
+| Delta | $\delta$ | `$\delta$` | $\Delta$ | `$\Delta$` |
+| Epsilon | $\epsilon$ o $\varepsilon$ | `$\epsilon$` o `$\varepsilon$` | $\mathrm{E}$ | `$\mathrm{E}$` o `E` |
+| Zeta | $\zeta$ | `$\zeta$` | $\mathrm{Z}$ | `$\mathrm{Z}$` o `Z` |
+| Eta | $\eta$ | `$\eta$` | $\mathrm{H}$ | `$\mathrm{H}$` o `H` |
+| Theta | $\theta$ o $\vartheta$ | `$\theta$` o `$\vartheta$` | $\Theta$ | `$\Theta$` |
+| Iota | $\iota$ | `$\iota$` | $\mathrm{I}$ | `$\mathrm{I}$` o `I` |
+| Kappa | $\kappa$ | `$\kappa$` | $\mathrm{K}$ | `$\mathrm{K}$` o `K` |
+| Lambda | $\lambda$ | `$\lambda$` | $\Lambda$ | `$\Lambda$` |
+| Mu (Miu) | $\mu$ | `$\mu$` | $\mathrm{M}$ | `$\mathrm{M}$` o `M` |
+| Nu (Niu) | $\nu$ | `$\nu$` | $\mathrm{N}$ | `$\mathrm{N}$` o `N` |
+| Xi | $\xi$ | `$\xi$` | $\Xi$ | `$\Xi$` |
+| Omicron | $o$ | `$o$` | $\mathrm{O}$ | `$\mathrm{O}$` o `O` |
+| Pi | $\pi$ | `$\pi$` | $\Pi$ | `$\Pi$` |
+| Rho | $\rho$ o $\varrho$ | `$\rho$` o `$\varrho$` | $\mathrm{P}$ | `$\mathrm{P}$` o `P` |
+| Sigma | $\sigma$ o $\varsigma$ | `$\sigma$` o `$\varsigma$` | $\Sigma$ | `$\Sigma$` |
+| Tau | $\tau$ | `$\tau$` | $\mathrm{T}$ | `$\mathrm{T}$` o `T` |
+| Upsilon | $\upsilon$ | `$\upsilon$` | $\Upsilon$ | `$\Upsilon$` |
+| Phi | $\phi$ o $\varphi$ | `$\phi$` o `$\varphi$` | $\Phi$ | `$\Phi$` |
+| Chi | $\chi$ | `$\chi$` | $\mathrm{X}$ | `$\mathrm{X}$` o `X` |
+| Psi | $\psi$ | `$\psi$` | $\Psi$ | `$\Psi$` |
+| Omega | $\omega$ | `$\omega$` | $\Omega$ | `$\Omega$` |
+
+---
+
+## Código para vector en correlación
+
+$(\delta_k, \lambda_k) \sim \mathcal{N} \left( \left( \begin{smallmatrix} 0 \\ 0 \end{smallmatrix} \right), \boldsymbol{\Sigma} \right)$ El código es `$(\delta_k, \lambda_k) \sim \mathcal{N} \left( \left( \begin{smallmatrix} 0 \\ 0 \end{smallmatrix} \right), \boldsymbol{\Sigma} \right)$`
+
