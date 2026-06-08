@@ -12,6 +12,10 @@ output:
     toc: true
     toc_depth: '3'
 ---
+
+\newpage
+
+
 # Variables continuas como predictores
 
 Este tipo de variables sería como si en el ejemplo de `Papel` que lo analizamos en el manual anterior tuviera el factor de temperatura, como una variable númerica, no como una categoría. Dado esto, para estos casos es crucial el **supuesto de linealidad**.
@@ -25,7 +29,7 @@ Para dicho experimento se tienen dos niveles:
 
 + Nivel 2: El lote, este tiene como factor el método.
 
-\newpage
+
 
 *A continuación se le brinda un ejemplo de gráfico de la temperatura como categoría*
 
@@ -137,6 +141,8 @@ donde:
 
 
 + **Las distribuciones de los factores aleatorios, asociadas al modelo corresponden a :** $\delta_k\sim\mathcal{N}(0,\sigma^2_\delta)$. De $\varepsilon\sim\mathcal{N}(0,\sigma^2_\varepsilon)$, también esta la distribución $Y_{ij}\sim\mathcal{N}(\mu_j,\sigma^2_\varepsilon)$. Por último, sabemos que $\delta_k = \mu_k-\mu$, de esto obtenemos que $\mu_j\sim\mathcal{N}(0,\sigma^2_\delta)$
+
+\newpage
 
 ### Modelo con interacción de una variable númerica
 
@@ -802,6 +808,8 @@ anova(mod1,mod2,test="LRT")
 ```
 
 Observe que no se rechaza la hipótesis, por lo que asumimos que no hay correlación.
+
+\newpage
 
 **Luego lo que queremos es ver la interacción, por lo que se prueba la siguiente hipótesis**
 
