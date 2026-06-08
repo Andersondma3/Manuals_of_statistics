@@ -1237,8 +1237,8 @@ La distancia a los 8 años está dada por los interceptos de las ecuaciones escr
 
 ```{r}
 h = c(0,0,-2,-12)
-df = 25 #PREGUNTAR COMO SE OBTIENE
-L = h%*%fixef(mod3)
+df = 25
+L = t(h)%*%fixef(mod3) #en este casi no hay transpuesta porque tienen la misma dimensión
 ee = t(h)%*%vcov(mod3)%*%h
 t = qt(1-0.05/2,25)
 ic = cbind(L-t*ee,L+t*ee)
