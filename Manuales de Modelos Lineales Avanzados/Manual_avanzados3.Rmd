@@ -12,3 +12,173 @@ output:
     toc: true
     toc_depth: '3'
 ---
+
+# Introducción a los modelos lineales generalizados
+
+Todos los modelos vistos anteriormente en los cursos anteriores y en este, son una combinación lineal de $\beta's$ y $X's$, por esta razón es que todos estos modelos les colocamos el nombre de modelos lineales.
+
+Los $\beta's$ y $X's$ que normalment escribrimos del modelo, le llamaremos la parte lineal del modelo, es decir la **parte lineal** en la modelación univariada *(la variables respuesta es una variable)* es igual a:
+
+
+$$\sum_{j=0}^{p-1}{\beta_jX_j}$$
+
+
+Además tenemos este nuevp elemento llamado la **función de enlance**, la cual es:
+
+$$g(\cdot)$$
+
+
+También sabemos que cada variable respuesta está asociada a una distribución, a esto le llamamos la **parte aleatoria** la cual se denota de la siguiente manera:
+
+
+$$y|x\sim f(y|x)$$
+
+
+La unión de los compenentes anteriores es lo que nos forma un modelo lineal generalizado:
+
+
+$$g(\mu_{y|x}) =\sum_{j=0}^{p-1}{\beta_jX_j}$$
+
+# Componentes de un modelo lineal generalizado (GLM)
+
+
++ Componente aleatoria: identifica la variable respuesta y su distribución de probabilidad.
+
+
++ Componente sistemática: especifica las variables explicativas (independientes o o predictoras) utilizadas en la función predictora lineal (una combinación lineal de las variables predictoras).
+
+
++ Función de enlace: es una función del valor esperado de $Y$, $E(Y)$ o $\mu_Y$, que relaciona la esperanza de la respuesta con las variables predictoras, es decir, la componente aleatoria con la sistemática. 
+
+
+## Componente aleatorio
+ 
+
++ La componente aleatoria de un GLM consiste en una variable aleatoria Y con observaciones independientes $(y_1,…,y_n)$.
+
+
++ En muchas aplicaciones las observaciones son continuas y se puede asumir para $Y$ una distribución condicional normal.
+
+
++ En otros casos las observaciones de $Y$ son binarias, y se identifican como éxito y fracaso. Aunque de modo más general, cada $Y_i$ indicaría el número de éxitos de entre un número fijo de ensayos, y se modelizaría como una distribución condicional binomial.
+
+
++ En otras ocasiones cada observación es un conteo, con lo que se puede asignar a Y una distribución condicional de Poisson o una distribución condicional binomial negativa. 
+
+
++ Cuando la respuesta Y tiene una distribución asimétrica con valores continuos a partir de cero, se puede usar la distribución condicional gamma.
+
+*Nota:* observe que en todos los casos se habla de la distribución condicional.
+
+## Componente sistemático
+
+
++ El componente sistemático de un GLM especifica las variables explicativas, que entran en forma de efectos fijos en un modelo lineal, es decir, las variables $X$ se relacionan como:
+
+$$\eta = \beta_1X_1+...+\beta_pX_p$$
+
+
++ Esta combinación lineal se denomina *predictor lineal* y se representa con h.
+
++ Algunos de los $\beta's$  en esta combinación son coeficientes de variables continuas.
+
+
++ Otros son coeficientes de factores. Recordando que en esos casos se crean variables auxiliares y cada una lleva un coeficiente.
+
+
++ También se pueden incluir interacciones entre dos o más factores, así como entre factores y variables continuas. 
+
++ Los parámetros del predictor lineal $\beta's$  son fijos para cualquier valor que tomen las $X's$. Sin embargo, los valores de esos parámetros son desconocidos y se deben estimar. Por lo tanto, para un vector de valores de las $X$ $(x_1,…,x_n)$, el correspondiente predictor lineal h es fijo (dados los coeficientes del modelo). 
+
+
+## Función de enlace
+
+
++ La función de enlace especifica una función g(.) que relaciona  la esperanza de la respuesta mY con el predictor lineal h como:
+
+
++ La función g más simple es g(m)=m, esto es, la identidad que da lugar al modelo de regresión lineal clásico.
+
+
++ Entonces el modelo lineal clásico para respuestas continuas (normales) son un caso particular de un GLM con una función de enlace identidad.
+
+ 
++ Los GLM generalizan la regresión clásica de dos modos: 1) permitiendo que Y tenga distribuciones diferentes a la normal, 2) incluyendo distintas funciones de enlace.
+
+
+
+*Notas:* 
+
+1. En r un `glm` con `family = "normal" ` es lo mismo que un `lm`.
+
+2. Sabemos `lmer` es para modelos lineales mixtos, en el caso de modelos generalizados mixtos es con `glmer`.
+
+3. En este caso como algunos modelos generalizados no dependen de la función normal el supuesto de normalidad se cae.
+
+
+
+## Función de enlace logit
+
+
+$$\text{logit}(p) = \log\left(\frac{p}{1-p}\right) \quad \text{para } p \in (0, 1)$$
+
+
+Si tenemos una distribución de forma que $y|x \sim Bernoulli(\pi_x)$, esto nos lleva que el valor esperado **condicional** $E[y|x]=\pi_x = \mu_{y|x}$
+
+El modelo lineal generalizado para este caso que tenga un factor con tres niveles queda de la siguiente manera:
+
+
+*Tenemos que la parte lineal usando el modelo de suma nula es:*
+
+$$\beta_0+\beta_1X_1+\beta_2X_2$$
+
+Este modelo tiene la restricción de que $\beta_3 = -\beta_1-\beta_2$
+
+
+*Tenemos que la función de enlace es:*
+
+
+$$\log\left(\frac{\pi_j}{1-\pi_j}\right)$$
+
+Note que $\pi$ depende del j-ésimo tratamiento
+
+
+*Uniendo ambos compentes obtenemos el siguiente resultado:*
+
+$$\log\left(\frac{\pi_j}{1-\pi_j}\right)=\beta_0+\beta_1X_1+\beta_2X_2$$
+
+
+Esto nos dice que la probabilidad en el tratamiento j-ésimo se modela de la forma.
+
+
+Para despejar esa probabilidad lo que hacemos es que colocamops una exponencial
+
+$$\left(\frac{\pi_j}{1-\pi_j}\right)= e^{PL}$$
+
+Despejamos el $\pi_j$ y esto nos lleva a que:
+
+
+$$\pi_j= \frac{e^{PL}}{1+e^{PL}}$$
+
+donde:
+
++ $PL = \beta_0+\beta_1X_1+\beta_2X_2$, lo cual corresponde a la parte lineal
+
+Observe que
+
+$$\pi_j = \begin{cases} 0.5 & \text{si } PL = 0 \\ >0.5 & \text{si } PL > 0 \\ <0.5 & \text{si } PL < 0 \end{cases}$$
+
+
+$$\lim_{PL \to \infty} \pi_j = 1 \quad \text{y} \quad \lim_{PL \to -\infty} \pi_j = 0$$
+
+
+*Nota:* La parte lineal no tiene niguna interpretación
+
+## Función de enlace Poisson
+
+$$\log(\lambda_j)=\beta_0+\tau_j$$
+
+$$\lambda_j=e^{PL}$$
+
+
+$$\lim_{PL \to \infty} \lambda_j = 1 \quad \text{y} \quad \lim_{PL \to -\infty} \lambda_j = 0$$
