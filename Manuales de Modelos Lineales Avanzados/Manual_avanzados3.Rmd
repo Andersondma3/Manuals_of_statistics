@@ -13,6 +13,15 @@ output:
     toc_depth: '3'
 ---
 
+```{r, echo=FALSE, message=FALSE, warning=FALSE }
+# 1. Cargar librerías necesarias
+library(ggplot2)
+library(dplyr)
+library(lattice)
+```
+
+
+
 # Introducción a los modelos lineales generalizados
 
 Todos los modelos vistos anteriormente en los cursos anteriores y en este, son una combinación lineal de $\beta's$ y $X's$, por esta razón es que todos estos modelos les colocamos el nombre de modelos lineales.
@@ -115,7 +124,7 @@ $$\eta = \beta_1X_1+...+\beta_pX_p$$
 
 3. En este caso como algunos modelos generalizados no dependen de la función normal el supuesto de normalidad se cae.
 
-
+# Respuesta binaria o binomial
 
 ## Función de enlace logit
 
@@ -182,3 +191,370 @@ $$\lambda_j=e^{PL}$$
 
 
 $$\lim_{PL \to \infty} \lambda_j = 1 \quad \text{y} \quad \lim_{PL \to -\infty} \lambda_j = 0$$
+
+## Propensión
+
+Sabemos que la propensión la podemos obtener como:
+
+$$odds = \left(\frac{p}{1-p}\right)$$
+
+## Análisis de Hiberbicidas
+
+En un experimento se aplican 3 dosis de un herbicida (200, 400 y 800 g/l) alrededor de unas plantas y se tiene un grupo control al que no se le aplicó nada (dosis=0). Se cuantifica el daño en las plantas tomando 
+20 hojas de cada planta y se cuenta el número de hojas que presenta daños a causa del herbicida. Se quiere saber si hay un efecto de la dosis en el daño en las hojas.
+
+*Note que en este caso la variables tiene una distribución binomial, esto nos lleva a que:*
+
+$$Y|\text{Dosis}\sim Binomial(n = 20,\pi_{\text{Dosis}})$$
+Para esta situación la esperanza es:
+
+$$\mu_j = n\pi_j$$
+
+```{r}
+base=read.csv("herbicidas.csv",row.names=NULL,header=T,sep=";")
+base$genotipo=factor(base$genotipo)
+base$dosix=factor(base$dosis)
+prop=base$mal/20
+boxplot(prop~dosix,ylab="proporción de dano",xlab="dosis",data=base)
+```
+
+
+En el gráfico se observa que la proporción de daños tiende a ser mayor para las dosis 200, 400 y 800 con respecto al control, y entre ellas es un poco mayor para la dosis 800.
+
+
+### Ejemplo de propensión (odds)
+
+
+Si $p = 0.6$, esto nos lleva a que:
+
+$$odds = \left(\frac{0.6}{0.4}\right) = \frac{3}{2}$$
+
+Esto se interpreta como:
+
+Por 3 hojas dañadas, existen 2 hojas no dañadas. Cuando el $odds=1$, quiere decir que $P = 0.5$.
+
+
+*Notas:*
+
+1. El logaritmo de los odds debe ser lineal, pero si la dosis es un factor no es necesaria la linealidad.
+
+2. Una ventaja que tiene usar los datos desagrupados (por ejemplo que en este experimento se tuvieran la información de cada hoja en específico), es medir ciertas variables específicas para cada unidad, un ejemplo de ello sería el tamaño o diamétro de la hoja.
+
+
+
+### Estimación de un modelo Binomial en r
+
+```{r}
+mod.trat=glm(cbind(mal,20-mal)~dosix,family=binomial(link = "logit"),data=base)
+mod.trat$coef
+```
+
+**La ecuación estimada usando como referencia la dosis 0 está dada por:**
+
+$$\log\left(\frac{p}{1-p}\right)=-2,43+2,15D_{200}+2,29D_{400}+3,05D_{800}$$
+
+
+## Estimación de la parte lineal con suma nula 
+
+```{r}
+options(contrasts=c("contr.sum","contr.poly"))
+contrasts(base$dosix)
+```
+
+	
+```{r}
+mod.sum=glm(cbind(mal,20-mal)~dosix,family=binomial,data=base)
+```
+
+```{r}
+b = mod.sum$coef
+tau_4 = -sum(b[-1])
+pl=(b[1]+ c(b[-1], tau_4))
+names(pl)=c("dosix0","dosix200","dosix400","dosi800")
+pl
+```
+
+
+
+### Estimar la probabilidad de éxito en un modelo binomial
+
+Para este ejemplo nuestro éxito es que la hoja esté dañanda, por lo que a continuación se le presenta, la forma de cálcularlo:
+
+
+```{r}
+dt=mod.trat$coef
+beta0=dt[1]
+taus=dt
+taus[1]=0
+p1=exp(beta0+taus)/(1+exp(beta0+taus))
+names(p1)=c("D0","D200","D400","D800")
+p1
+```
+
+La interpretación del `D200` es:
+
+Para la dosis 200 se estima por cada 100 hojas en promedio 46 jojas están dañadas.
+
+### Estimación del odds
+
+```{r}
+round(p1/(1-p1),2)
+```
+La interpretación del `D200` es:
+
+Para la dosis 200, se estima que en promedio por cada 75 hojas dañadas existen 100 no dañadas.
+
+### Estimación automática con predict()
+
+Directamente con la función de R se obtiene una estimación para cada planta, pero hay 13 plantas con el mismo tratamiento por lo que no es necesario tener tantas estimaciones, se puede saca un valor único por tratamiento.
+
+```{r}
+# Si se coloca solo predict devuelve la parte lineal
+probs=predict(mod.trat,type="response")
+p2=tapply(probs,base$dosix,mean)
+names(p2)=names(p1)
+p2
+```
+
+Otra forma de sacarlo
+
+```{r}
+p3 = unique(predict(mod.trat,type="response"))
+names(p3) = names(p2)
+p3
+```
+
+
+
+### Estimar la probabilidad para una cantidad específica de unidades
+
+Se quiere estimar promedio de hojas dañadas por planta en cada tratamiento, si la planta tiene 1500 hojas
+
+
+```{r}
+p1=exp(beta0+taus)/(1+exp(beta0+taus))
+1500*p1
+```
+
+### Prueba para verificar si la dosis tiene un efecto en la probabilidad
+
+
+```{r}
+drop1(mod.trat,test="LRT")
+```
+
+Con la prueba de la Razón de Verosimilitud (LRT) se obtiene una deviancia para el modelo grande de 68.55, mientras que para el modelo en que se elimina dosis se obtiene 276.66. La diferencia entre ellas es 208.11, que proviene de una distribución chi-cuadrado con 3 grados de libertad, y tiene una probabilidad asociada de error tipo I diminuta (p<0.001). Por lo tanto, se rechaza la hipótesis de que ambos modelos explican lo mismo. Finalmente, se dice que sí existe un efecto de la dosis sobre la probabilidad de daño, es decir, no todas las dosis tienen las misma probabilidad de daño.
+
+
+### Comparción de propensiones
+
+
+Primero hay que hacer los contrastes. Si los coeficientes para las dosis se
+denominan con $\alpha_{200}$,  $\alpha_{400}$ y  $\alpha_{800}$, se sabe que $\alpha_0 = 0$. Por ejemplo para comparar
+la dosis 800 contra la dosis 400, se tiene que el OR respectivo es:
+
+Por lo tanto, el vector de coeficientes del contraste asociado está dado por: c(0,0,-1,1). De esta forma se construyen los otros constrastes y se colocan en una matriz con los contrastes. Si cada contraste se denomina $\eta$, se tiene que** $OR = \exp(\eta)$
+
+$$OR = \exp(\alpha_{a800}-\alpha_{400})$$
+
+
+La demoestración de este proceso es:
+
+$$\log\left(\frac{\pi_{800}}{1-\pi_{800}}\right)-\log\left(\frac{\pi_{400}}{1-\pi_{400}}\right)$$
+
+Lo expoenciamos y por propiedades de logatimos nos lleva a este resultado:
+
+
+$$\left(\frac{\frac{\pi_{800}}{1-\pi_{800}}}{\frac{\pi_{400}}{1-\pi_{800}}}\right)=e^{(\beta_0+\tau_{800})-(\beta_0+\tau_{400})}$$
+
+Este proceso anterior es lo que llamamos *Odds Ratio (OR)*, que es lo mismo que decir la razón de dos propensiones.
+
+**Propiedad:**
+
+
+$$\text{Si } \pi_i = \pi_j \iff OR_{i|j}=1 \iff \tau_j = \tau_i$$
+
+
+
+
+Los vectores se contrutyen de la siguiente manera
+
+
+```{r}
+dt=mod.trat$coef
+d0 = c(1,0,0,0)
+d200 = c(1,1,0,0)
+d400 = c(1,0,1,0)
+d800 = c(1,0,0,1)
+d0.200 = d0-d200
+d0.400 = d0-d400
+d0.800 = d0-d800
+d200.400 = d200-d400
+d200.800 = d200-d800
+d400.800 = d400-d800
+h = cbind(d0.200, d0.400, d0.800, d200.400, d200.800, d400.800 )
+eta=t(h)%*%dt
+or=exp(eta)
+colnames(or)="OR"
+round(or,2)
+```
+
+
+**Ojo que estos son los contrastes**
+
+```{r}
+c1=c(0,0,-1,1)
+c2=c(0,-1,0,1)
+c3=c(0,0,0,1)
+c4=c(0,-1,1,0)
+c5=c(0,0,1,0)
+c6=c(0,1,0,0)
+h=cbind(c1,c2,c3,c4,c5,c6)
+eta=t(h)%*%dt
+or=exp(eta)
+rownames(or)=c("800-400","800-200","800-0","400-200","400-0","200-0")
+colnames(or)="OR"
+round(or,2)
+```
+
+Con la estimación puntual de los OR, se observa que son muy altos al comparar todas las dosis contra el control, pero entre las otras dosis (200, 400 y 800), las que más se diferencian son 800 vs 200 y luego 800 vs 400.
+
+
+
+
+
+# Análisis de linealidad en estudios longitudinales
+
+*Observe el siguiente ejemplo visto en clase*
+
+Un estudio busca analizar si los cambios en el rendimiento físico se encuentran relacionados con los cambios en el rendimiento cognitivo de las personas conforme estas envejecen. Para esto se han recolectado datos que provienen del proyecto “Comparación del envejecimiento físico y cognitivo en personas de los Estados Unidos de América y de Costa Rica”. Cada sujeto de investigación se presentó tres veces a realizar las pruebas (físicas y neurocognitivas), en diferentes años. Interesa conocer si cambios en el rendimiento físico están asociados a cambios en el rendimiento cognitivo tanto en hombres como en mujeres y si esta asociación es más fuerte en un sexo que en el otro.  
+
+Basado en este estudio se hace un gráfico donde se aprecie una interacción entre rendimiento cognitivo y el rendimiento físico 
+
+
+```{r, echo=FALSE}
+# Configurar semilla para reproducibilidad
+set.seed(2026)
+
+# 2. Simulación de los datos longitudinales
+n_sujetos <- 100
+mediciones <- 3
+
+# Crear estructura básica de los sujetos
+datos_sujetos <- data.frame(
+  id = rep(1:n_sujetos, each = mediciones),
+  sexo = rep(sample(c("Hombre", "Mujer"), n_sujetos, replace = TRUE), each = mediciones),
+  tiempo = rep(1:mediciones, n_sujetos)
+)
+
+# Simular variable independiente (Rendimiento Físico) con variabilidad intra-sujeto
+datos_sujetos <- datos_sujetos %>%
+  mutate(
+    rend_fisico = rnorm(n(), mean = 50, sd = 10) - (tiempo * 2) # Tiende a bajar con el tiempo
+  )
+
+# Simular variable dependiente (Rendimiento Cognitivo) metiendo el efecto de INTERACCIÓN
+# Efecto hipotético: En mujeres, la caída del rendimiento físico afecta más al cognitivo (mayor pendiente).
+datos_sujetos <- datos_sujetos %>%
+  mutate(
+    error = rnorm(n(), mean = 0, sd = 5),
+    rend_cognitivo = case_when(
+      sexo == "Mujer" ~ 30 + 0.8 * rend_fisico + error,  # Pendiente fuerte (0.8)
+      sexo == "Hombre" ~ 45 + 0.3 * rend_fisico + error  # Pendiente más leve (0.3)
+    )
+  )
+
+# 3. Construcción del Gráfico de Interacción
+ggplot(datos_sujetos, aes(x = rend_fisico, y = rend_cognitivo, color = sexo, fill = sexo)) +
+  # Rectas de regresión ajustadas para evidenciar la interacción
+  geom_smooth(method = "lm", formula = y ~ x, se = TRUE, size = 1.2) +
+  # Personalización estética y etiquetas
+  scale_color_manual(values = c("Hombre" = "#1f77b4", "Mujer" = "#d62728")) +
+  scale_fill_manual(values = c("Hombre" = "#1f77b4", "Mujer" = "#d62728")) +
+  theme_minimal(base_size = 13) +
+  labs(
+    title = "Interacción entre Rendimiento Físico y Cognitivo según el Sexo",
+    x = "Cambios en el Rendimiento Físico ",
+    y = "Cambios en el Rendimiento Cognitivo ",
+    color = "Sexo",
+    fill = "Sexo"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "gray40"),
+    legend.position = "bottom"
+  )
+```
+
+Luego se gráfica la pendiente de cada persona 
+
+
+```{r}
+xyplot(rend_cognitivo~rend_fisico|id, groups = sexo, type = c("r", "p") , auto.key = list(columns = 2),data = datos_sujetos[1:30,], pch = 18)
+```
+
+Observe que con tres medidas es muy díficil aceptar el supuesto de linealidad
+
+*A continuación se le demuestra por medio de una simulación lo que está ocurriendo*
+
+Tenemos el siguiente modelo con sus valores verdaderos
+
+$$\mu = 2+3X$$
+Además se tiene que $\hat{\sigma} = 1$
+
+*A continuación se simulan con dos semillas distintas*
+
+```{r, warning=FALSE}
+set.seed(1234)
+x = runif(3,2,2.5)
+y = 2+ 3*x +rnorm(2,0,1)
+lm(y~x)$coef[2]
+```
+```{r, warning=FALSE}
+set.seed(1236)
+x = runif(3,2,2.5)
+y = 2+ 3*x +rnorm(2,0,1)
+lm(y~x)$coef[2]
+```
+
+Podemos observar que las pendientes dieron un resultado muy distinto
+
+Ahora vamos a realizarlo con `x = runif(3,2,2.01)`.
+
+```{r, warning=FALSE}
+set.seed(1234)
+x = runif(3,2,2.01)
+y = 2+ 3*x +rnorm(2,0,1)
+lm(y~x)$coef[2]
+```
+```{r, warning=FALSE}
+set.seed(1236)
+x = runif(3,2,2.01)
+y = 2+ 3*x +rnorm(2,0,1)
+lm(y~x)$coef[2]
+```
+
+
+Es importante notar que cuando bajamos la x, el problema se empeoró y ahora las pendientes estimadas son demasiado distintas.
+
+
+Para un último caso, lo haremos con `x = runif(3,2,20)`
+
+```{r, warning=FALSE}
+set.seed(1234)
+x = runif(3,2,20)
+y = 2+ 3*x +rnorm(2,0,1)
+lm(y~x)$coef[2]
+```
+```{r, warning=FALSE}
+set.seed(1236)
+x = runif(3,2,20)
+y = 2+ 3*x +rnorm(2,0,1)
+lm(y~x)$coef[2]
+```
+
+
+En este caso las pendientes son mucho más parecidas. Esto nos lleva a que no siempre es bueno realizar estudios longitudinales, si el tiempo o nuestyra variable x no está causando ningún y que sería mejor capturar una mayor cantidad de datos en un solo momento, para obtener mejores resultados. Si el objetivo del estudio verdaderamente hacer un estudio longitinal, lo que se recomienda es que haya más tiempo entre cada medición, para observar un efecto.
+
+
+
