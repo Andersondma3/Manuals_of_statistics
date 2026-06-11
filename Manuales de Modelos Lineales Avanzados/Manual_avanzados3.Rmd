@@ -377,7 +377,7 @@ $$\text{Si } \pi_i = \pi_j \iff OR_{i|j}=1 \iff \tau_j = \tau_i$$
 
 
 
-Los vectores se contrutyen de la siguiente manera
+Los vectores se contrutyen de la siguiente manera:
 
 
 ```{r}
@@ -417,10 +417,146 @@ colnames(or)="OR"
 round(or,2)
 ```
 
+
 Con la estimación puntual de los OR, se observa que son muy altos al comparar todas las dosis contra el control, pero entre las otras dosis (200, 400 y 800), las que más se diferencian son 800 vs 200 y luego 800 vs 400.
 
+*Prueba de hipótesis*
+
+Tenemos lo siguiente:
+
+$$
+\begin{aligned}
+\eta &= \alpha_i - \alpha_j \\
+Var(\eta) &= Var(\alpha_i - \alpha_j) \\
+&= Var(\alpha_i) + Var(\alpha_j) \\
+ ee(\eta)&= \sqrt{Var(\alpha_i) + Var(\alpha_j)} 
+\end{aligned}
+$$
+
+Esto es equivalente a :
+
+$$\sqrt{e^{\alpha_i - \alpha_j}}$$
 
 
+
+```{r}
+ee=sqrt(diag(t(h)%*%vcov(mod.trat)%*%h))
+(q=eta/ee)
+```
+
+```{r}
+(pn=pnorm(q, lower.tail = F))
+pn < 0.05/12 # Se usa bomferroni
+# Observe que es una prueba de dos colas 2*d = 12, donde d = 6
+```
+**Cálculo de Intervalos de Confianza**
+
+
+$$IC = e^{\eta\pm z\cdot ee}$$
+
+```{r}
+k=5 #número de intervalos de confianza
+qz=qnorm(1-0.05/(2*k))
+ic=cbind(exp(eta-qz*ee),exp(eta+qz*ee))[-4,] #Quitamos 4 porque no es significativa
+rownames(ic)=rownames(or)[-4] #Quitamos 4 porque no es significativa
+ic1=cbind(ic,ee[-4]) #Quitamos 4 porque no es significativa
+colnames(ic1)=c("L.Inf","L.Sup","ee")
+ic1
+```
+Las comparaciones contra la dosis 0 son muy imprecisas, en cambio las comparaciones entre dosis 800 y las otras dos dosis son más precisas. Esto es una consecuencia de que estas dos últimas comparaciones tienen errores estándar más pequeños.
+
+
+*Nota:* Las probabilidades no se dividen debido a su complejidad matemática, para calcular sus intervalos de confianza, en estadística Bayesiana esos intervalos se pueden hacer de forma más sencilla.
+
+**Interpretación y cálculo de los límites inferiores de las comparaciones**
+
+```{r}
+qz=qnorm(1-0.05/k)
+LIM=exp(eta-qz*ee)[-4]
+names(LIM)=rownames(or)[-4]
+LIM
+```
+Con una confianza global de 95%, se puede decir que la propensión de daño para D800 es al menos 40% mayor que la de D400, 61% mayor que la de D200 y es 11.5 veces la de D0, que la propensión de daño de D400 es al menos 5.4 veces la de D0 y la propensión de daño de D200 es al menos 4.7 veces la de D0.
+
+# Análisis de la dosis como continua
+
+Cuando se utliza la variable como continua, podemos realizar interpolaciones para diferentes rangos de una variable en específico.
+
+```{r, warning=FALSE}
+library(car)
+logodds=log((prop)/(1-prop))
+scatterplot(logodds~log(base$dosis+0.1,2),xlab="dosis",ylab="log(odds)")
+```
+
+
+En el gráfico se observa que para el intervalo que va de 0 a 200, hay un comportamiento diferente al resto del intervalo estudiado, lo cual hace pensar que la relación general entre el log(odds) y la dosis no es lineal. Si se observa solo la parte de la dosis que va de 200 en adelante, se aprecia un comportamiento más lineal. Entonces, el modelo que se ajusta con la variable dosis en forma continua no está siguiendo lo que se observa en este gráfico.
+
+El problema de la estimación es como se prueba la linealidad, debido a que hay valores únicos, es decir que hay sujetos que no tiene esa variable continua exacytamente igual. Po ejmplo si se quiere hacer un estudio de la relación de la altura con ser hombres, en donde en la muestra se pueden tener una cantidad de sujetos, pero prácticamemte todos tiene una altura distinta asociada a una variable binaria. En algunos casos si se cumple, en otros este problema puede generarnos problema en el supuesto de linelidad.
+
+**En este caso, como no hay linealidad no es recomendable asumir linealidad, por lo que se tiene que considerar como factor o realizar una transformación**
+
+## Estimación del modelo con la variable continua
+
+
+```{r}
+# Se le suma uno al log porque hay valores que son 0 
+# Además como la dosis se está duplicando, se hace el logaritmo en base 2
+mod2=glm(cbind(mal,20-mal)~log(dosis+1,2),family=binomial,data=base)
+(beta=mod2$coef)
+```
+**Primero tenemos que probar la siguiente hipótesis:**
+
+$$H_0:\beta_1=0$$
+```{r}
+drop1(mod2, test = "Chisq")
+```
+
+Debido a que la probabilidad asociada a la prueba es p < 0.001, podemos decir que al duplicar la dosis la propensión de daño cambia significativamente.
+
+*Nota:* Recordar que si no se rechaza, se tiene que analizar si tengo una muestra suficiente para probar que hayan diferencias (Potencia). Es importante tomar en cuentra que para regresión logística se necesitan muchos datos.
+
+Tenemos que:
+
+$$\begin{aligned}
+&Odds_2 = e^{-2.54+0.30\cdot\log_2{(2D)}}\\
+&Odds_2 = e^{-2.54+0.30\cdot(\log_2{(2)}+\log_2{(D)})}\quad\text{Note que} \log_2{(2)} = 1\\
+&Odds_1 = e^{-2.54+0.30\cdot(\log_2{(D)})}\\
+&\implies OR_{2|1} = e^{0.30} = 1.35
+\end{aligned}$$
+
+**Interpretación:** Al duplicar la dosis la propensión se amplifica ó simplifica 1.35 veces, es decir aumenta 35%.
+
+Luego realizamos su intervalos de confianza
+
+```{r}
+exp(confint(mod2))
+```
+
+Con un 95% de confianza, al duplicar la dosis la propensión de daño se multiplica entre 28% y 43%.
+
+
+*La ecuación estimada usando dosis de forma continua es la siguiente:*
+
+$$\log\left(\frac{p}{1-p}\right)=-1.41+0,003D$$
+
+```{r}
+xh=c(1,300)
+eta=t(xh)%*%beta
+prob300.a=exp(eta)/(1+exp(eta))
+prob300.b=predict(mod2,data.frame(dosis=300),type="response")
+c(prob300.a,prob300.b)
+```
+
+*En el siguiente gráfico se muestren los porcentajes de hojas dañadas por planta contra la dosis*
+
+```{r}
+curve(exp(beta[1]+beta[2]*x)/(1+exp(beta[1]+beta[2]*x)),0,2000,
+ylab="probabilidad",xlab="dosis",ylim=c(0,1))
+points(base$dosis,base$mal/20,pch=18,col=2)
+points(300,prob300.a,col=4,pch="+",cex=1.5)
+a=round(beta[1],2); b=format(round(beta[2],3),scientific=F)
+title(main=(bquote(log(pi/(1-pi))==.(a)+.(b)*D)))
+```
 
 
 # Análisis de linealidad en estudios longitudinales
@@ -546,6 +682,7 @@ x = runif(3,2,20)
 y = 2+ 3*x +rnorm(2,0,1)
 lm(y~x)$coef[2]
 ```
+
 ```{r, warning=FALSE}
 set.seed(1236)
 x = runif(3,2,20)
