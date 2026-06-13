@@ -394,7 +394,7 @@ d200.800 = d200-d800
 d400.800 = d400-d800
 h = cbind(d0.200, d0.400, d0.800, d200.400, d200.800, d400.800 )
 eta=t(h)%*%dt
-or=exp(eta)
+or=exp(abs(eta))
 colnames(or)="OR"
 round(or,2)
 ```
@@ -559,6 +559,9 @@ title(main=(bquote(log(pi/(1-pi))==.(a)+.(b)*D)))
 ```
 
 
+
+
+
 # Análisis de linealidad en estudios longitudinales
 
 *Observe el siguiente ejemplo visto en clase*
@@ -694,4 +697,122 @@ lm(y~x)$coef[2]
 En este caso las pendientes son mucho más parecidas. Esto nos lleva a que no siempre es bueno realizar estudios longitudinales, si el tiempo o nuestyra variable x no está causando ningún y que sería mejor capturar una mayor cantidad de datos en un solo momento, para obtener mejores resultados. Si el objetivo del estudio verdaderamente hacer un estudio longitinal, lo que se recomienda es que haya más tiempo entre cada medición, para observar un efecto.
 
 
+# Modelos para conteos
 
+
+La diferencia entre un modelo binomial y otro poisson radica en la información que se tiene, esto es porque en un modelo binomial yo puedo conocer o conozco el máximo en cambio en el poisson esto no es así.Un ejemplo de esto con el experimento de las hojas dañadas es que en ese experimento sabemos que nuestra variable resúesta es el número de hojas dañadas y sabiamos que el total o el máximo de hojas de cada planta eran 20, por lo que yo puedo calcular la proporción de hojas dañadas de este total. Para el caso de la poisson es como si yo tomará una ramita para contar las hojas dañanas, pero no se posee conocimiento, ni se puede averiguar de cual puede ser el número máximo de hojas dañadas.
+
+Un modelo Poisson se escribe de la siguiente manera:
+
+$$\log(\lambda_x) = \beta_0+\beta_1X$$
+
+
+donde:
+
++ $\lambda_x=E[X|Y]$
+
+
++ $E[Y|X] = Var[Y|X]$ y $Y|X\sim P(\lambda_x)$
+
+
+*En un modelo binomial tenemos esto*
+
+
+$$\frac{odds_{x+1}}{odds_x}=\frac{\frac{\pi_{x+1}}{1-\pi_{x+1}}}{\frac{\pi_{x}}{1-\pi_{x}}}=2$$
+
+
+*En un modelo Poisson*
+
+
+Al aumentar x en una unidad, la propensión es 2 veces mayor o la propensión de daño es el doble al aumentar la x una unidad.
+
+$$\frac{\lambda_{x+1}}{\lambda_x}=2$$
+
+
+
+Al aumentar x en una unidad, el promedio es 2 veces mayor
+
+En este tipo de modelo no tiene sentido probar el supuesto de homocedasticidad, debido a que la media es igual a la varianza. Debido a que este modelo se distribuye como una Poisson, no se necesita el supuesto de normaalidad. El único supuesto a tomar en cuenta puede ser la multicolinealidad, pero este depende de la cantidad de factores.
+
+
+
+**Experimento de Moscas**
+
+En un experimento diseñado para ver el tipo de aditivo que se puede poner en una trampa para moscas, se probaron 4 tratamientos: miel, sirope, leche y vinagre.
+
+En diferentes lugares donde había una población importante de moscas se colocaron 4 trampas en cada lugar, una con cada aditivo y se contó el número de moscas atrapadas en cada trampa. 
+
+El experimento se repitió durante varios días. Se usaron dos lugares y se repitió durante 4 días, por lo que se tienen 32 observaciones de los conteos para las 4 trampas.
+
+*Notas: Ese experimento se podría hacer más rápido si se hacían 16 trampas en un solo día*
+
+
+
+*A continuación se ve el gráfico de un conteo*
+
+```{r, message=FALSE, warning=FALSE}
+attach(base)
+library(ggplot2)
+qplot(trat1,conteo,geom="boxplot",ylab="conteo",xlab="tratamiento")
+```
+*Nota: Recuerde que la homocedasticidad se omite*
+
+En este caso se cuenta el número de moscas en un momento y lugar específico bajo un cierto tratamiento. Este número teóricamente puede ir de cero a infinito, siendo en general los conteos obtenidos números no muy grandes, por lo que la distribución es genuinamente Poisson y no convendría aproximarla a la normal por el hecho de no tener conteos muy grandes.
+
+
+**El modelo es:**
+
+$$\log(\lambda_j)=\beta_0+\tau_j$$
+
+Con la restricción de $\sum\tau_j = 0$
+
+
+## Estimación de un modelo Poisson
+
+```{r}
+options(contrasts=c("contr.sum","contr.poly")) # Suma nula
+mod1=glm(conteo~trat1,family=poisson,data=base)
+```
+
+
+
+```{r}
+contrasts(trat1)
+```
+
+**Estimación de todos los coeficientes del modelo**
+
+```{r}
+d=mod1$coef
+d1=c(d,-sum(d[2:4]))
+names(d1)[5] = "trat14"
+round(d1,2)
+```
+
+## Cálculo de valores ajustados de un modelo Poisson
+
+### Forma manual
+
+
+$$\text{Si} \log(\lambda_j)=\beta_0+\tau_j\implies\lambda_j = e^{\beta_0+\tau_j}$$
+
+
+```{r}
+d2=d1[-1]
+lambda=exp(d[1]+d2)
+names(lambda)=levels(trat1)
+round(lambda,2)
+```
+
+
+### Forma automática.
+
+
+```{r}
+fit=predict(mod1,type="response")
+means = unique(predict(mod1,type="response"))
+names(means) = levels(trat1)
+# También se puede con
+# tapply(fit,trat1,mean) 
+means
+```
