@@ -751,6 +751,7 @@ El experimento se repitió durante varios días. Se usaron dos lugares y se repi
 *A continuación se ve el gráfico de un conteo*
 
 ```{r, message=FALSE, warning=FALSE}
+load("moscas.Rdata")
 attach(base)
 library(ggplot2)
 qplot(trat1,conteo,geom="boxplot",ylab="conteo",xlab="tratamiento")
@@ -811,7 +812,7 @@ round(lambda,2)
 ```{r}
 fit=predict(mod1,type="response")
 means = unique(predict(mod1,type="response"))
-names(means) = levels(trat1)
+names(means) = levels(base$trat1)
 # También se puede con
 # tapply(fit,trat1,mean) 
 means
