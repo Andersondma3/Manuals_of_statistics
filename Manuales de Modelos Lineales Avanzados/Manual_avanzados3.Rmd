@@ -517,12 +517,14 @@ Debido a que la probabilidad asociada a la prueba es p < 0.001, podemos decir qu
 
 Tenemos que:
 
-$$\begin{aligned}
+$$
+\begin{aligned}
 &Odds_2 = e^{-2.54+0.30\cdot\log_2{(2D)}}\\
 &Odds_2 = e^{-2.54+0.30\cdot(\log_2{(2)}+\log_2{(D)})}\quad\text{Note que} \log_2{(2)} = 1\\
 &Odds_1 = e^{-2.54+0.30\cdot(\log_2{(D)})}\\
 &\implies OR_{2|1} = e^{0.30} = 1.35
-\end{aligned}$$
+\end{aligned}
+$$
 
 **Interpretación:** Al duplicar la dosis la propensión se amplifica ó simplifica 1.35 veces, es decir aumenta 35%.
 
@@ -817,3 +819,331 @@ names(means) = levels(base$trat1)
 # tapply(fit,trat1,mean) 
 means
 ```
+
+## Supuesto de un modelo Poisson
+
+En este tipo de modelo tenemos un supuesto muy importante:
+
+$$\lambda_j=\sigma_j$$
+
+$$E[Y|j]= V[Y|j]$$
+
+Si este no se cumple existen dos alternativas, las cuales son:
+
++ Quasi-Poisson
+
++ Binomial Negativa
+
+
+Además de esto se **tienen** que cumplir los siguientes supuestos:
+
+
+1. Linealiadad con las predictoras continuas.
+
+2. No multicolinealidad (Si en nuestro modelo hay más de una predictora númerica).
+
+
+
+### Cálculo de los residuales normales
+
+
+```{r}
+r=residuals(mod1,type="response") # El type response, es una predicción de la media del modelo
+#Sin el "response", calcula solo la parte lineal no la media
+```
+
+### Gráfico para visualizar los residuales
+
+
+*A continuación se le presenta el código poara generar un gráfico que ayude a visualizar está situación*
+
+```{r, eval=FALSE}
+# El residual al cuadrado es una medida de variabilidad
+plot(log(r^2)~log(fit),pch=18,xlab=expression(log(hat(lambda))),
+ylab=expression(log(r^2)))
+abline(0,1) #Esto es la identidad
+```
+
+
+```{r, echo=FALSE}
+# Configurar la ventana para ver los 3 gráficos lado a lado
+par(mfrow = c(1, 3))
+
+# Valores fijos de log(fit) basados en tu imagen
+log_fit <- c(rep(0.3, 3), rep(1.45, 6), rep(2.05, 6), rep(2.23, 6))
+
+# -------------------------------------------------------------------------
+# 1. EQUIDISPERSIÓN (Puntos perfectamente alrededor de la línea)
+# -------------------------------------------------------------------------
+# Definimos desvíos fijos y balanceados para que fuercen la oscilación sobre la línea
+desvios_equi <- c(
+  -0.3, 0.0, 0.3,                 # Para x = 0.3
+  -0.4, -0.1, 0.2, -0.2, 0.1, 0.4, # Para x = 1.45
+  -0.5, -0.2, 0.1, -0.1, 0.3, 0.4, # Para x = 2.05
+  -0.4, -0.2, 0.0, 0.2, 0.3, -0.1  # Para x = 2.23
+)
+log_r2_equi <- log_fit + desvios_equi
+
+plot(log_r2_equi ~ log_fit, pch = 18, cex = 1.5,
+     xlim = c(0.2, 2.4), ylim = c(-1, 6),
+     xlab = expression(log(hat(lambda))), ylab = expression(log(r^2)),
+     main = "Equidispersión")
+abline(0, 1, lwd = 2, col = "red")
+
+# -------------------------------------------------------------------------
+# 2. SOBREDISPERSIÓN (Todos los puntos arriba de la línea)
+# -------------------------------------------------------------------------
+# Sumamos valores positivos altos para desplazar toda la nube hacia arriba
+desvios_sobre <- c(
+  0.8, 1.2, 1.5,
+  1.0, 1.4, 1.9, 2.3, 2.7, 3.1,
+  1.2, 1.8, 2.4, 3.0, 3.5, 4.0,
+  1.5, 2.0, 2.5, 3.1, 3.6, 4.2
+)
+log_r2_sobre <- log_fit + desvios_sobre
+
+plot(log_r2_sobre ~ log_fit, pch = 18, cex = 1.5,
+     xlim = c(0.2, 2.4), ylim = c(-1, 6),
+     xlab = expression(log(hat(lambda))), ylab = expression(log(r^2)),
+     main = "Sobredispersión")
+abline(0, 1, lwd = 2, col = "red")
+
+# -------------------------------------------------------------------------
+# 3. SUBDISPERSIÓN (Todos los puntos abajo de la línea)
+# -------------------------------------------------------------------------
+# Restamos valores para arrastrar absolutamente todos los puntos debajo de la línea
+desvios_sub <- c(
+  -0.8, -1.0, -1.2,
+  -0.8, -1.0, -1.1, -1.3, -1.4, -1.5,
+  -0.9, -1.1, -1.3, -1.4, -1.6, -1.8,
+  -1.0, -1.2, -1.3, -1.5, -1.7, -1.9
+)
+log_r2_sub <- log_fit + desvios_sub
+
+plot(log_r2_sub ~ log_fit, pch = 18, cex = 1.5,
+     xlim = c(0.2, 2.4), ylim = c(-1, 6),
+     xlab = expression(log(hat(lambda))), ylab = expression(log(r^2)),
+     main = "Subdispersión")
+abline(0, 1, lwd = 2, col = "red")
+
+# Restaurar ventana gráfica
+par(mfrow = c(1, 1))
+```
+
+
+*Lo más común es observar Sobredispersión en muchos casos la subdispersión no sucede.*
+
+
+
+### Cálculo de los residuales de Pearson
+
+Un residual de Pearson se define como:
+
+$$r_p=\frac{y-\hat{y}}{\sqrt{\hat{y}}}$$
+De esto podemos obtener el cuadrado medio residual de Pearson el cual se define como:
+
+$$\frac{\sum{r_p^2}}{n-p} = \phi$$
+donde:
+
++ $\phi:$ Es el paramétro de dispersión
+
++ $n:$ El número de observaciones
+
++ $p$: número de paramétros del modelo
+
+Para $\phi$, tenemos tres casos:
+
+$$
+\begin{aligned}
+\phi \sim 1 &\implies \text{Equidispersión} \\
+\phi > 1    &\implies \text{Sobredispersión} \\
+\phi < 1    &\implies \text{Subdispersión}
+\end{aligned}
+$$
+
+*A continuación se le presenta la fórmula de calcularlo en r*
+
+```{r}
+n = nrow(base)#número de observaciones
+p = length(mod1$coef)#Número de coef
+phi=sum(residuals(mod1,type="pearson")^2)/(n-p)
+round(phi,1)
+```
+Se obtiene un parámetro de dispersión $\phi = 6.1$ , el cual es mucho mayor que 1, por lo que se comprueba la sospecha de que existe sobredispersión, por lo tanto, no se cumple el supuesto que dice que la media condicional es igual que la variancia condicional.
+
+En ocasiones decir que la media es igual a la varianza es algo muy fantasioso e irreal, por lo que hay varias casos que pueden ocurrir uno de ello es cuando la varianza es proporcional a la media, con esto nos referimos a los siguiente:
+
+*Esto lo podemos considerar como un supuesto*. Por lo que ignoramos un supuesto para incluir otro. 
+
+
+$$\sigma_j^2=\phi\lambda_j$$
+
+
+En el ejemplo anterior como $\phi = 6.1$
+
+Esto nos lleva a que:
+
+$$\begin{aligned}
+&\lambda_1 = 2 \implies\sigma_1^2 = 12.2 \\
+&\lambda_2 = 4 \implies\sigma_2^2 = 24.4 \\
+\end{aligned}$$
+
+
+
+Hay otros dos casos los cuales son:
+
+1. Cuando la varianza tiene un comportamiento cuadrático, lo que sería una binomial negativa.
+
+
+2. Cuando la varianza tiene una relación aleatoria con la media y no se puede observar su comportamiento. Por está razón en muchas ocasiones se utiliza la que no está tan aleajada.
+
+```{r tablas-comparativas, echo=FALSE}
+library(knitr)
+
+# Datos Escenario 1
+escenario1 <- data.frame(
+  Rendimiento = c("Mejor", "Intermedio", "Peor"),
+  Modelo = c("Binomial Negativa", "Quasi-Poisson", "Regresión Poisson"),
+  Diagnostico = c("Ajusta la varianza de forma cuadrática.", 
+                  "Corrige errores estándar usando phi.", 
+                  "Subestima errores estándar (falsos positivos).")
+)
+
+# Datos Escenario 2
+escenario2 <- data.frame(
+  Rendimiento = c("Mejor", "Intermedio", "Peor"),
+  Modelo = c("Binomial Negativa", "Regresión Poisson", "Quasi-Poisson"),
+  Diagnostico = c("Sigue siendo el más flexible y robusto.", 
+                  "Eficiente y parsimonioso si phi es cercano a 1.", 
+                  "Introduce sobreparametrización innecesaria.")
+)
+
+# Renderizar tablas
+kable(escenario1, caption = "Jerarquía con Alta Sobredispersión")
+kable(escenario2, caption = "Jerarquía con Baja Dispersión / Muestra Pequeña")
+```
+
+*A continuación se le presenta como colocar el modelo quasipoisson en r*
+
+
+```{r}
+mod2=glm(conteo~trat1,family=quasipoisson(link=log),base)#da lo mismo sin el (link=log)
+summary(mod2)
+```
+
+```{r}
+ee2=summary(mod2)$coef[,2]
+ee1=summary(mod1)$coef[,2]
+ee2/ee1 
+```
+
+Todos los errores estándar se inflan. **Siempre** la Quasi-Poisson va a tener errores estándar mayores que la Poisson normal.
+
+```{r}
+sqrt(phi)
+```
+
+Se puede observar que los coeficientes son los mismos obtenidos anteriormente pero los errores estándar ahora son mayores. Estos son los correctos. El error estándar de cada coeficiente ahora es $\sqrt{\phi}$ veces el que se había obtenido antes.
+
+*A continuación observe la diferencia entre los $\phi$ de los modelos*
+
+
+```{r}
+summary(mod1)$disp # Modelo de equidispersión
+```
+
+
+```{r}
+summary(mod2)$disp #Modelo de sobredispersión
+```
+
+
+### Análisis de si la varianza es proporcional a la media
+
+```{r}
+med=tapply(conteo,trat1,mean)
+v=tapply(conteo,trat1,var)
+round(v/med,2)
+```
+
+En el caso de sirope la variancia es 10.2 veces la media, mientras que en el vinagre la variancia no llega a ser ni el doble de la media. Por lo tanto, no parece que las variancias sean proporcionales a las medias.
+
+*Nota:Si tenemos un predictor que es una variable continua, se necesitan más datos para hacer la verificación de que es proporcional*
+
+## Comparación de medias
+
+
+Tenemos las siguientes medias:
+
+
+$$
+\begin{aligned}
+\hat{\lambda_1}=e^{\beta_0+\tau_1}\\
+\hat{\lambda_2}=e^{\beta_0+\tau_2}
+\end{aligned}
+$$
+
+
+
+Para compararlas se debe realizar una razón:
+
+$$\text{Razón}=e^{\tau_2-\tau_1}$$
+
+Esto nos lleva a la siguiente hipótesis:
+
+$$H_0: \lambda_2 = \lambda_1  \iff \tau_2=\tau_1$$
+*Nota: Recuerde que la interpretación es aumenta x veces o es el doble etc.*
+
+
+# Poisson inflada con ceros
+
+Esto es un fenoméno de cuando la variable que yo estoy estudiando tiene  muchos ceros. Su nombre en inglés es *Zero-inflation Poisson*
+
+
+```{r simulacion-zip, message=FALSE, warning=FALSE, fig.width=8, fig.height=5, echo=FALSE}
+library(ggplot2)
+
+set.seed(2026)
+n <- 500
+omega <- 0.35  # 35% de probabilidad de obtener un cero estructural
+lambda <- 4    # Media del componente Poisson
+
+# 1. Simulación del proceso de mezcla
+# Generamos una variable Bernoulli (0 o 1) para decidir el origen del dato
+es_cero_estructural <- rbinom(n, size = 1, prob = omega)
+datos_poisson <- rpois(n, lambda = lambda)
+
+# Si es_cero_estructural es 1, el conteo es 0; si no, viene de la Poisson
+contingencias <- ifelse(es_cero_estructural == 1, 0, datos_poisson)
+
+df_zip <- data.frame(Conteos = contingencias)
+
+# 2. Gráfico de Densidad / Histograma
+ggplot(df_zip, aes(x = Conteos)) +
+  # Usamos un histograma de densidad (y = ..density..) adaptado a datos discretos
+  geom_histogram(aes(y = ..density..), binwidth = 0.5, 
+                 fill = "steelblue", color = "white", alpha = 0.8) +
+  # Línea de densidad suavizada para marcar el perfil de la distribución
+  geom_density(color = "darkred", size = 1, adjust = 2) +
+  labs(
+    title = "Distribucion Poisson Inflada con Ceros (ZIP)",
+    subtitle = paste0("n = ", n, ", ", omega*100, "% de ceros estructurales y lambda = ", lambda),
+    x = "Conteo de eventos (Y)",
+    y = "Densidad de probabilidad"
+  ) +
+  scale_x_continuous(breaks = 0:max(contingencias)) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    panel.grid.minor = element_blank()
+  )
+```
+
+
+
+# Resumen de la diferencia entre un modelo de conteo y otro binomial
+
+$$\log\left(\frac{\pi}{1-\pi}\right)=PL\to .OR$$
+
+
+$$\log(\lambda)=PL\to \text{Razón de medias}$$
