@@ -1,0 +1,12 @@
+---
+title: "Protecto de Teoría estadística"
+author: "Anderson Martínez, Sebastián Calvo, Justin Zhu, Fabián Almirall"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  word_document:
+    toc: true
+    toc_depth: '3'
+---
