@@ -264,6 +264,7 @@ contrasts(base$dosix)
 	
 ```{r}
 mod.sum=glm(cbind(mal,20-mal)~dosix,family=binomial,data=base)
+# Se coloca cbind(mal,20-mal), porque los datos no están agrupados
 ```
 
 ```{r}
@@ -1138,8 +1139,261 @@ ggplot(df_zip, aes(x = Conteos)) +
     panel.grid.minor = element_blank()
   )
 ```
+## Diferencia entre el modelo Quasipoisson, Binomial Negativa y Poisson al momento de probar factores fijos
+
+Para la siguiente hipótesis:
+
+$$H_0: \lambda_1 = ... = \lambda_k $$
+
+Para los modelos que tienen verosimiltud se realizan con el `test = "LRT`, estos son el modelo de **Poisson** y la **Binomial Negativa**. En el caso de la **QuasiPoisson** se utliza el `test = "F"`, porque no tiene verosimilitud.
 
 
+Para esta otra hipótesis: (comparaciones multiples)
+
+$$H_0:\lambda_i=\lambda_j$$
+Para los modelos de **Poisson** y la **Binomial Negativa**, usamos una $z$ (normal). En cambio la **Quasipoisson** es con la $t$
+
+
+```{r}
+drop1(mod2,test="F") # Este modelo es Quasipoisson
+```
+
+Note que como rechazamos la hipótesis nula, las medias de cada tratamiento son diferentes.
+
+
+Para está 
+
+
+### Código para usar emmeans en una Quasipoisson
+
+```{r}
+library(emmeans)
+# 1. Extraer los grados de libertad residuales de tu modelo
+gl_residuales <- df.residual(mod2)
+# 2. Pasárselos al emmeans
+diff = emmeans(mod2, pairwise ~ trat1, adjust = "bonferroni", df = mod2$df.residual, type = "response")
+diff$contrasts
+```
+
+
+### Forma manual de hacer las estimaciones de una Quasipoisson
+
+```{r}
+med
+```
+
+```{r}
+contrasts(trat1)
+```
+
+```{r}
+cmie =c(1,1,0,0)
+csir =c(1,0,1,0)
+clec =c(1,0,0,1)
+cvin =c(1,-1,-1,-1)
+c.ms =cmie-csir
+c.ml =cmie-clec
+c.mv =cmie-cvin
+c.sl =csir-clec
+c.sv =csir-cvin
+c.lv =clec-cvin
+contr =cbind(c.ms,c.ml,c.mv,c.sl,c.sv,c.lv)
+```
+
+
+```{r}
+b=mod2$coef
+L=exp(t(contr)%*%b)
+row.names(L)=c("miel-sirope","miel-leche","miel-vinagre",
+"sirope-leche","sirope-vinagre","leche-vinagre")
+round(L,2)
+```
+Estas cantidades representan la razón entre cada par de medias, por ejemplo, la media de miel es 19% mayor que la media de sirope, la media de miel es 6.7 veces la media de vinagre, etc. Se nota que las que más se diferencian son miel y vinagre, así como sirope y vinagre. Además la media de leche es 3.09 veces mayor a la de vinagre.
+
+
+
+**Pruebas de hipótesis para las diferencias**
+
+
+```{r}
+cov=vcov(mod2)
+ee=sqrt(diag(t(contr)%*%cov%*%contr))
+eta=t(contr)%*%b
+qt=eta/ee
+p=pt(qt,28,lower.tail = F)
+row.names(p)=row.names(L)
+round(p,3)
+```
+
+
+### Nota importante sobre el emmeans 
+
+Como el emmeans lo hace automáticamente de dos colas, entonces en este caso como son 6 diferencias lo compara contra $\alpha/12$, pero como a nosotros nos interesa de una cola entonces se deben comparar contra$\frac{p}{1} < \alpha$ o $p < 2\alpha$
+
+
+# Binomial Negativa
+
+
+Si los datos no cumplen el supuesto de una distribución Poisson, donde $E[Y|X]=V[Y|X]$. Se va a utilizar la distribución binomial negativa.  
+
+Se tiene el siguiente modelo:
+ 
+ $$\log(\lambda_j) = \beta_0+\tau_j$$
+ 
+Esto nos lleva a que:
+ 
+ 
+$$\sigma^2 = \lambda_j+\frac{\lambda_j^2}{\theta} =\lambda_j+\alpha \lambda^2$$
+
+## Estimación de paramétros
+
+```{r}
+library(MASS)
+mod3=glm.nb(conteo~trat1)
+```
+
+
+```{r}
+drop1(mod3, test = "LRT")
+```
+
+
+```{r}
+emmeans(mod3, pairwise~trat1, adjust = "bonferroni")$contrasts
+```
+
+# Prueba de hipótesis para saber cual modelo es mejor
+
+
+$$H_0: Poiss \approx QP$$
+$$H_1: QP  > Poiss$$
+
+*En r* es lo mismo que `trafo1`
+
+```{r, message=FALSE}
+#install.packages("AER")
+library(AER)
+```
+
+```{r}
+dispersiontest(mod1,trafo=1)
+```
+
+$$H_0: Poiss \approx BN$$
+$$H_1: BN > Poiss$$
+
+*En r* es lo mismo que `trafo2`
+
+
+## Resumen
+
+\begin{enumerate}
+    \item \textbf{Quasipoisson (QP)} $\rightarrow$ Evaluar el parámetro de dispersión ($\phi$):
+    \begin{itemize}
+        \item $\phi > 1 \rightarrow$ \textbf{Sobredispersión}: Se puede optar por Binomial Negativa (BN) o Quasipoisson (QP).
+        \item $\phi < 1 \rightarrow$ \textbf{Subdispersión}: Se selecciona \textbf{Quasipoisson (QP)}.
+    \end{itemize}
+    
+    \item Formular la prueba formal de dispersión usando la función: \texttt{dispersiontest()}
+    
+    \item \textbf{Decidir} el modelo definitivo entre: Quasipoisson (QP), Poisson (P) o Binomial Negativa (BN).
+\end{enumerate}
+
+
+
+En la **Quasipoisson**, la varianza se estima como:
+
+$$\hat{\sigma}_j^2 = \phi\lambda_j$$
+
+En la **Binomial Negativa**, la varianza se estima como:
+
+$$\hat{\sigma}_j^2=\hat{\lambda_j}+\alpha \hat{\lambda^2}=\hat{\lambda_j}+\frac{\hat{\lambda_j^2}}{\theta}$$
+
+*Nota* $\theta = \frac{1}{\alpha}$, este nos lo da r en el `summary()`, para el modelo de la binomial negativa.
+
+*En r los hacemos de la siguiente manera*
+
+```{r}
+vobs=tapply(conteo,trat1,var) #varianza observada
+med=tapply(predict(mod2,type="response"),trat1,mean) #media observada
+#unique(predict(mod2,type="response")) Alternativa
+phi=summary(mod2)$disp # Este es el theta o 1/alpha
+vquasi=phi*med
+alpha=1/summary(mod3)$theta
+vnegbin=med+alpha*med^2
+round(cbind(vobs,vquasi,vnegbin),2)
+```
+*Nota: Cuando hay covariables este análisis no se puede hacer, porque necesitamos al menos un dato por cada combinación con la covariable*.
+
+La variancia de miel es subestimada por el modelo quasi-Poisson y sobrestimada por la binomial negativa, la de sirope está muy cerca la binomial negativa y lejos el quasi-Poisson, la de leche está parecida con las dos y la de vinagre está más cerca con la binomial negativa. No hay ninguna de las dos que realmente aproxime todas las variancias pero es un poco mejor con la binomial negativa.
+
+# Análisis con bloques
+
+Para esta clase de análisis pasamos de los modelos lineales generalizados corrientes a los modelos lineales generalizados mixtos debido que el número de niveles del estudio cambia.
+
+## Poisson
+
+El modelo es el siguiente:
+
+$$\log(\lambda_{ij})=\beta_0+\tau_i+\delta_j$$
+
+```{r}
+mod4=glm(conteo~trat1+as.factor(unid),family=poisson)
+sum(residuals(mod4,type="pearson")^2)/(32-11)
+```
+
+```{r}
+dispersiontest(mod4,trafo=1,alternative = "less") 
+#Este es el de subdispersión por el lees, es uan especie de guia para la hipótesis
+```
+
+
+Se rechaza la hipótesis de equidispersión y se concluye que la media es proporcional a la variancia con una constante de proporcionalidad menor a uno, es decir la variancia es menor que la media.
+
+```{r}
+mod5=glm(conteo~trat1+as.factor(unid),family=quasipoisson)
+drop1(mod5,test="F")
+```
+
+Ahora el tratamiento resulta mucho más significativo con una probabilidad de error tipo I bajísima (<0.0001).
+
+### Forma automática de los contrastes
+
+```{r}
+p = emmeans(mod5, pairwise~trat1, df = df.residual(mod5), adjust = "bonferroni")$contrast
+p = as.data.frame(p)
+round(p[,6]/12,5)
+p[,6]/12<0.05/6
+```
+
+### Forma manual de los contrastes
+
+```{r}
+b=mod5$coef[1:4]
+cov=vcov(mod5)[1:4,1:4]
+ee=sqrt(diag(t(contr)%*%cov%*%contr))
+eta=t(contr)%*%b
+qt=eta/ee
+p=pt(qt,21,lower.tail = F)
+row.names(p)=row.names(L)
+round(p,3)
+```
+
+
+```{r}
+p<0.05/6
+```
+```{r}
+t=qt(1-0.05/5,21) # note que es de una cola
+LIM=exp(eta[-1]-t*ee[-1])
+round(LIM,2)
+```
+```{r}
+mod6=glm.nb(conteo~trat1+factor(unid))
+summary(mod6)$theta
+```
+
+El parámetro de dispersión es 35839, el cual es suficientemente alto como para pensar que ** $\alpha_1/ \theta \to 0$. **Por lo tanto, la distribución binomial negativa tiende a la Poisson.
 
 # Resumen de la diferencia entre un modelo de conteo y otro binomial
 
