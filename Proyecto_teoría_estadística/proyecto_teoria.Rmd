@@ -10,3 +10,139 @@ output:
     toc: true
     toc_depth: '3'
 ---
+
+
+El archivo `poblacion.RData` contiene un vector de altura (en centímetros) de una población de 1500 estudiantes universitarios en Costa Rica. En este estudio, el objetivo es que extraiga una muestra de tamaño n = 50 de esta población con reemplazo. y realizar inferencia sobre la altura promedio de todos los 1500 estudiantes universitarios de Costa Rica, denotado por $\theta$, específicamente queremos encontrar el intervalo de confianza del 99% para el parámetro $\theta$, utilizando tres métodos:
+
+Cargamos el archivo de datos:
+
+```{r}
+load("población.RData")
+```
+
+```{r}
+# 1. Crear el histograma en escala de densidad (probability = TRUE o freq = FALSE)
+hist(x, 
+     probability = TRUE, 
+     col = "lightblue", 
+     main = "Histograma de Alturas vs. Curva Normal",
+     xlab = "Alturas (cm)", 
+     ylab = "Densidad")
+
+# 2. Generar una secuencia de puntos que cubra el rango de tus datos
+Z2 <- seq(min(x), max(x), length = 1500)
+
+# 3. Dibujar la línea usando la media y desviación REAL de tus datos 'x'
+lines(Z2, dnorm(Z2, mean = mean(x), sd = sd(x)), col = "red", lwd = 2)
+
+# 4. Opcional: Añadir una línea vertical en la media poblacional para comparar
+abline(v = mean(x), col = "darkblue", lwd = 2, lty = 2)
+```
+
+
+Se extrae una muestra de $n = 50$ del total de la población de estudiantes universitarios.
+
+*Nota:Para la reproducibilidad del ejercicios, se utliza una semilla*
+
+```{r}
+set.seed(1117)
+n = sample(x,50, replace = T)
+```
+
+
+
+```{r}
+densidad_h1 <- density(n, kernel = "gaussian", bw = 1)
+densidad_h5 <- density(n, kernel = "gaussian", bw = 5)
+
+# 3. Graficar el histograma base de la muestra
+hist(n, probability = TRUE, col = "gray90", border = "white",
+     main = "Efecto del Ancho de Banda (h) en el Kernel Gaussiano",
+     xlab = "Alturas", ylab = "Densidad", ylim = c(0, max(densidad_h1$y)))
+
+# 4. Superponer las curvas kernel
+lines(densidad_h1, col = "tomato", lwd = 2.5)   # h = 1
+lines(densidad_h5, col = "royalblue", lwd = 2.5) # h = 5
+
+# Añadir leyenda
+legend("topright", legend = c("Kernel h = 1", "Kernel h = 5"),
+       col = c("tomato", "royalblue"), lwd = 2.5)
+```
+
+
+Asumiendo que la población es normal con variancia conocida $\sigma^2 = 100$, se calcula un intervalo de confianza exacto, el mismo se realiza con un valor de 99% de confianza.
+
+
+
+```{r}
+xbarra = mean(x)
+varx = 100
+alpha = 0.01
+z = qnorm(1-alpha/2)
+ee = sqrt(varx/length(n))
+ic = cbind(xbarra-z*ee,xbarra+z*ee)
+cat("Con un 99% de confianza, la altura promedio de los estudiantes de la Universidad de Costa Rica, se encuentra entre ", round(ic[1,1],2), "y", round(ic[1,2],2))
+```
+Lo que es lo mismo decir que $\theta \in [156.38, 163.67]$
+
+
+Luego asumiendo que no se conoce la varianza, se encuentra el intervalo de confianza asintóntico por medio del teorema de Slutsky.
+
+
+```{r}
+xbarra = mean(x)
+sd = sd(x)
+alpha = 0.01
+z = qnorm(1-alpha/2)
+ee = sd/sqrt(length(n))
+ic = cbind(xbarra-z*ee,xbarra+z*ee)
+cat("Con un 99% de confianza, la altura promedio de los estudiantes de la Universidad de Costa Rica, se encuentra entre ", round(ic[1,1],2), "y", round(ic[1,2],2))
+```
+Lo que es lo mismo decir que $\theta \in [155.95, 164.11]$
+
+
+
+
+
+Por último asumiendo una poblacón desconocida, calculamos el IC de bootstrap, en donde utlizamos 1000 muestras de bootstrap.
+
+
+```{r}
+B = 1000
+Tboot_b = c()
+for(b in 1:B) {
+  xb <- sample(x, size = length(n), replace = TRUE)
+  Tboot_b[b] <- mean(xb)
+}
+
+```
+
+Obtenemos el cuantil de $z$ con un 99% de confianza
+
+```{r}
+alpha = 0.99
+q_z = qnorm(1-alpha/2)
+```
+
+Estimamos la media de todos los promedios de las muestras del bootstrap de 1000 muestras.
+
+
+```{r}
+(media_boots = mean(Tboot_b))
+```
+
+
+
+Calculamos la desviación estándar de todos los promedios de las muestras del bootstrap de 1000 muestras.
+
+```{r}
+(sdboot = sd(Tboot_b))
+```
+
+Realizamos la estimación del intervalo de confianza
+
+```{r}
+ic = cbind(media_boots-q_z*sdboot,xbarra+q_z*media_boots)
+cat("Con un 99% de confianza, la altura promedio de los estudiantes de la Universidad de Costa Rica, se encuentra entre ", round(ic[1,1],2), "y", round(ic[1,2],2))
+```
+
