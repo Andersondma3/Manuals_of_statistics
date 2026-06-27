@@ -1169,7 +1169,7 @@ Para está
 ```{r}
 library(emmeans)
 # 1. Extraer los grados de libertad residuales de tu modelo
-gl_residuales <- df.residual(mod2)
+gl_residuales = df.residual(mod2)
 # 2. Pasárselos al emmeans
 diff = emmeans(mod2, pairwise ~ trat1, adjust = "bonferroni", df = mod2$df.residual, type = "response")
 diff$contrasts
@@ -1394,6 +1394,189 @@ summary(mod6)$theta
 ```
 
 El parámetro de dispersión es 35839, el cual es suficientemente alto como para pensar que ** $\alpha_1/ \theta \to 0$. **Por lo tanto, la distribución binomial negativa tiende a la Poisson.
+
+
+# Poisson con tasas vs Binomial
+
+Este apartado se explicará a partir del siguiente ejemplo:
+
+$Y:$ Número de personas enfermas de una cierta enferemedad (COVID-19, Tuberculosis etc.)
+
+Esta variable corresponde a una binomial si se tiene el total de la población. Sin embargo, podemos utilizar una tasa que se construye como $\text{Tasa} = \frac{Y}{N}$, en algunas ocasiones este tipo de variable se puede usar como una normal, pero en muchas ocasiones suele fallar. En otras situaciones, el número de casos de la enfermedad es muy pequeño, por lo que  se utliza como una Poisson, esto se realiza si $Y \lt\lt N$ (Y es mucho menor que N). A esto le llamamos que estamos modelando las **tasas indirectamente**. LO que pasa es que hay experimentos en donde ciertas ubicaciones no tienen el mismo tamaño, por esta razón es que utlizamos la tasa y no la Y.
+
+
+El modelo para estos casos se escribe así:
+
+$$\log\left(E\left[\frac{Y}{N}\right]\right) = \beta_0+\beta_1X $$
+
+Aplicamos propiedades de logaritmos:
+
+$$\log(E[Y]) - \log(N)= \beta_0+\beta_1X $$
+
+
+Despejamos $\log(Y)$ y llegamos a que:
+
+$$\log(E[Y])  = \beta_0+\beta_1X+\log(N) $$
+
+
+donde $Y|X\sim Poiss(\lambda)$
+
+*Nota:* La $Y$ es la que se distribuye la poisson, la tasa no tiene distribución, solo la utlizamos para modelar.
+
+
+De esta manera llegamos al modelo de tasas, el cual lo podemos ver de la siguiente manera:
+
+$$\log{(\lambda_x)} =\beta_0+\beta_1X+\log(N)$$
+en donde en un estudio de los cantones puede ser:
+
++ $N:$ Población del cantón.
+
+
++ $Y:$ número de casos totales de cierta enfermedad en el cantón.
+
++ $X:$ Zona rural o urbana.
+
+*A continuación se le presenta como se podría ver la base de datos*
+
+
+| id_canton | canton | casos_totales ($Y$) | poblacion ($N$) | zona ($X$) | 
+| :---: | :--- | :---: | :---: | :---: | 
+| 1 | San José | 245 | 350000 | Urbana | 
+| 2 | Alajuela | 162 | 300000 | Urbana | 
+| 3 | San Carlos | 98 | 200000 | Rural | 
+| 4 | Pérez Zeledón | 65 | 140000 | Rural | 
+| 5 | Escazú | 42 | 70000 | Urbana | 
+| 6 | Talamanca | 28 | 40000 | Rural | 
+
+
+Note que $N$ es la variable de tamaño y los casos de esta enfermedad no nos interesa calcularlos a mano, sino con el modelo. Además $\lambda_x = E[Y|X]$
+
+## Ejemplo en un caso de banca 
+
+En un banco quiere analizar el número de veces que un cliente utiliza su tarjeta de crédito en el extranjero al año ($Y$).Como estamos modelando un conteo ($Y$) pero no todos los clientes tienen el mismo tiempo de tener la cuenta activa (exposición $N$, medida en meses), utilizaremos un Modelo de Regresión Poisson con un offset. Así modelaremos la tasa de uso por mes.
+
+*Nota:* Este tipo de estudios los podemos meterlo a la fuerza a una normal, en algunos puede que sirva en otros que no. En la mayoría de casos sirve cuando la proporción está muy cerca de $p = 0.5$, debido a la forma de la distribución. Además la cantidad de muestra $(n)$ puede afectar.
+
+
+
+```{r}
+load("datos_banca_offset.RData")
+```
+
+```{r}
+mod1 = glm(transacciones ~ tarjeta + ingreso, family = poisson(link = "log"), offset = log(meses_exposicion), data = datos_banca)
+```
+
+La clave de este modelo es el `offset = log(meses_exposicion)`, ya que aquí le decimos que loa agregue, pero que no le calcule un coeficiente.
+
+```{r}
+summary(mod1)
+```
+Observe que no hay un coeficiente de la variable `meses_exposicion`
+
+
+**¿Cómo interpretar los coeficientes?**
+
+```{r}
+round(mod1$coef,5)
+```
+
+```{r}
+contrasts(datos_banca$tarjeta)
+```
+
+
+Tenemos la siguiente ecuación:
+
+
+$$\log{(\lambda_x)} = -2.08+0.41T_{\text{Gold}}+0.87T_{\text{Black}}+0.00051I$$
+En este caso nos interesa interpretar las diferencias entre las tarjetas para hacerlo la exponenciamos 
+
+$$e^{0.41} = 1.51 $$
+Manteniendo el ingreso constante, los clientes con tarjeta Gold tienen una tasa esperada de transacciones en el extranjero un 51% mayor (o $1.51$ veces la tasa) en comparación con los clientes de tarjeta Regular. 
+
+
+**Si no fuera con la Tasa:** También El número promedio de transacciones de los clientes de la tarjeta Gold es 51% mayor en comparación con la cantidad de los clientes de la tarjeta Regular.
+
+
+# Gamma
+
+*A continuación se le presenta el gráfico de la densidad de la variable* `ind_mg_dry` *para cada orden. Observe la forma que tienen las distribuciones.*
+
+```{r}
+load("datosdm.Rdata")
+dm$order=as.factor(dm$order)
+par(mfrow=c(1,2))
+plot(density(dm$ind_mg_dry[dm$order=="Diptera"]),
+main="Masa seca- Diptera",xlab = "mg")
+plot(density(dm$ind_mg_dry[dm$order=="Ephemeroptera"]),
+main="Masa seca- Ephemeroptera",xlab = "mg")
+```
+La distribución condicional a cada orden es asimétrica, por lo que se espera que al ajustar un modelo lineal
+no se cumpla el supuesto de normalidad.  
+
+Observe lo que sucede en el caso de la normalidad
+
+```{r}
+mod0=lm(ind_mg_dry~order,data = dm)
+invisible(qqPlot(mod0$residuals)) # El invisibl es por estética
+```
+Observe que no se cumple le supuesto de normalidad, debdio a que se observa una curvatura. Para solucionar esto hacemos una transformación, pero eso sí ante asimetrías mucha veces la solución es gamma.
+
+```{r}
+library(MASS)
+boxcox(mod0)
+```
+Usamos logaritmo porque está muy cerca de cero.
+
+
+```{r}
+mod1=lm(log(ind_mg_dry)~order,data = dm)
+invisible(qqPlot(mod1$residuals))
+```
+```{r}
+shapiro.test(mod1$residuals)
+```
+No hay normalidad, debido a que se rechaza la prueba.
+
+## La solución ante este problema (La gamma)
+
+El modelo de esta distribución se escribe de la siguiente manera:
+
+$$\log({\mu_x}) = \beta_0+\beta_1X$$
+
+donde:
+
++ $Y|X\sim\Gamma(\alpha_x,\beta_x)$
+
+*A continuación se le miestra el modelo en r*
+
+```{r}
+#Con un glm Gamma
+mod2=glm(ind_mg_dry~order,data = dm, family = Gamma(link = "log"))
+```
+
+
+Los resultados de la gamma se interpretan de la misma manera que una binomial
+
+
+## Verificación de si es correcta la solución
+
+```{r, warning=FALSE}
+#Residuos de cuantil
+library(statmod)
+```
+
+```{r}
+qr.mod2 <- qresid(mod2)
+#Grafico componente aleatorio
+invisible(qqPlot(qr.mod2))
+```
+
+
+Observe que este gráfico se ve mucho mejor que los anteriores.
+
+
 
 # Resumen de la diferencia entre un modelo de conteo y otro binomial
 
