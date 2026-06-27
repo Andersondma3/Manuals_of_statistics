@@ -1402,7 +1402,7 @@ Este apartado se explicará a partir del siguiente ejemplo:
 
 $Y:$ Número de personas enfermas de una cierta enferemedad (COVID-19, Tuberculosis etc.)
 
-Esta variable corresponde a una binomial si se tiene el total de la población. Sin embargo, podemos utilizar una tasa que se construye como $\text{Tasa} = \frac{Y}{N}$, en algunas ocasiones este tipo de variable se puede usar como una normal, pero en muchas ocasiones suele fallar. En otras situaciones, el número de casos de la enfermedad es muy pequeño, por lo que  se utliza como una Poisson, esto se realiza si $Y \lt\lt N$ (Y es mucho menor que N). A esto le llamamos que estamos modelando las **tasas indirectamente**. LO que pasa es que hay experimentos en donde ciertas ubicaciones no tienen el mismo tamaño, por esta razón es que utlizamos la tasa y no la Y.
+Esta variable corresponde a una binomial si se tiene el total de la población. Sin embargo, podemos utilizar una tasa que se construye como $\text{Tasa} = \frac{Y}{N}$, en algunas ocasiones este tipo de variable se puede usar como una normal, pero en muchas ocasiones suele fallar. En otras situaciones, el número de casos de la enfermedad es muy pequeño, por lo que  se utliza como una Poisson, esto se realiza si $Y << N$ (Y es mucho menor que N). A esto le llamamos que estamos modelando las **tasas indirectamente**. LO que pasa es que hay experimentos en donde ciertas ubicaciones no tienen el mismo tamaño, por esta razón es que utlizamos la tasa y no la Y.
 
 
 El modelo para estos casos se escribe así:
