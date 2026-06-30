@@ -30,13 +30,13 @@ library(lattice)
 
 Todos los modelos vistos anteriormente en los cursos anteriores y en este, son una combinación lineal de $\beta's$ y $X's$, por esta razón es que todos estos modelos les colocamos el nombre de modelos lineales.
 
-Los $\beta's$ y $X's$ que normalment escribrimos del modelo, le llamaremos la parte lineal del modelo, es decir la **parte lineal** en la modelación univariada *(la variables respuesta es una variable)* es igual a:
+Los $\beta's$ y $X's$ que normalmente escribrimos del modelo, le llamaremos la parte lineal del modelo, es decir la **parte lineal** en la modelación univariada *(la variable respuesta es una variable)* es igual a:
 
 
 $$\sum_{j=0}^{p-1}{\beta_jX_j}$$
 
 
-Además tenemos este nuevp elemento llamado la **función de enlance**, la cual es:
+Además tenemos este nuevo elemento llamado la **función de enlance**, la cual es:
 
 $$g(\cdot)$$
 
@@ -51,6 +51,7 @@ La unión de los compenentes anteriores es lo que nos forma un modelo lineal gen
 
 
 $$g(\mu_{y|x}) =\sum_{j=0}^{p-1}{\beta_jX_j}$$
+\newpage
 
 # Componentes de un modelo lineal generalizado (GLM)
 
@@ -67,7 +68,7 @@ $$g(\mu_{y|x}) =\sum_{j=0}^{p-1}{\beta_jX_j}$$
 ## Componente aleatorio
  
 
-+ La componente aleatoria de un GLM consiste en una variable aleatoria Y con observaciones independientes $(y_1,…,y_n)$.
++ El componente aleatoria de un GLM consiste en una variable aleatoria $Y$ con observaciones independientes $(y_1,…,y_n)$.
 
 
 + En muchas aplicaciones las observaciones son continuas y se puede asumir para $Y$ una distribución condicional normal.
@@ -76,12 +77,12 @@ $$g(\mu_{y|x}) =\sum_{j=0}^{p-1}{\beta_jX_j}$$
 + En otros casos las observaciones de $Y$ son binarias, y se identifican como éxito y fracaso. Aunque de modo más general, cada $Y_i$ indicaría el número de éxitos de entre un número fijo de ensayos, y se modelizaría como una distribución condicional binomial.
 
 
-+ En otras ocasiones cada observación es un conteo, con lo que se puede asignar a Y una distribución condicional de Poisson o una distribución condicional binomial negativa. 
++ En otras ocasiones cada observación es un conteo, con lo que se puede asignar a $Y$ una distribución condicional de Poisson o una distribución condicional binomial negativa. 
 
 
-+ Cuando la respuesta Y tiene una distribución asimétrica con valores continuos a partir de cero, se puede usar la distribución condicional gamma.
++ Cuando la respuesta $Y$ tiene una distribución asimétrica con valores continuos a partir de cero, se puede usar la distribución condicional gamma.
 
-*Nota:* observe que en todos los casos se habla de la distribución condicional.
+*Nota:* Observe que en todos los casos se habla de la distribución condicional.
 
 ## Componente sistemático
 
@@ -91,7 +92,7 @@ $$g(\mu_{y|x}) =\sum_{j=0}^{p-1}{\beta_jX_j}$$
 $$\eta = \beta_1X_1+...+\beta_pX_p$$
 
 
-+ Esta combinación lineal se denomina *predictor lineal* y se representa con h.
++ Esta combinación lineal se denomina *predictor lineal* y se representa con $h$.
 
 + Algunos de los $\beta's$  en esta combinación son coeficientes de variables continuas.
 
@@ -101,22 +102,22 @@ $$\eta = \beta_1X_1+...+\beta_pX_p$$
 
 + También se pueden incluir interacciones entre dos o más factores, así como entre factores y variables continuas. 
 
-+ Los parámetros del predictor lineal $\beta's$  son fijos para cualquier valor que tomen las $X's$. Sin embargo, los valores de esos parámetros son desconocidos y se deben estimar. Por lo tanto, para un vector de valores de las $X$ $(x_1,…,x_n)$, el correspondiente predictor lineal h es fijo (dados los coeficientes del modelo). 
++ Los parámetros del predictor lineal $\beta's$  son fijos para cualquier valor que tomen las $X's$. Sin embargo, los valores de esos parámetros son desconocidos y se deben estimar. Por lo tanto, para un vector de valores de las $X$ $(x_1,…,x_n)$, el correspondiente predictor lineal $h$ es fijo (dados los coeficientes del modelo). 
 
 
 ## Función de enlace
 
 
-+ La función de enlace especifica una función g(.) que relaciona  la esperanza de la respuesta mY con el predictor lineal h como:
++ La función de enlace especifica una función $g(\cdot)$ que relaciona  la esperanza de la respuesta $Y$ con el predictor lineal $h$ como:
 
 
-+ La función g más simple es g(m)=m, esto es, la identidad que da lugar al modelo de regresión lineal clásico.
++ La función g más simple es $g(m)=m$, esto es, la identidad que da lugar al modelo de regresión lineal clásico.
 
 
 + Entonces el modelo lineal clásico para respuestas continuas (normales) son un caso particular de un GLM con una función de enlace identidad.
 
  
-+ Los GLM generalizan la regresión clásica de dos modos: 1) permitiendo que Y tenga distribuciones diferentes a la normal, 2) incluyendo distintas funciones de enlace.
++ Los GLM generalizan la regresión clásica de dos modos: 1) permitiendo que $Y$ tenga distribuciones diferentes a la normal, 2) incluyendo distintas funciones de enlace.
 
 
 
@@ -164,7 +165,7 @@ $$\log\left(\frac{\pi_j}{1-\pi_j}\right)=\beta_0+\beta_1X_1+\beta_2X_2$$
 Esto nos dice que la probabilidad en el tratamiento j-ésimo se modela de la forma.
 
 
-Para despejar esa probabilidad lo que hacemos es que colocamops una exponencial
+Para despejar esa probabilidad lo que hacemos es que colocamos una exponencial
 
 $$\left(\frac{\pi_j}{1-\pi_j}\right)= e^{PL}$$
 
@@ -298,7 +299,7 @@ p1
 
 La interpretación del `D200` es:
 
-Para la dosis 200 se estima por cada 100 hojas en promedio 46 jojas están dañadas.
+Para la dosis 200 se estima que por cada 100 hojas en promedio 44 hojas están dañadas.
 
 ### Estimación del odds
 
@@ -307,7 +308,7 @@ round(p1/(1-p1),2)
 ```
 La interpretación del `D200` es:
 
-Para la dosis 200, se estima que en promedio por cada 75 hojas dañadas existen 100 no dañadas.
+Para la dosis 200, se estima que en promedio por cada 76 hojas dañadas existen 100 no dañadas.
 
 ### Estimación automática con predict()
 
@@ -340,6 +341,7 @@ Se quiere estimar promedio de hojas dañadas por planta en cada tratamiento, si 
 p1=exp(beta0+taus)/(1+exp(beta0+taus))
 1500*p1
 ```
+Esto se puede interpretar como: *Para una planta que posee un total de 1500 hojas y recibe el tratamiento de dosis 200, se estima que el promedio de hojas dañadas es de aproximadamente 646.15 hojas.*
 
 ### Prueba para verificar si la dosis tiene un efecto en la probabilidad
 
@@ -358,35 +360,39 @@ Primero hay que hacer los contrastes. Si los coeficientes para las dosis se
 denominan con $\alpha_{200}$,  $\alpha_{400}$ y  $\alpha_{800}$, se sabe que $\alpha_0 = 0$. Por ejemplo para comparar
 la dosis 800 contra la dosis 400, se tiene que el OR respectivo es:
 
-Por lo tanto, el vector de coeficientes del contraste asociado está dado por: c(0,0,-1,1). De esta forma se construyen los otros constrastes y se colocan en una matriz con los contrastes. Si cada contraste se denomina $\eta$, se tiene que** $OR = \exp(\eta)$
-
 $$OR = \exp(\alpha_{a800}-\alpha_{400})$$
 
+Por lo tanto, el vector de coeficientes del contraste asociado está dado por: `c(0,0,-1,1)`. De esta forma se construyen los otros constrastes y se colocan en una matriz con los contrastes. Si cada contraste se denomina $\eta$, se tiene que $OR = \exp(\eta)$
 
-La demoestración de este proceso es:
+
+La demostración de este proceso es:
 
 $$\log\left(\frac{\pi_{800}}{1-\pi_{800}}\right)-\log\left(\frac{\pi_{400}}{1-\pi_{400}}\right)$$
 
-Lo expoenciamos y por propiedades de logatimos nos lleva a este resultado:
+Lo exponenciamos y por propiedades de logatimos nos lleva a este resultado:
 
 
 $$\left(\frac{\frac{\pi_{800}}{1-\pi_{800}}}{\frac{\pi_{400}}{1-\pi_{800}}}\right)=e^{(\beta_0+\tau_{800})-(\beta_0+\tau_{400})}$$
 
-Este proceso anterior es lo que llamamos *Odds Ratio (OR)*, que es lo mismo que decir la razón de dos propensiones.
+Este proceso anterior es lo que llamamos *Odds Ratio (OR)*, que es lo mismo que decir la razón de dos propensiones (razón de chances).
 
 **Propiedad:**
 
 
 $$\text{Si } \pi_i = \pi_j \iff OR_{i|j}=1 \iff \tau_j = \tau_i$$
 
+### Método manual de comparación de propensiones
 
 
+Los vectores se contruyen de la siguiente manera:
 
-Los vectores se contrutyen de la siguiente manera:
+```{r}
+(dt=mod.trat$coef)
+```
+
 
 
 ```{r}
-dt=mod.trat$coef
 d0 = c(1,0,0,0)
 d200 = c(1,1,0,0)
 d400 = c(1,0,1,0)
@@ -487,7 +493,7 @@ Con una confianza global de 95%, se puede decir que la propensión de daño para
 
 Cuando se utliza la variable como continua, podemos realizar interpolaciones para diferentes rangos de una variable en específico.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 library(car)
 logodds=log((prop)/(1-prop))
 scatterplot(logodds~log(base$dosis+0.1,2),xlab="dosis",ylab="log(odds)")
@@ -496,7 +502,7 @@ scatterplot(logodds~log(base$dosis+0.1,2),xlab="dosis",ylab="log(odds)")
 
 En el gráfico se observa que para el intervalo que va de 0 a 200, hay un comportamiento diferente al resto del intervalo estudiado, lo cual hace pensar que la relación general entre el log(odds) y la dosis no es lineal. Si se observa solo la parte de la dosis que va de 200 en adelante, se aprecia un comportamiento más lineal. Entonces, el modelo que se ajusta con la variable dosis en forma continua no está siguiendo lo que se observa en este gráfico.
 
-El problema de la estimación es como se prueba la linealidad, debido a que hay valores únicos, es decir que hay sujetos que no tiene esa variable continua exacytamente igual. Po ejmplo si se quiere hacer un estudio de la relación de la altura con ser hombres, en donde en la muestra se pueden tener una cantidad de sujetos, pero prácticamemte todos tiene una altura distinta asociada a una variable binaria. En algunos casos si se cumple, en otros este problema puede generarnos problema en el supuesto de linelidad.
+El problema de la estimación es como se prueba la linealidad, debido a que hay valores únicos, es decir que hay sujetos que no tiene esa variable continua exactamente igual. Por ejemplo si se quiere hacer un estudio de la relación de la altura con ser hombres, en donde en la muestra se pueden tener una cantidad de sujetos, pero prácticamente todos tiene una altura distinta asociada a una variable binaria. En algunos casos si se cumple, en otros este problema puede generarnos problema en el supuesto de linelidad.
 
 **En este caso, como no hay linealidad no es recomendable asumir linealidad, por lo que se tiene que considerar como factor o realizar una transformación**
 
@@ -509,6 +515,9 @@ El problema de la estimación es como se prueba la linealidad, debido a que hay 
 mod2=glm(cbind(mal,20-mal)~log(dosis+1,2),family=binomial,data=base)
 (beta=mod2$coef)
 ```
+
+*Nota*: `log(dosis+1,2)` es el logaritmo en base 2 de dosis.
+
 **Primero tenemos que probar la siguiente hipótesis:**
 
 $$H_0:\beta_1=0$$
@@ -573,7 +582,7 @@ title(main=(bquote(log(pi/(1-pi))==.(a)+.(b)*D)))
 # Modelos para conteos
 
 
-La diferencia entre un modelo binomial y otro poisson radica en la información que se tiene, esto es porque en un modelo binomial yo puedo conocer o conozco el máximo en cambio en el poisson esto no es así.Un ejemplo de esto con el experimento de las hojas dañadas es que en ese experimento sabemos que nuestra variable resúesta es el número de hojas dañadas y sabiamos que el total o el máximo de hojas de cada planta eran 20, por lo que yo puedo calcular la proporción de hojas dañadas de este total. Para el caso de la poisson es como si yo tomará una ramita para contar las hojas dañanas, pero no se posee conocimiento, ni se puede averiguar de cual puede ser el número máximo de hojas dañadas.
+La diferencia entre un modelo binomial y otro poisson radica en la información que se tiene, esto es porque en un modelo binomial yo puedo conocer o conozco el máximo en cambio en el poisson esto no es así.Un ejemplo de esto con el experimento de las hojas dañadas es que en ese experimento sabemos que nuestra variable respuesta es el número de hojas dañadas y sabiamos que el total o el máximo de hojas de cada planta eran 20, por lo que yo puedo calcular la proporción de hojas dañadas de este total. Para el caso de la poisson es como si yo tomará una ramita para contar las hojas dañanas, pero no se posee conocimiento, ni se puede averiguar de cual puede ser el número máximo de hojas dañadas.
 
 Un modelo Poisson se escribe de la siguiente manera:
 
@@ -594,18 +603,21 @@ donde:
 $$\frac{odds_{x+1}}{odds_x}=\frac{\frac{\pi_{x+1}}{1-\pi_{x+1}}}{\frac{\pi_{x}}{1-\pi_{x}}}=2$$
 
 
+**Interpretación:** Al aumentar x en una unidad, la propensión es 2 veces mayor o la propensión de daño es el doble al aumentar la x una unidad.
+
 *En un modelo Poisson*
 
 
-Al aumentar x en una unidad, la propensión es 2 veces mayor o la propensión de daño es el doble al aumentar la x una unidad.
+
 
 $$\frac{\lambda_{x+1}}{\lambda_x}=2$$
 
 
 
-Al aumentar x en una unidad, el promedio es 2 veces mayor
+**Interpretación:** Al aumentar x en una unidad, el promedio es 2 veces mayor
 
-En este tipo de modelo no tiene sentido probar el supuesto de homocedasticidad, debido a que la media es igual a la varianza. Debido a que este modelo se distribuye como una Poisson, no se necesita el supuesto de normaalidad. El único supuesto a tomar en cuenta puede ser la multicolinealidad, pero este depende de la cantidad de factores.
+En este tipo de modelo no tiene sentido probar el supuesto de homocedasticidad, debido a que la media es igual a la varianza. Debido a que este modelo se distribuye como una Poisson, no se necesita el supuesto de normalidad. El único supuesto a tomar en cuenta puede ser la multicolinealidad, pero este depende de la cantidad y el tipo de predictores.
+
 
 
 
@@ -729,6 +741,7 @@ r=residuals(mod1,type="response") # El type response, es una predicción de la m
 *A continuación se le presenta el código poara generar un gráfico que ayude a visualizar está situación*
 
 ```{r, eval=FALSE}
+# El código de fit y r, se encuentran en las partes de arriba
 # El residual al cuadrado es una medida de variabilidad
 plot(log(r^2)~log(fit),pch=18,xlab=expression(log(hat(lambda))),
 ylab=expression(log(r^2)))
@@ -968,7 +981,7 @@ $$H_0: \lambda_2 = \lambda_1  \iff \tau_2=\tau_1$$
 
 # Poisson inflada con ceros
 
-Esto es un fenoméno de cuando la variable que yo estoy estudiando tiene  muchos ceros. Su nombre en inglés es *Zero-inflation Poisson*
+Esto es un fenoméno de cuando la variable que se es estudia tiene  muchos ceros. Su nombre en inglés es *Zero-inflation Poisson*
 
 
 ```{r simulacion-zip, message=FALSE, warning=FALSE, fig.width=8, fig.height=5, echo=FALSE}
@@ -1009,6 +1022,7 @@ ggplot(df_zip, aes(x = Conteos)) +
     panel.grid.minor = element_blank()
   )
 ```
+
 ## Diferencia entre el modelo Quasipoisson, Binomial Negativa y Poisson al momento de probar factores fijos
 
 Para la siguiente hipótesis:
@@ -1036,7 +1050,7 @@ Para está
 
 ### Código para usar emmeans en una Quasipoisson
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(emmeans)
 # 1. Extraer los grados de libertad residuales de tu modelo
 gl_residuales = df.residual(mod2)
@@ -1212,9 +1226,14 @@ mod4=glm(conteo~trat1+as.factor(unid),family=poisson)
 sum(residuals(mod4,type="pearson")^2)/(32-11)
 ```
 
+Se quiere probar la siguiente hipótesis:
+
+$$H_0:\text{Var}(Y) = \mu$$
+$$H_1:\text{Var}(Y) < \mu$$
+
 ```{r}
 dispersiontest(mod4,trafo=1,alternative = "less") 
-#Este es el de subdispersión por el lees, es uan especie de guia para la hipótesis
+#Este es el de subdispersión por el lees, es una especie de guia para la hipótesis
 ```
 
 
@@ -1258,7 +1277,8 @@ t=qt(1-0.05/5,21) # note que es de una cola
 LIM=exp(eta[-1]-t*ee[-1])
 round(LIM,2)
 ```
-```{r}
+
+```{r, warning=FALSE, message=FALSE}
 mod6=glm.nb(conteo~trat1+factor(unid))
 summary(mod6)$theta
 ```
@@ -1272,7 +1292,7 @@ Este apartado se explicará a partir del siguiente ejemplo:
 
 $Y:$ Número de personas enfermas de una cierta enferemedad (COVID-19, Tuberculosis etc.)
 
-Esta variable corresponde a una binomial si se tiene el total de la población. Sin embargo, podemos utilizar una tasa que se construye como $\text{Tasa} = \frac{Y}{N}$, en algunas ocasiones este tipo de variable se puede usar como una normal, pero en muchas ocasiones suele fallar. En otras situaciones, el número de casos de la enfermedad es muy pequeño, por lo que  se utliza como una Poisson, esto se realiza si $Y << N$ (Y es mucho menor que N). A esto le llamamos que estamos modelando las **tasas indirectamente**. LO que pasa es que hay experimentos en donde ciertas ubicaciones no tienen el mismo tamaño, por esta razón es que utlizamos la tasa y no la Y.
+Esta variable corresponde a una binomial si se tiene el total de la población. Sin embargo, podemos utilizar una tasa que se construye como $\text{Tasa} = \frac{Y}{N}$, en algunas ocasiones este tipo de variable se puede usar como una normal, pero en muchas ocasiones suele fallar. En otras situaciones, el número de casos de la enfermedad es muy pequeño, por lo que  se utliza como una Poisson, esto se realiza si $Y << N$ (Y es mucho menor que N). A esto le llamamos que estamos modelando las **tasas indirectamente**. Lo que pasa es que hay experimentos en donde **ciertas ubicaciones no tienen el mismo tamaño**, por esta razón es que utlizamos la tasa y no la Y.
 
 
 El modelo para estos casos se escribe así:
@@ -1337,7 +1357,7 @@ load("datos_banca_offset.RData")
 mod1 = glm(transacciones ~ tarjeta + ingreso, family = poisson(link = "log"), offset = log(meses_exposicion), data = datos_banca)
 ```
 
-La clave de este modelo es el `offset = log(meses_exposicion)`, ya que aquí le decimos que loa agregue, pero que no le calcule un coeficiente.
+La clave de este modelo es el `offset = log(meses_exposicion)`, ya que aquí le decimos que se agregue al modelo, pero que no le calcule un coeficiente.
 
 ```{r}
 summary(mod1)
@@ -1366,7 +1386,7 @@ $$e^{0.41} = 1.51 $$
 Manteniendo el ingreso constante, los clientes con tarjeta Gold tienen una tasa esperada de transacciones en el extranjero un 51% mayor (o $1.51$ veces la tasa) en comparación con los clientes de tarjeta Regular. 
 
 
-**Si no fuera con la Tasa:** También El número promedio de transacciones de los clientes de la tarjeta Gold es 51% mayor en comparación con la cantidad de los clientes de la tarjeta Regular.
+**Si no fuera con la Tasa:** El número promedio de transacciones de los clientes de la tarjeta Gold es 51% mayor en comparación con la cantidad de los clientes de la tarjeta Regular.
 
 
 # Gamma
