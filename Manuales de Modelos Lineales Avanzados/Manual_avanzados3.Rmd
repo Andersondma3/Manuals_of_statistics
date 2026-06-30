@@ -11,6 +11,10 @@ output:
   word_document:
     toc: true
     toc_depth: '3'
+header-includes:
+  - \usepackage{fvextra}
+  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\},breakanywhere,breaksymbolleft={},breaksymbolright={},fontsize=\small}
+geometry: margin=1in
 ---
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE }
@@ -565,140 +569,6 @@ title(main=(bquote(log(pi/(1-pi))==.(a)+.(b)*D)))
 
 
 
-# Análisis de linealidad en estudios longitudinales
-
-*Observe el siguiente ejemplo visto en clase*
-
-Un estudio busca analizar si los cambios en el rendimiento físico se encuentran relacionados con los cambios en el rendimiento cognitivo de las personas conforme estas envejecen. Para esto se han recolectado datos que provienen del proyecto “Comparación del envejecimiento físico y cognitivo en personas de los Estados Unidos de América y de Costa Rica”. Cada sujeto de investigación se presentó tres veces a realizar las pruebas (físicas y neurocognitivas), en diferentes años. Interesa conocer si cambios en el rendimiento físico están asociados a cambios en el rendimiento cognitivo tanto en hombres como en mujeres y si esta asociación es más fuerte en un sexo que en el otro.  
-
-Basado en este estudio se hace un gráfico donde se aprecie una interacción entre rendimiento cognitivo y el rendimiento físico 
-
-
-```{r, echo=FALSE}
-# Configurar semilla para reproducibilidad
-set.seed(2026)
-
-# 2. Simulación de los datos longitudinales
-n_sujetos <- 100
-mediciones <- 3
-
-# Crear estructura básica de los sujetos
-datos_sujetos <- data.frame(
-  id = rep(1:n_sujetos, each = mediciones),
-  sexo = rep(sample(c("Hombre", "Mujer"), n_sujetos, replace = TRUE), each = mediciones),
-  tiempo = rep(1:mediciones, n_sujetos)
-)
-
-# Simular variable independiente (Rendimiento Físico) con variabilidad intra-sujeto
-datos_sujetos <- datos_sujetos %>%
-  mutate(
-    rend_fisico = rnorm(n(), mean = 50, sd = 10) - (tiempo * 2) # Tiende a bajar con el tiempo
-  )
-
-# Simular variable dependiente (Rendimiento Cognitivo) metiendo el efecto de INTERACCIÓN
-# Efecto hipotético: En mujeres, la caída del rendimiento físico afecta más al cognitivo (mayor pendiente).
-datos_sujetos <- datos_sujetos %>%
-  mutate(
-    error = rnorm(n(), mean = 0, sd = 5),
-    rend_cognitivo = case_when(
-      sexo == "Mujer" ~ 30 + 0.8 * rend_fisico + error,  # Pendiente fuerte (0.8)
-      sexo == "Hombre" ~ 45 + 0.3 * rend_fisico + error  # Pendiente más leve (0.3)
-    )
-  )
-
-# 3. Construcción del Gráfico de Interacción
-ggplot(datos_sujetos, aes(x = rend_fisico, y = rend_cognitivo, color = sexo, fill = sexo)) +
-  # Rectas de regresión ajustadas para evidenciar la interacción
-  geom_smooth(method = "lm", formula = y ~ x, se = TRUE, size = 1.2) +
-  # Personalización estética y etiquetas
-  scale_color_manual(values = c("Hombre" = "#1f77b4", "Mujer" = "#d62728")) +
-  scale_fill_manual(values = c("Hombre" = "#1f77b4", "Mujer" = "#d62728")) +
-  theme_minimal(base_size = 13) +
-  labs(
-    title = "Interacción entre Rendimiento Físico y Cognitivo según el Sexo",
-    x = "Cambios en el Rendimiento Físico ",
-    y = "Cambios en el Rendimiento Cognitivo ",
-    color = "Sexo",
-    fill = "Sexo"
-  ) +
-  theme(
-    plot.title = element_text(face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(hjust = 0.5, color = "gray40"),
-    legend.position = "bottom"
-  )
-```
-
-Luego se gráfica la pendiente de cada persona 
-
-
-```{r}
-xyplot(rend_cognitivo~rend_fisico|id, groups = sexo, type = c("r", "p") , auto.key = list(columns = 2),data = datos_sujetos[1:30,], pch = 18)
-```
-
-Observe que con tres medidas es muy díficil aceptar el supuesto de linealidad
-
-*A continuación se le demuestra por medio de una simulación lo que está ocurriendo*
-
-Tenemos el siguiente modelo con sus valores verdaderos
-
-$$\mu = 2+3X$$
-Además se tiene que $\hat{\sigma} = 1$
-
-*A continuación se simulan con dos semillas distintas*
-
-```{r, warning=FALSE}
-set.seed(1234)
-x = runif(3,2,2.5)
-y = 2+ 3*x +rnorm(2,0,1)
-lm(y~x)$coef[2]
-```
-```{r, warning=FALSE}
-set.seed(1236)
-x = runif(3,2,2.5)
-y = 2+ 3*x +rnorm(2,0,1)
-lm(y~x)$coef[2]
-```
-
-Podemos observar que las pendientes dieron un resultado muy distinto
-
-Ahora vamos a realizarlo con `x = runif(3,2,2.01)`.
-
-```{r, warning=FALSE}
-set.seed(1234)
-x = runif(3,2,2.01)
-y = 2+ 3*x +rnorm(2,0,1)
-lm(y~x)$coef[2]
-```
-```{r, warning=FALSE}
-set.seed(1236)
-x = runif(3,2,2.01)
-y = 2+ 3*x +rnorm(2,0,1)
-lm(y~x)$coef[2]
-```
-
-
-Es importante notar que cuando bajamos la x, el problema se empeoró y ahora las pendientes estimadas son demasiado distintas.
-
-
-Para un último caso, lo haremos con `x = runif(3,2,20)`
-
-```{r, warning=FALSE}
-set.seed(1234)
-x = runif(3,2,20)
-y = 2+ 3*x +rnorm(2,0,1)
-lm(y~x)$coef[2]
-```
-
-```{r, warning=FALSE}
-set.seed(1236)
-x = runif(3,2,20)
-y = 2+ 3*x +rnorm(2,0,1)
-lm(y~x)$coef[2]
-```
-
-
-En este caso las pendientes son mucho más parecidas. Esto nos lleva a que no siempre es bueno realizar estudios longitudinales, si el tiempo o nuestyra variable x no está causando ningún y que sería mejor capturar una mayor cantidad de datos en un solo momento, para obtener mejores resultados. Si el objetivo del estudio verdaderamente hacer un estudio longitinal, lo que se recomienda es que haya más tiempo entre cada medición, para observar un efecto.
-
 
 # Modelos para conteos
 
@@ -1247,7 +1117,7 @@ $$\sigma^2 = \lambda_j+\frac{\lambda_j^2}{\theta} =\lambda_j+\alpha \lambda^2$$
 
 ## Estimación de paramétros
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(MASS)
 mod3=glm.nb(conteo~trat1)
 ```
@@ -1270,7 +1140,7 @@ $$H_1: QP  > Poiss$$
 
 *En r* es lo mismo que `trafo1`
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 #install.packages("AER")
 library(AER)
 ```
@@ -1393,7 +1263,7 @@ mod6=glm.nb(conteo~trat1+factor(unid))
 summary(mod6)$theta
 ```
 
-El parámetro de dispersión es 35839, el cual es suficientemente alto como para pensar que ** $\alpha_1/ \theta \to 0$. **Por lo tanto, la distribución binomial negativa tiende a la Poisson.
+El parámetro de dispersión es 35839, el cual es suficientemente alto como para pensar que $\alpha_1/ \theta \to 0$. Por lo tanto, la distribución binomial negativa tiende a la Poisson.
 
 
 # Poisson con tasas vs Binomial
