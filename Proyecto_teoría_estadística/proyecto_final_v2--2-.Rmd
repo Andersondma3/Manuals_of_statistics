@@ -9,8 +9,6 @@ output:
     toc_depth: 3
     number_sections: true
     latex_engine: xelatex
-    includes:
-      in_header: header.tex
   word_document:
     toc: true
     toc_depth: '3'
