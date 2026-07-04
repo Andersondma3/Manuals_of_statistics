@@ -381,7 +381,7 @@ Este proceso anterior es lo que llamamos *Odds Ratio (OR)*, que es lo mismo que 
 
 $$\text{Si } \pi_i = \pi_j \iff OR_{i|j}=1 \iff \tau_j = \tau_i$$
 
-### Método manual de comparación de propensiones
+## Método manual de comparación de propensiones (pruebas de hipótesis)
 
 
 Los vectores se contruyen de la siguiente manera:
@@ -460,7 +460,9 @@ ee=sqrt(diag(t(h)%*%vcov(mod.trat)%*%h))
 pn < 0.05/12 # Se usa bomferroni
 # Observe que es una prueba de dos colas 2*d = 12, donde d = 6
 ```
-**Cálculo de Intervalos de Confianza**
+## Cálculo de Intervalos de Confianza
+
+*Recuerde que esto lo puede hacer con la función automática* `emmeans`
 
 
 $$IC = e^{\eta\pm z\cdot ee}$$
