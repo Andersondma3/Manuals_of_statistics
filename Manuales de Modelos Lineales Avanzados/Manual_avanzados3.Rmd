@@ -481,7 +481,10 @@ Las comparaciones contra la dosis 0 son muy imprecisas, en cambio las comparacio
 
 *Nota:* Las probabilidades no se dividen debido a su complejidad matemática, para calcular sus intervalos de confianza, en estadística Bayesiana esos intervalos se pueden hacer de forma más sencilla.
 
-**Interpretación y cálculo de los límites inferiores de las comparaciones**
+## Interpretación y cálculo de los límites inferiores de las comparaciones
+
+
+**Si eta es positivo**
 
 ```{r}
 qz=qnorm(1-0.05/k)
@@ -490,6 +493,19 @@ names(LIM)=rownames(or)[-4]
 LIM
 ```
 Con una confianza global de 95%, se puede decir que la propensión de daño para D800 es al menos 40% mayor que la de D400, 61% mayor que la de D200 y es 11.5 veces la de D0, que la propensión de daño de D400 es al menos 5.4 veces la de D0 y la propensión de daño de D200 es al menos 4.7 veces la de D0.
+
+**Si eta es negativo**
+
+```{r}
+qz=qnorm(1-0.05/k)
+LIM=exp(-eta-qz*ee)[-4]
+names(LIM)=rownames(or)[-4]
+LIM
+```
+
+
+Con una confianza global de 95%, se puede decir que la propensión de daño para la dosis de 800 es al menos 0.31 veces la de la dosis de 400, al menos 0.27 veces la de la dosis de 200 y al menos 0.03 veces la de la dosis de 0. Asimismo, la propensión de daño de la dosis de 400 es al menos 0.06 veces la de la dosis de 0, y la propensión de daño de la dosis de 200 es al menos 0.06 veces la de la dosis de 0.
+
 
 # Análisis de la dosis como continua
 
