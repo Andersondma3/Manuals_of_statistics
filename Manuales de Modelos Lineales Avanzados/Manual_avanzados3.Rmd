@@ -997,7 +997,7 @@ $$H_0: \lambda_2 = \lambda_1  \iff \tau_2=\tau_1$$
 *Nota: Recuerde que la interpretación es aumenta x veces o es el doble etc.*
 
 
-# Poisson inflada con ceros
+## Poisson inflada con ceros
 
 Esto es un fenoméno de cuando la variable que se es estudia tiene  muchos ceros. Su nombre en inglés es *Zero-inflation Poisson*
 
@@ -1061,9 +1061,6 @@ drop1(mod2,test="F") # Este modelo es Quasipoisson
 ```
 
 Note que como rechazamos la hipótesis nula, las medias de cada tratamiento son diferentes.
-
-
-Para está 
 
 
 ### Código para usar emmeans en una Quasipoisson
