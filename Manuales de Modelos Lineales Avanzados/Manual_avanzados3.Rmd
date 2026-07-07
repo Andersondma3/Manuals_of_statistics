@@ -51,7 +51,6 @@ La unión de los compenentes anteriores es lo que nos forma un modelo lineal gen
 
 
 $$g(\mu_{y|x}) =\sum_{j=0}^{p-1}{\beta_jX_j}$$
-\newpage
 
 # Componentes de un modelo lineal generalizado (GLM)
 
@@ -1481,6 +1480,270 @@ invisible(qqPlot(qr.mod2))
 
 Observe que este gráfico se ve mucho mejor que los anteriores.
 
+
+# Simulaciones 
+
+## Binomial 
+
+*Un factor*
+
+```{r}
+p= c() # Se crea el vector donde se guardan las probabilidades
+r=c(6,7,5,8) # vector con el número de réplicas
+n=sum(r) # total de observaciones (suma de réplicas)
+tot = sample(20:25,n,replace=T) #muestra de números del 20 al 25, de tamaño n
+dosis=factor(rep(1:4,times=r)) # Creación del factor dosis
+base=data.frame(tot,dosis) # Creación de la base de datos
+for (i in 1:1000){
+beta = c(-2.4, log(1.5/2), log(1.5/2), log(1.5)) # Se da el vector de coeficientes 
+tau_4 = -sum(beta[-1]) # Se obtiene el efecto de la última dosis (estamos en suma nula)
+PL = (beta[1]+c(beta[-1],tau_4)) #Se obtiene la parte lineal
+PL1 = PL[dosis]# Se asigna a cada dosis su respectiva parte lineal
+pi = exp(PL1)/(1+exp(PL1))# Se obtiene la probabilidad
+malas=rbinom(n,tot,pi)#Se simula la respuestas
+# Se crea el modelo con los datos generasdos
+mod=glm(cbind(malas,tot-malas)~dosis,family=binomial)
+prob = drop1(mod, test = "Chisq")[5]
+p_i= prob[2,1]
+p = c(p,p_i)
+pot = mean(p < 0.05)
+}
+
+cat("La potencia para esta simulación es de", pot)
+```
+
+**Dos factores**
+
+
+```{r}
+# --- Configuración del Diseño ---
+r <- c(6, 7, 5, 8)               # Réplicas por nivel de dosis
+n_reps_dosis <- sum(r)           # 26 observaciones por ambiente
+n_total <- n_reps_dosis * 2      # 52 observaciones en total
+
+# 1. Crear los factores
+dosis <- factor(rep(rep(1:4, times = r), times = 2))
+ambiente <- factor(rep(c("A", "B"), each = n_reps_dosis))
+
+# 2. Variable total de ensayos (binomial)
+
+tot <- sample(20:25, n_total, replace = TRUE) #números de hojas por planta
+
+base <- data.frame(tot, dosis, ambiente)
+
+# --- Parámetros Teóricos (Suma Nula) ---
+mu <- -2.4
+tau <- c(log(1.5/2), log(1.5/2), log(1.5)) # Efectos dosis 1, 2, 3
+tau[4] <- -sum(tau)                       # Efecto dosis 4
+
+alpha_A <- 0.3
+alpha <- c(alpha_A, -alpha_A)             # Efecto ambiente A y B
+
+# --- Simulación de la Potencia ---
+N_sim <- 1000
+p_dosis <- c()      # Más eficiente pre-asignar el tamaño
+p_ambiente <- c()
+
+# Forzar explícitamente la codificación de suma nula en la sesión de R
+options(contrasts = c("contr.sum", "contr.poly"))
+
+for (i in 1:N_sim) {
+  
+  # 1. Construir la Parte Lineal (PL) exacta para cada una de las 52 filas
+  # Se suma el intercepto + el efecto dosis de esa fila + el efecto ambiente de esa fila
+  PL <- mu + tau[base$dosis] + alpha[base$ambiente]
+  
+  # 2. Convertir la combinación lineal a la escala de probabilidad (Inverso de Logit)
+  pi_prob <- exp(PL) / (1 + exp(PL))
+  
+  # 3. Simular éxitos (malas) usando el vector pi_prob de tamaño 52
+  malas <- rbinom(n_total, base$tot, pi_prob)
+  
+  # Guardar temporalmente en la base para el ajuste del modelo
+  base$malas <- malas
+  
+  # 4. Ajustar el GLM Binomial
+  mod <- glm(cbind(malas, tot - malas) ~ dosis + ambiente, 
+             data = base, 
+             family = binomial)
+  
+  p_dosis[i] <- drop1(mod, test = "Chisq")[2,5]
+  p_ambiente[i] <- drop1(mod, test = "Chisq")[3,5]
+}
+
+# --- Resultados ---
+pot_dosis <- mean(p_dosis < 0.05)
+pot_ambiente <- mean(p_ambiente < 0.05)
+
+cat("La potencia para el factor Dosis es:", pot_dosis, "\n")
+cat("La potencia para el factor Ambiente es:", pot_ambiente, "\n")
+```
+
+
+
+## Poisson
+
+```{r}
+p= c() # Se crea el vector donde se guardan las probabilidades
+r=c(6,7,5,8) # vector con el número de réplicas
+n=sum(r)  # total de observaciones (suma de réplicas)
+tot = sample(20:25,n,replace=T) #muestra de números del 20 al 25, de tamaño n
+dosis=factor(rep(1:4,times=r)) # Creación del factor dosis
+base=data.frame(tot,dosis) # Creación de la base de datos
+for (i in 1:1000){
+# Note que aquí el odds es de 3/2 por eso las medias son valores entre 2 y 3
+medias = c(2, 2.5, 2.7, 3)   # lambda para cada dosis
+# Asignar lambda según la dosis de cada observación
+lambda_i = medias[dosis]
+# Generar respuesta Poisson
+y = rpois(n, lambda = lambda_i)
+base = data.frame(y, dosis)
+mod = glm(y ~ dosis, family = poisson, data = base)
+# Extraer p-valor de la prueba de dosis (robusto)
+tabla = drop1(mod, test = "Chisq")
+p_i = tabla["dosis", "Pr(>Chi)"]
+p = c(p,p_i)
+pot = mean(p < 0.05)
+}
+
+cat("La potencia para esta simulación es de", pot)
+```
+
+
+
+
+```{r}
+# --- Configuración del Diseño ---
+r <- c(6, 7, 5, 8)               # Réplicas por nivel de dosis
+n_reps_dosis <- sum(r)           # 26 observaciones por ambiente
+n_total <- n_reps_dosis * 2      # 52 observaciones en total
+
+# 1. Crear los factores (estructura original de bloques)
+dosis <- factor(rep(rep(1:4, times = r), times = 2))
+ambiente <- factor(rep(c("A", "B"), each = n_reps_dosis))
+
+base <- data.frame(dosis, ambiente)
+
+# --- PARÁMETROS TEÓRICOS: VECTOR DE MEDIAS DIRECTO ---
+medias_dosis <- c(2, 2.5, 2.7, 3)   # El vector de medias que querías para cada dosis
+efecto_ambiente_B <- 1.3             # Factor multiplicativo para el Ambiente B (Ambiente A es el basal), el ambiente aumenta 1.3 veces
+
+# --- Simulación de la Potencia ---
+N_sim <- 1000
+p_dosis <- numeric(N_sim)
+p_ambiente <- numeric(N_sim)
+
+options(contrasts = c("contr.sum", "contr.poly"))
+
+for (i in 1:N_sim) {
+  
+  # 1. Asignar la media directa según la dosis de cada fila
+  lambda_i <- medias_dosis[base$dosis]
+  
+  # 2. Aplicar el efecto del segundo factor (Ambiente B incrementa la media en 30%)
+  lambda_i[base$ambiente == "B"] <- lambda_i[base$ambiente == "B"] * efecto_ambiente_B
+  
+  # 3. Generar la respuesta Poisson directamente con el vector de medias (lambda_i)
+  y <- rpois(n_total, lambda = lambda_i)
+  
+  # Guardar la respuesta en el dataframe
+  base$y <- y
+  
+  # 4. Ajustar el GLM Poisson
+  mod <- glm(y ~ dosis + ambiente, data = base, family = poisson)
+  
+  # 5. Extraer p-valores usando drop1
+  tabla <- drop1(mod, test = "Chisq")
+  p_dosis[i] <- tabla["dosis", "Pr(>Chi)"]
+  p_ambiente[i] <- tabla["ambiente", "Pr(>Chi)"]
+}
+
+# --- Resultados ---
+pot_dosis <- mean(p_dosis < 0.05)
+pot_ambiente <- mean(p_ambiente < 0.05)
+
+cat("La potencia para el factor Dosis es:", pot_dosis, "\n")
+cat("La potencia para el factor Ambiente es:", pot_ambiente, "\n")
+```
+
+# Gráfico para análisis de una covariable 
+
+*El siguiente ejemplo esta basado en el siguiente estudio*
+
+En la base de datos del sistema de alquiler de bicicletas Capital Bikeshare, ubicado en Washington, Estados Unidos (2011 y 2012) se registra la cantidad de bicicletas alquiladas por hora. Se toma esta variable como respuesta y se asocia con 3 horas del día (8hr, 12h y 15h), así como las 4 estaciones del año (primavera, verano, otoño e invierno). Además, se cuenta con la humedad relativa.
+
+
+```{r}
+load("bicicletas.Rdata") 
+base$season=factor(base$season) 
+base$hr=factor(base$hr)
+```
+
+
+```{r, echo=FALSE}
+options(contrasts = c("contr.treatment", "contr.poly"))
+```
+
+
+Primero obtenemos los coeficientes del modelo
+
+```{r}
+mod2=glm.nb(cnt~hum*hr+season,data=base) 
+b=mod2$coef 
+round(b,2)
+```
+
+
+```{r}
+levels(base$hr)
+```
+Hacemos las comparaciones entre las diferentes hora, en la `season2`
+
+
+```{r}
+b0.8=b[1]+b[5] 
+b0.12=b[1]+b[5]+b[3] 
+b0.17=b[1]+b[5]+b[4] 
+b1.8=b[2] 
+b1.12=b[2]+b[8] 
+b1.17=b[2]+b[9]
+```
+
+
+
+```{r}
+range(base$hum)
+```
+
+
+```{r}
+curve(exp(b0.8+b1.8*x),from = 0,to = 1,ylim=c(0,1000)) 
+curve(exp(b0.12+b1.12*x),add=T,col=2) 
+curve(exp(b0.17+b1.17*x),add=T,col=4) 
+```
+
+
+Observe que conforme la humedad aumenta, el promedio del número de bicicletas se mantiene bastante constante a las 8h, mientas que en los otros 2 horarios (12h y 17h) va disminuyendo de forma similar. Observe que siempre el promedio el mayor a las 12h que a las 17h.
+
+
+Al aumentar la humedad relativa en una cantidad que tenga sentido, ¿cuánto se espera que cambie el promedio del número de bicicletas a las 17h en la Estación 2?
+
+```{r}
+sd(base$hum) 
+```
+
+```{r}
+1-exp(b1.17*0.20)#Aquí b1.17 es negativo
+```
+
+**Interpretación:** Al aumentar la humedad en 0.20 unidades  el promedio del número de bicicletas a las 17h en la Estación 2 disminuye 19,65%.
+
+
+```{r}
+exp(-b1.17*0.20) 
+```
+
+**Interpretación:** Al disminuir la humedad en 0.20 unidades  el promedio del número de bicicletas a las 17h en la Estación 2 aumenta 24.4%.
 
 
 # Resumen de la diferencia entre un modelo de conteo y otro binomial
