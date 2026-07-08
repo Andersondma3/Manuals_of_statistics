@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.11)  8 JUL 2026 09:13
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.11)  8 JUL 2026 10:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -733,7 +733,7 @@ File: Manual_avanzados3_files/figure-latex/unnamed-chunk-36-1.pdf Graphic file
 (type pdf)
 <use Manual_avanzados3_files/figure-latex/unnamed-chunk-36-1.pdf>
 Package pdftex.def Info: Manual_avanzados3_files/figure-latex/unnamed-chunk-36-
-1.pdf  used on input line 1297.
+1.pdf  used on input line 1299.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 <Manual_avanzados3_files/figure-latex/unnamed-chunk-37-1.pdf, id=256, 469.755pt
  x 325.215pt>
@@ -741,7 +741,7 @@ File: Manual_avanzados3_files/figure-latex/unnamed-chunk-37-1.pdf Graphic file
 (type pdf)
 <use Manual_avanzados3_files/figure-latex/unnamed-chunk-37-1.pdf>
 Package pdftex.def Info: Manual_avanzados3_files/figure-latex/unnamed-chunk-37-
-1.pdf  used on input line 1299.
+1.pdf  used on input line 1301.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [19 <./Manual_avanzados3_files/figure-latex/unnamed-chunk-36-1.pdf>] [20 <./Man
 ual_avanzados3_files/figure-latex/unnamed-chunk-37-1.pdf>] [21] [22]
@@ -751,7 +751,7 @@ File: Manual_avanzados3_files/figure-latex/simulacion-zip-1.pdf Graphic file (t
 ype pdf)
 <use Manual_avanzados3_files/figure-latex/simulacion-zip-1.pdf>
 Package pdftex.def Info: Manual_avanzados3_files/figure-latex/simulacion-zip-1.
-pdf  used on input line 1587.
+pdf  used on input line 1589.
 (pdftex.def)             Requested size: 578.15858pt x 361.34912pt.
 [23 <./Manual_avanzados3_files/figure-latex/simulacion-zip-1.pdf>] [24] [25] [2
 6] [27] [28] [29] [30] [31]
@@ -761,10 +761,10 @@ File: Manual_avanzados3_files/figure-latex/unnamed-chunk-72-1.pdf Graphic file
 (type pdf)
 <use Manual_avanzados3_files/figure-latex/unnamed-chunk-72-1.pdf>
 Package pdftex.def Info: Manual_avanzados3_files/figure-latex/unnamed-chunk-72-
-1.pdf  used on input line 2316.
+1.pdf  used on input line 2318.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 2316--2320
+Underfull \hbox (badness 10000) in paragraph at lines 2318--2322
 [][]
  []
 
@@ -775,10 +775,10 @@ File: Manual_avanzados3_files/figure-latex/unnamed-chunk-73-1.pdf Graphic file
 (type pdf)
 <use Manual_avanzados3_files/figure-latex/unnamed-chunk-73-1.pdf>
 Package pdftex.def Info: Manual_avanzados3_files/figure-latex/unnamed-chunk-73-
-1.pdf  used on input line 2330.
+1.pdf  used on input line 2332.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 2330--2334
+Underfull \hbox (badness 10000) in paragraph at lines 2332--2336
 [][]
  []
 
@@ -789,10 +789,10 @@ File: Manual_avanzados3_files/figure-latex/unnamed-chunk-74-1.pdf Graphic file
 (type pdf)
 <use Manual_avanzados3_files/figure-latex/unnamed-chunk-74-1.pdf>
 Package pdftex.def Info: Manual_avanzados3_files/figure-latex/unnamed-chunk-74-
-1.pdf  used on input line 2342.
+1.pdf  used on input line 2344.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 2342--2344
+Underfull \hbox (badness 10000) in paragraph at lines 2344--2346
 [][]
  []
 
@@ -803,7 +803,7 @@ File: Manual_avanzados3_files/figure-latex/unnamed-chunk-75-1.pdf Graphic file
 (type pdf)
 <use Manual_avanzados3_files/figure-latex/unnamed-chunk-75-1.pdf>
 Package pdftex.def Info: Manual_avanzados3_files/figure-latex/unnamed-chunk-75-
-1.pdf  used on input line 2352.
+1.pdf  used on input line 2354.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [35 <./Manual_avanzados3_files/figure-latex/unnamed-chunk-74-1.pdf>] [36 <./Man
 ual_avanzados3_files/figure-latex/unnamed-chunk-75-1.pdf>]
@@ -813,7 +813,7 @@ File: Manual_avanzados3_files/figure-latex/unnamed-chunk-79-1.pdf Graphic file
 (type pdf)
 <use Manual_avanzados3_files/figure-latex/unnamed-chunk-79-1.pdf>
 Package pdftex.def Info: Manual_avanzados3_files/figure-latex/unnamed-chunk-79-
-1.pdf  used on input line 2415.
+1.pdf  used on input line 2417.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [37 <./Manual_avanzados3_files/figure-latex/unnamed-chunk-79-1.pdf>] [38] [39] 
 [40]
@@ -823,7 +823,7 @@ File: Manual_avanzados3_files/figure-latex/unnamed-chunk-90-1.pdf Graphic file
 (type pdf)
 <use Manual_avanzados3_files/figure-latex/unnamed-chunk-90-1.pdf>
 Package pdftex.def Info: Manual_avanzados3_files/figure-latex/unnamed-chunk-90-
-1.pdf  used on input line 2719.
+1.pdf  used on input line 2721.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [41] [42 <./Manual_avanzados3_files/figure-latex/unnamed-chunk-90-1.pdf>] [43] 
 [44] (Manual_avanzados3.aux)
@@ -858,7 +858,7 @@ s/Ander/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtk10.pfb><C:/User
 s/Ander/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt10.pfb><C:/User
 s/Ander/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt9.pfb><C:/Users
 /Ander/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtti10.pfb>
-Output written on Manual_avanzados3.pdf (44 pages, 663853 bytes).
+Output written on Manual_avanzados3.pdf (44 pages, 663862 bytes).
 PDF statistics:
  744 PDF objects out of 1000 (max. 8388607)
  126 named destinations out of 1000 (max. 500000)

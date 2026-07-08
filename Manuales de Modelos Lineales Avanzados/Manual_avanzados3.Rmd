@@ -695,6 +695,8 @@ mod1=glm(conteo~trat1,family=poisson,data=base)
 contrasts(trat1)
 ```
 
+\newpage
+
 **Estimación de todos los coeficientes del modelo**
 
 ```{r}
