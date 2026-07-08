@@ -511,18 +511,11 @@ Con una confianza global de 95%, se puede decir que la propensión de daño para
 
 ```{r, message=FALSE, warning=FALSE}
 library(emmeans)
-
-# 1. Obtenemos ÚNICAMENTE las medias estimadas de las dosis
-em_dosis <- emmeans(mod.trat, ~ dosix)
-
-# 2. Calculamos los contrastes inversos (revpairwise) de una sola cola con Bonferroni
-# Nota: 'revpairwise' en pairs() se especifica con reverse = TRUE
-contrastes_unilaterales <- pairs(em_dosis, reverse = TRUE, side = "<", adjust = "bonferroni")
-
-# 3. Obtenemos el intervalo de confianza en la escala original (response)
-confint(contrastes_unilaterales, type = "response")
+em_dosis <- emmeans(mod.trat, revpairwise ~ dosix)
+confint(em_dosis$contrasts, side = ">", type = "response", adjust= "bonferroni")
 ```
 
+*Nota:* Estos valores deben dar similares a lo de eta positivo en la sección anterior, pero como no todas las hipótesis son significativas el `emmeans` no lo detecta y tanto la significancia como la correción cambian.
 
 
 # Análisis de la dosis como continua
