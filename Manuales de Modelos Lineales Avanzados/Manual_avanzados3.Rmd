@@ -506,6 +506,25 @@ LIM
 Con una confianza global de 95%, se puede decir que la propensión de daño para la dosis de 800 es al menos 0.31 veces la de la dosis de 400, al menos 0.27 veces la de la dosis de 200 y al menos 0.03 veces la de la dosis de 0. Asimismo, la propensión de daño de la dosis de 400 es al menos 0.06 veces la de la dosis de 0, y la propensión de daño de la dosis de 200 es al menos 0.06 veces la de la dosis de 0.
 
 
+## Limites inferiores con emmeans
+
+
+```{r, message=FALSE, warning=FALSE}
+library(emmeans)
+
+# 1. Obtenemos ÚNICAMENTE las medias estimadas de las dosis
+em_dosis <- emmeans(mod.trat, ~ dosix)
+
+# 2. Calculamos los contrastes inversos (revpairwise) de una sola cola con Bonferroni
+# Nota: 'revpairwise' en pairs() se especifica con reverse = TRUE
+contrastes_unilaterales <- pairs(em_dosis, reverse = TRUE, side = "<", adjust = "bonferroni")
+
+# 3. Obtenemos el intervalo de confianza en la escala original (response)
+confint(contrastes_unilaterales, type = "response")
+```
+
+
+
 # Análisis de la dosis como continua
 
 Cuando se utliza la variable como continua, podemos realizar interpolaciones para diferentes rangos de una variable en específico.
@@ -764,6 +783,14 @@ plot(log(r^2)~log(fit),pch=18,xlab=expression(log(hat(lambda))),
 ylab=expression(log(r^2)))
 abline(0,1) #Esto es la identidad
 ```
+
+
+También se puede hacer esta versión con el `scatterplot`, para observar una posible curvatura cuadrática, lo cual nos lleva a utilizar una binomial negativa.
+
+```{r}
+scatterplot(log(r^2)~log(fit))
+```
+
 
 
 ```{r, echo=FALSE}
@@ -1183,6 +1210,11 @@ $$H_1: BN > Poiss$$
 *En r* es lo mismo que `trafo2`
 
 
+```{r}
+dispersiontest(mod1,trafo=2)
+```
+
+
 ## Resumen
 
 \begin{enumerate}
@@ -1368,7 +1400,7 @@ load("datos_banca_offset.RData")
 ```
 
 ```{r}
-mod1 = glm(transacciones ~ tarjeta + ingreso, family = poisson(link = "log"), offset = log(meses_exposicion), data = datos_banca)
+mod1 = glm(transacciones ~ tarjeta + ingreso+ offset(log(meses_exposicion)), family = poisson(link = "log"), offset = , data = datos_banca)
 ```
 
 La clave de este modelo es el `offset = log(meses_exposicion)`, ya que aquí le decimos que se agregue al modelo, pero que no le calcule un coeficiente.
