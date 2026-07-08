@@ -1777,3 +1777,96 @@ $$\log\left(\frac{\pi}{1-\pi}\right)=PL\to .OR$$
 
 
 $$\log(\lambda)=PL\to \text{Razón de medias}$$
+
+
+# Modelos matemáticos y sus detalles
+
+1. Modelo Poisson
+
+$$\log(\mu_{x,j}) = \beta_0 + \tau_j$$
+
+Donde:
+
+
++ $\beta_0$: Intercepto del modelo (logaritmo de la tasa o media basal).
+
++ $\tau_j$: Efecto del $j$-ésimo tratamiento.
+
++ Suposición de la distribución: $Y|X,j \sim \text{Poisson}(\mu_{x,j})$
+
++ Función de enlace: $g(\mu) = \log(\mu)$
+
+
+**Propiedad clave:** Asume equidispersión estricta, lo que significa que la media es exactamente igual a la varianza: $E[Y] = Var(Y) = \mu$.
+
+
+
+2. Modelo Quasipoisson
+
+$$\log(\mu_{x,j}) = \beta_0 + \tau_j$$
+
+Donde:
+
++ $\beta_0$: Intercepto del modelo.
+
++ $\tau_j$: Efecto del $j$-ésimo tratamiento.
+
+
++ Suposición de la distribución:No es una distribución de probabilidad formal (se basa en cuasi-verosimilitud), pero estructuralmente se define mediante sus dos primeros momentos:$E[Y|X,j] = \mu_{x,j}$ $Var(Y|X,j) = \phi \cdot \mu_{x,j}$
+
++ Función de enlace: $g(\mu) = \log(\mu)$
+
+
+**Propiedad clave:** Se utiliza cuando existe sobredispersión ($\phi > 1$). La estructura de la media y el enlace son idénticos a Poisson, pero los errores estándar se inflan por el factor de dispersión $\phi$ para evitar conclusiones falsamente significativas.
+
+
+
+3. Modelo Binomial Negativo
+
+
+$$\log(\mu_{x,j}) = \beta_0 + \tau_j$$
+
+Donde:
+
++ $\beta_0$: Intercepto del modelo.
+
++ $\tau_j$: Efecto del $j$-ésimo tratamiento.
+
++ Suposición de la distribución:$Y|X,j \sim \text{NegBin}(\mu_{x,j}, \theta)$
+
++ Función de enlace: $g(\mu) = \log(\mu)$
+
+
+**Propiedad clave:** Es la alternativa clásica a Poisson para manejar la sobredispersión mediante una distribución de probabilidad formal. A diferencia de Quasipoisson, aquí la varianza es una función cuadrática de la media: $Var(Y) = \mu + \frac{\mu^2}{\theta}$, donde $\theta$ es el parámetro de forma (o dispersión).
+
+
+
+4. Modelo Gamma
+$$\log(\mu_{x,j}) = \beta_0 + \tau_j$$
+
+Donde:
+
++ $\beta_0$: Intercepto del modelo.
+
+
++ $\tau_j$: Efecto del $j$-ésimo tratamiento.Suposición de la distribución:$Y|X,j \sim \text{Gamma}(\mu_{x,j}, \nu)$ (Donde el soporte es estrictamente continuo y positivo, $y > 0$).
+
++ Función de enlace:$g(\mu) = \log(\mu)$
+
+**Propiedad clave:* *A diferencia de los tres anteriores (que son para datos de conteo discretos), este es para variables continuas asimétricas. Bajo este modelo, la varianza aumenta proporcionalmente al cuadrado de la media: $Var(Y) = \frac{\mu^2}{\nu}$ (donde $\nu$ es el parámetro de forma), manteniendo el coeficiente de variación constante.
+
+
+
+5. Modelo Binomial (Enlace Logarítmico)
+
+$$\log(\pi_{x,j}) = \beta_0 + \tau_j$$
+
+Donde:
+
++ $\beta_0$: Intercepto del modelo (logaritmo de la probabilidad basal o riesgo basal).
+
++ $\tau_j$: Efecto del $j$-ésimo tratamiento.
+
++ Suposición de la distribución: $Y|X,j \sim \text{Binom}(n, \pi_{x,j})$
+
+Función de enlace: $g(\pi_x) = \log(\pi_{x,j})$
