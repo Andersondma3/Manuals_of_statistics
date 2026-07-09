@@ -1747,6 +1747,10 @@ range(base$hum)
 curve(exp(b0.8+b1.8*x),from = 0,to = 1,ylim=c(0,1000)) 
 curve(exp(b0.12+b1.12*x),add=T,col=2) 
 curve(exp(b0.17+b1.17*x),add=T,col=4) 
+legend("topright", 
+       legend=c("8h","12h","17h"), 
+       col=c(1,2,4), 
+       lty=1)
 ```
 
 
