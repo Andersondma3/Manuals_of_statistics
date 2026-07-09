@@ -1512,7 +1512,7 @@ Observe que este gráfico se ve mucho mejor que los anteriores.
 
 ## Binomial 
 
-*Un factor*
+**Un factor**
 
 ```{r}
 p= c() # Se crea el vector donde se guardan las probabilidades
