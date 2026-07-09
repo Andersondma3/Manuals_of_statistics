@@ -1783,6 +1783,32 @@ $$\log\left(\frac{\pi}{1-\pi}\right)=PL\to .OR$$
 
 
 $$\log(\lambda)=PL\to \text{Razón de medias}$$
+# Función para crear intervalos de covariables
+
+```{r, eval=FALSE}
+H=0.10*(0:10)
+b = modbn$coefficients
+compa=function(H){
+  v8=c(1,H,0,0,0,0,0,0,0)
+  v12=c(1,H,1,0,0,0,0,H,0)
+  v17=c(1,H,0,1,0,0,0,0,H)
+
+  c8.12=v8-v12
+  c8.17=v8-v17
+  c12.17=v12-v17
+  h=cbind(c8.12,c8.17,c12.17)
+  L=t(h)%*%b
+  ee=sqrt(diag(t(h)%%vcov(modbn)%%h))
+  q=abs(L)/ee
+  p=pnorm(q,lower.tail = F)
+  return(data.frame(L,round(p,2),p<0.05))
+}
+mat=list()
+for(i in 1:11){
+  mat[[i]]=compa(H[i])
+}
+mat
+```
 
 
 # Modelos matemáticos y sus detalles
@@ -1865,7 +1891,7 @@ Donde:
 
 5. Modelo Binomial (Enlace Logarítmico)
 
-$$\log(\pi_{x,j}) = \beta_0 + \tau_j$$
+$$\log\left(\frac{\pi_{x,j}}{1-\pi_{x,j}}\right) = \beta_0 + \tau_j$$
 
 Donde:
 
