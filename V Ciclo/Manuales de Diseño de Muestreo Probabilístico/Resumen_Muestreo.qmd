@@ -1,0 +1,92 @@
+---
+title: "Resumen de Muestreo Estadístico e Inferencial"
+subtitle: "Escuela de Estadística - Universidad de Costa Rica"
+author: "Sebastián Calvo, Anderson Martínez, Fabian Almirall, Justin Shu"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+    number-sections: true
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+---
+
+# Conceptos de Diseño Muestral
+
+El diseño de la muestra es fundamental para asegurar que los resultados puedan proyectarse correctamente a la población [3].
+
+*   **Población**: Es el conjunto completo de todas las unidades de estudio que se desean medir [1].
+*   **Marco Muestral (MM)**: Es el listado o referente (como un padrón o lista de correos) que permite contactar a las unidades de la población [2, 4].
+*   **Unidad de Muestreo**: Es lo que se selecciona directamente del marco muestral; puede variar si el diseño es de varias etapas [1].
+*   **Problemas del Marco Muestral**: Se deben vigilar las omisiones (faltantes), duplicados, elementos extraños y la presencia de conglomerados (una unidad de muestreo con varias unidades de estudio) [1-3].
+
+# Estimadores de Punto y Expansión
+
+Estos cálculos permiten pasar de los datos observados en la muestra a estimaciones sobre la población total [5].
+
+*   **Media Aritmética ($\bar{y}$)**: El promedio de la variable de interés en la muestra [5].
+$$\bar{y} = \frac{\sum y_i}{n}$$
+
+*   **Fracción de Muestreo ($f$)**: Indica la proporción de la población que representa la muestra seleccionada [5, 6].
+$$f = \frac{n}{N}$$
+
+*   **Ponderador Base ($w$ o $F$)**: También llamado factor de expansión; indica cuántas unidades de la población representa cada elemento de la muestra [5, 7, 8].
+$$w = F = \frac{N}{n}$$
+
+*   **Estimador del Total Poblacional ($\hat{y}$)**: Proyección de la suma total de la variable en toda la población [5, 6].
+$$\hat{y} = N \cdot \bar{y} = \frac{N}{n} \cdot \sum_{i=1}^{n} y_i$$
+
+# Variabilidad y Error
+
+Evalúan la precisión de las estimaciones y la dispersión de los datos [5].
+
+*   **Varianza Muestral ($s^2$)**: Mide la variabilidad observada entre los elementos de la muestra [6, 9].
+$$s^2 = \frac{\sum_{i=1}^{n} (y_i - \bar{y})^2}{n - 1}$$
+
+*   **Varianza de la Media ($Var(\bar{y})$)**:
+    *   **Con reemplazo**: Se asume independencia total entre selecciones [9].
+    $$Var(\bar{y}) = \frac{s^2}{n}$$
+    *   **Sin reemplazo**: Incluye el factor de corrección por finitud ($1-f$) [9, 10]. Si $f < 5\%$, este ajuste puede omitirse [8, 10].
+    $$Var(\bar{y}) = (1 - f) \cdot \frac{s^2}{n}$$
+
+*   **Error Estándar ($ee(\bar{y})$)**: Es la desviación estándar del estimador de la media y cuantifica su precisión [9, 10].
+$$ee(\bar{y}) = \sqrt{(1 - f) \cdot \frac{s^2}{n}}$$
+
+# Inferencial e Intervalos de Confianza
+
+Permiten realizar afirmaciones sobre la población con un nivel de confianza determinado [9, 11].
+
+*   **Grados de Libertad ($gl$)**: Se definen como el tamaño de muestra menos uno [8, 9].
+$$gl = n - 1$$
+
+*   **Intervalo de Confianza para la Media ($\mu$)**:
+    *   **Distribución Normal (Z)**: Se utiliza típicamente para muestras grandes ($n \ge 30$) [9, 10].
+    $$IC_{\mu Z} = \bar{y} \pm z_{\alpha/2} \cdot ee(\bar{y})$$
+    *   **Distribución t-Student**: Recomendada para muestras pequeñas o varianza poblacional desconocida [9, 12].
+    $$IC_{media} = \bar{y} \pm t(gl, \alpha/2) \cdot se(\bar{y})$$
+
+# Estimación de Proporciones
+
+Se utiliza cuando la variable de interés es binaria (posee o no una característica) [13].
+
+*   **Varianza de la Proporción ($Var(p)$)**:
+$$Var(p) = (1 - f) \cdot \frac{p(1 - p)}{n - 1}$$
+
+*   **Error Estándar de la Proporción ($ee(p)$)**:
+$$ee(p) = \sqrt{(1 - f) \cdot \frac{p(1 - p)}{n - 1}}$$
+
+# Determinación del Tamaño de Muestra ($n$)
+
+El tamaño de la muestra depende de la precisión deseada y la variabilidad de la población, no directamente de su tamaño total ($N$) a menos que se aplique corrección por finitud [14].
+
+*   **Basado en el Margen de Error ($B$) para medias**:
+$$n = \frac{z^2 \cdot s^2}{moe^2}$$
+
+*   **Basado en el Margen de Error ($moe$) para proporciones**:
+$$n = \frac{z^2 \cdot p(1 - p)}{moe^2}$$
+
+*   **Corrección por Finitud**: Si el $n$ calculado es grande respecto a $N$, se ajusta [14, 15]:
+$$n_{ajustado} = \frac{n}{1 + \frac{n}{N}}$$
