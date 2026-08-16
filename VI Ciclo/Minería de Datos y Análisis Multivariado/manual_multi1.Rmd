@@ -14,3 +14,80 @@ output:
 ---
 
 
+# Aprendizaje supervisado
+
+
+Se aprenden funciones, relaciones que asocian entradas con salidas, por lo que se ajustan a un conjunto de ejemplos de los que conocemos la relación entre la entrada y la salida deseada. 
+
+
+Dependiendo del tipo de salida, suele darse una subcategoría que diferencia entre:
+
++ Modelos de clasificación, si la salida es un valor categórico (por ejemplo, una enumeración, o un conjunto finito de clases).
+
++ Modelos de regresión, si la salida es un valor de un espacio continuo.
+
+# Aprendizaje no supervisado
+
+No estamos interesados en ajustar pares (entrada, salida), sino en aumentar el conocimiento estructural de los datos disponibles (y posibles datos futuros que provengan del mismo fenómeno), por ejemplo: 
+
++ Dando una agrupación de los datos según su similitud.
+
++ Simplificando las estructura de los mismos manteniendo sus características fundamentales (como en los procesos de reducción de la dimensionalidad).
+
+
++ Extrayendo la estructura interna con la que se distribuyen los datos en su espacio original (aprendizaje topológico).
+
+
+
+
+
+# Diferencia entre aprendizaje supervisado y no supervisado
+
+El aprendizaje supervisado tiene variable respuesta $Y$, mientras que el aprendizaje supervisado no la tiene. Además es importante resalatr que el no supervisado es más descriptivo. 
+
+
+# Características del aprendizaje no supervisado
+
++ No existe una salida o variable respuesta, por lo que no se utiliza un modelo que relacione un conjunto de variables con una respuesta.
+
++ Esto hace que sea difícil validar los resultados, al contrario del aprendizaje supervisado en el que existen métricas que permiten evaluar con claridad la bondad del aprendizaje realizado.
+
++ Es parte de un análisis exploratorio de datos.
+
++ Algoritmos no supervisados resultan ser muy costosos porque requieren de más pruebas de ensayo y error, haciendo que requieran de un aparataje teórico y computacional mucho más elaborado.
+
+
+**Ejemplo 1**
+
+Suponga que tiene la siguiente regresión:
+
+$$\mu_{y|x}=\beta_0+\beta_1 X_1+\beta_2X_2+\ldots{}+\beta_{p-1}X_{p-1}$$
+Recuerde que $\mu_{y|x}$ es la respuesta
+
+Se tiene el siguiente subconjunto der X's:
+
+
+
+$$X_1,\ldots{},X_k \text{ Altamente Correlacionadas}$$
+
+**Nota:** Cuando las X's están muy correlacionadas hay problemas de multicolinealidad y eso nos infla los errores estándar.
+
+
+Note que este conjunto de variable es de dimensión $k$, esto lo que nos dice en realidad es que estas X's miden un subconjunto menor de conceptos, lo quye nos lleva al siguiente conjunto:
+
+$$Z_1,\ldots,Z_q\text{ donde } q \lt k \text{ (No Correlacionadas)}$$
+
+
+Reemplanzado en el modelo original tenemos el siguiente resultado:
+
+$$\mu_{y|x,z}=\beta_0+\beta_1 Z_1+\beta_2Z_2+\ldots{}+\beta_qZ_q+\beta_{k+1}X_{k+1}$$
+
+
+En este modelo la primera parte es no supervisado ya que no utilzamos la variable respuesta, para el último modelo obtenido si es supervisado ya que se utiliza con la variable respuesta.
+
+
+**Ejemplo 2**
+
+1. Se tienen $X_1,\ldots{},X_p $ Grupos
+
+2. Formo $k$ grupos 
