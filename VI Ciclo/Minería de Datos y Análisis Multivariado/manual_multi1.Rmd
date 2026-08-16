@@ -75,7 +75,8 @@ $$X_1,\ldots{},X_k \text{ Altamente Correlacionadas}$$
 
 Note que este conjunto de variable es de dimensión $k$, esto lo que nos dice en realidad es que estas X's miden un subconjunto menor de conceptos, lo quye nos lleva al siguiente conjunto:
 
-$$Z_1,\ldots,Z_q\text{ donde } q \lt k \text{ (No Correlacionadas)}$$
+$$Z_1,\dots,Z_q$$
+Donde $ q < k \text{ (No Correlacionadas)}$
 
 
 Reemplanzado en el modelo original tenemos el siguiente resultado:
@@ -91,3 +92,266 @@ En este modelo la primera parte es no supervisado ya que no utilzamos la variabl
 1. Se tienen $X_1,\ldots{},X_p $ Grupos
 
 2. Formo $k$ grupos 
+
+3. Se crea una variable $G$, la cual se crea a partir del aprendizaje no supervisado. Ya que se crea basado en las X's
+
+
+| Observación ($i$) | $X_1$ | $X_2$ | $\dots$ | $X_p$ | $G = f(X_1, \dots, X_p)$ |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| $1$ | $x_{11}$ | $x_{12}$ | $\dots$ | $x_{1p}$ | $g_1$ |
+| $2$ | $x_{21}$ | $x_{22}$ | $\dots$ | $x_{2p}$ | $g_2$ |
+| $\vdots$ | $\vdots$ | $\vdots$ | $\ddots$ | $\vdots$ | $\vdots$ |
+| $i$ | $x_{i1}$ | $x_{i2}$ | $\dots$ | $x_{ip}$ | $g_i$ |
+| $\vdots$ | $\vdots$ | $\vdots$ | $\ddots$ | $\vdots$ | $\vdots$ |
+| $n$ | $x_{n1}$ | $x_{n2}$ | $\dots$ | $x_{np}$ | $g_n$ |
+
+*Nota:* Si agregamos una variable edad, podríamos realizar un análisis de varianza, ya que dicha variable funcionaría como una variable respuesta.
+
+```{r, echo=FALSE}
+set.seed(42)
+n <- 100
+
+edad_g1 <- pmax(18, pmin(35, rnorm(n, 24, 4)))
+edad_g2 <- pmax(28, pmin(58, rnorm(n, 42, 6.5)))
+edad_g3 <- pmax(45, pmin(85, rnorm(n, 63, 8)))
+
+datos_base <- list(G1 = edad_g1, G2 = edad_g2, G3 = edad_g3)
+
+boxplot(
+  datos_base,
+  col = c("#4C72B0", "#55A868", "#C44E52"),
+  main = "Distribución de Edad por Grupo",
+  xlab = "Grupo (G)",
+  ylab = "Edad (años)",
+  border = "#2c3e50",
+  pch = 19,
+  boxwex = 0.5
+)
+grid(nx = NA, ny = NULL, lty = 2, col = "gray80")
+```
+
+**Ejemplo 3**
+
+| Observación ($i$) | Altura (cm) | N.° de Hojas | Grosor del Tallo (mm) | Peso del Racimo (kg) | pH del Suelo |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| $1$ | 24.5 | 6 | 3.2 | 0.45 | 5.4 |
+| $2$ | 28.1 | 7 | 3.8 | 0.58 | 5.6 |
+| $3$ | 31.4 | 8 | 4.1 | 0.65 | 5.5 |
+| $4$ | 52.6 | 14 | 7.5 | 1.85 | 6.1 |
+| $5$ | 58.0 | 15 | 8.2 | 2.10 | 6.3 |
+| $6$ | 61.3 | 17 | 8.9 | 2.40 | 6.2 |
+| $7$ | 84.7 | 22 | 12.4 | 4.15 | 6.8 |
+| $8$ | 89.2 | 25 | 13.1 | 4.60 | 7.0 |
+
+Note que la Altura (cm), N.° de Hojas, Grosor del Tallo (mm), Peso del Racimo (kg) están muy correlacionadas, mientras que el H del Suelo no tanto.
+
+
+Con esas variables correlaciondas puede crear una variable $Z_1$
+
+
+```{r, message=FALSE}
+library(ggplot2)
+library(dplyr)
+# 1. Definir los datos de la tabla (8 observaciones)
+datos <- data.frame(
+  obs      = 1:8,
+  altura   = c(24.5, 28.1, 31.4, 52.6, 58.0, 61.3, 84.7, 89.2),
+  hojas    = c(6, 7, 8, 14, 15, 17, 22, 25),
+  grosor   = c(3.2, 3.8, 4.1, 7.5, 8.2, 8.9, 12.4, 13.1),
+  peso     = c(0.45, 0.58, 0.65, 1.85, 2.10, 2.40, 4.15, 4.60),
+  ph_suelo = c(5.4, 5.6, 5.5, 6.1, 6.3, 6.2, 6.8, 7.0)
+)
+
+# 2. Extracción de Z_1 como el Primer Componente Principal (CP1 estandarizado)
+# Z_1 captura la mayor parte de la variabilidad conjunta del crecimiento/rendimiento
+pca_morfologia <- prcomp(
+  datos[, c("altura", "hojas", "grosor", "peso")],
+  center = TRUE,
+  scale. = TRUE
+)
+
+# Asignar los scores de Z_1 al dataframe
+datos$Z1 <- pca_morfologia$x[, 1]
+
+# 3. Scatterplot con ggplot2
+ggplot(datos, aes(x = ph_suelo, y = Z1)) +
+  geom_point(color = "#1f77b4", size = 4, alpha = 0.9) +
+  geom_smooth(method = "lm", se = TRUE, color = "#d62728", linetype = "dashed", fill = "#e0e0e0", alpha = 0.5) +
+  labs(
+    title = expression(bold("Diagrama de Dispersión:") ~ bolditalic(Z)[1] ~ bold("vs. pH del Suelo")),
+    subtitle = expression(italic(Z)[1] ~ "construida como el primer componente principal (" * CP[1] * ")"),
+    x = "pH del Suelo",
+    y = expression(italic(Z)[1] ~ "(Índice Morfológico /" ~ CP[1] * ")")
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "gray35", margin = margin(b = 10)),
+    axis.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+```
+
+# Proceso de Análisis de componentes principales (PCA)
+
+$$\mu_{y|x_1,x_2,x_3,x_4}=\beta_0+\beta_1 X_1+\beta_2X_2+\beta_3X_3+\beta_4X_4$$
+
+
+Suponga que $X_2,X_3,X_4$ están muy correlacionadas, para ello se crea una variable $Z_1$.
+
+
+$$\mu_{y|x_1,z_1}=\beta_0+\beta_1 X_1+\gamma_1 Z_1$$
+
+
+Sin embargo, como pasamos de tres variables ($X_2,X_3,X_4$) a una ($Z_1$) perdemos cierta información. Es decir $Z_1$ explica un cierto porcentaje de ($X_2,X_3,X_4$). Por ejemplo $Z_1$ explica un 80% de ($X_2,X_3,X_4$). 
+
+
+Se puede dar el caso que $Z_1$ no explique suficiente.
+
+
+Existe otro modelo que puede explicar más que el siguiente:
+
+$$\mu_{y|x_1,x_3}=\beta_0+\beta_1 X_1+\beta_3X_3$$
+
+
+*Nota:* Es importante resaltar que los tres modelos anteriores no son lo mismo, cada uno tiene sus ventajas y desventajas.
+
+El PCA sirva para eliminar la multicolinealidad, solo si lo queremos usar para una regresión. Otro uso que se le puede dar es para obtener gráficos más simples.
+
+## Maldición de la dimensionalidad
+
++ Cuando se cuenta con demasidadas variables es difícil hacer un análisis gráfico para tener una idea inicial del comportamiento de los datos.
+
+
++ Muchas variables son un obstáculo para aplicar otras técnicas multivariadas.
+
+
+
+##  Requisitos para que PCA tenga sentido
+
+
++ Si las variables originales casi no están correlacionadas, nada se gana al llevar a cabo un PCA.
+
+
++ Cuando el determinante de una matriz es cero, se tiene que hay columnas linealmente dependientes. Esto se llama multicolinealidad.
+
+
++ Si el determinante de la matriz de correlación (R) es cercano a cero, hay indicación de altas correlaciones entre las variables, de lo contrario, cuando el determinante es alto un PCA puede no tener sentido.
+
+## Ejemplo de aplicación
+
+Se tienen los siguientes datos
+
+| Observación ($i$) | $X_1$ | $X_2$ | $X_3$ | $X_4$ |
+| :---: | :---: | :---: | :---: | :---: |
+| $1$ | 3 | 4 | 2 | 5 |
+| $2$ | 5 | 1 | 1 | 3 |
+| $3$ | 4 | 3 | 3 | 2 |
+| $4$ | 2 | 7 | 4 | 0 |
+| $\bar{X}\to$| 3.6 | 3.75 | 2.5 | 2.5 |
+| $S\to$ | 1.24 | 2.5 | 1.24 | 2.05 |
+
+
+
+
+Luego estándarizamos mediante la siguiente fórmula:
+
+
+$$X_i = \frac{X_i-\bar{X}}{S_i}$$
+
+
+```{r}
+# 1. Definición de la matriz de datos X (4 observaciones x 4 variables)
+X <- matrix(
+  c(
+    3, 4, 2, 5,
+    5, 1, 1, 3,
+    4, 3, 3, 2,
+    2, 7, 4, 0
+  ),
+  nrow = 4,
+  byrow = TRUE,
+  dimnames = list(paste0("ID_", 1:4), paste0("X", 1:4))
+)
+
+
+
+# 2. Visualizar resultados
+print("Matriz Original X:")
+print(X)
+```
+
+
+```{r}
+# 2. Estandarización con scale()
+# scale() por defecto resta la media muestral (center = TRUE) 
+# y divide entre la desviación estándar muestral s con n-1 grados de libertad (scale = TRUE)
+Z <- scale(X, center = TRUE, scale = TRUE)
+print("Matriz Estandarizada Z (Z-scores):")
+print(round(Z, 4))
+```
+
+**Interpretación** El ID_4 en $X_1$ esta 1.16 desviaciones estándar debajo la media (recuerde que la desvación estándar de $X_1$ es 1.29). Para el ID_1 está 0.1 desviaciones estándar sobre la media, es decir está practicamente en la media.
+
+
+*Nota:* El máximo de desviaciones estándar en una normal son 3 que son el 99.7% de los datos. 
+
+
+
+
+Luego obtenemos los coeficientes para $Z_1$ y hacemos la siguiente regresión:
+
+$Z_1=0.2X_1^s+0.4X_2^s+0.01X_3^s+0.5X_4^s$
+
+
+*Nota:* En regresión estanrizabamos los coefcientes para poder compararlos en este caso, estadarizamos y la que tiene más peso en el resultado de $Z_1$ es $X_4$
+
+Luego sustituimos con los valores que tenemos
+
+$$\begin{aligned} Z_1^{(1)} &= 0.2(-0.39) + 0.4(0.10) + 0.01(-0.39) + 0.5(1.20) \\ &= -0.078 + 0.040 - 0.0039 + 0.600 = \mathbf{0.5581} \end{aligned}$$
+$$\begin{aligned} Z_1^{(2)} &= 0.2(1.16) + 0.4(-1.10) + 0.01(-1.16) + 0.5(0.24) \\ &= 0.232 - 0.440 - 0.0116 + 0.120 = \mathbf{-0.0996} \end{aligned}
+$$
+
+$$\begin{aligned} Z_1^{(3)} &= 0.2(0.39) + 0.4(-0.30) + 0.01(0.39) + 0.5(-0.24) \\ &= 0.078 - 0.120 + 0.0039 - 0.120 = \mathbf{-0.1581} \end{aligned}$$
+
+$$\begin{aligned} Z_1^{(4)} &= 0.2(-1.16) + 0.4(1.30) + 0.01(1.16) + 0.5(-1.20) \\ &= -0.232 + 0.520 + 0.0116 - 0.600 = \mathbf{-0.3004} \end{aligned}$$
+
+*Nota:* Si uno tiene $p$ variables originales, puede llegar a $p$ variables nuevas, la idea es siempre obtener menos que $p$
+
+
+Más adelante se explicará la obtención de los $Z$'s mediante la descomposición esprectra.
+
+
+Además los coeficentes de los $Z$'s, como está normalizados la suma de ellos es igual a 1.
+
+
+**Sub-Ejemplo**
+
+Se tiene el siguiente $Z$
+
+
+$$Z_2 = 0.8X_1+0.8X_2+0.01x_3+0.01X_4$$
+
+Como $X_3,X_4$ prácticamente no pesan, por lo que se interpretaría como un promedio entre $X_1 \text{ y } X_2$
+
+Para este otro caso
+
+$$Z_3 = 0.8X_1+0.6X_2+0.5x_3+0.01X_4$$
+
+
+En esta situación es una especie de ponderación donde el que tiene más peso es $X_1$
+
+Caso inusual
+
+$$Z_4 = 0.5X_1-0.5X_2+0.01x_3+0.01X_4$$
+
+
++ Si $X_1 = X_2 = 0 $ significa que está muy parecido
+
+PREGUNTAR
+
++ Si $X_1  > X_2 $
+
++ Si $X_1  < X_2$
+
+
