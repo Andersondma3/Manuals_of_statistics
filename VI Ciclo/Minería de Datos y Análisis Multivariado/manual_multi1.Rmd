@@ -507,7 +507,7 @@ round(v$values[1] * e1, 4)
 ```
 Observe que la condición se cumple.
 
-También otra propiedad que se tiene que resaltar es la ornormalidad de los mismos
+También otra propiedad que se tiene que resaltar es la ornormalidad de los mismos.
 
 Verificación sobre si la norma es 1
 
@@ -523,4 +523,233 @@ Verificación de ortogonalidad
 round(t(e1) %*% e2, 4)
 ```
 
+## Construcción de Z's
 
+
+```{r, echo=FALSE}
+
+# 1. Parámetros del gráfico
+mu_x <- 3.5   # Media X1
+mu_y <- 2.5   # Media X2
+theta_deg <- 42  # Ángulo de inclinación del 1er Componente
+theta <- theta_deg * pi / 180
+
+# Vectores directores unitarios (autovectores e1 y e2)
+e1 <- c(cos(theta), sin(theta))    # Dirección de Z1
+e2 <- c(-sin(theta), cos(theta))   # Dirección de Z2
+
+# Punto de observación i
+P <- c(5.5, 3.2)
+
+# 2. Puntuaciones proyectadas: z = V^T * (P - mu)
+diff_p <- P - c(mu_x, mu_y)
+z1_val <- sum(diff_p * e1)
+z2_val <- sum(diff_p * e2)
+
+proj_z1 <- c(mu_x, mu_y) + z1_val * e1
+proj_z2 <- c(mu_x, mu_y) + z2_val * e2
+
+# 3. Segmentos para los ejes rotados y sus marcas (ticks)
+l_z1 <- c(-3.2, 3.8)
+l_z2 <- c(-2.5, 2.5)
+
+eje_z1 <- data.frame(
+  x = mu_x + l_z1[1] * e1[1], y = mu_y + l_z1[1] * e1[2],
+  xend = mu_x + l_z1[2] * e1[1], yend = mu_y + l_z1[2] * e1[2]
+)
+
+eje_z2 <- data.frame(
+  x = mu_x + l_z2[1] * e2[1], y = mu_y + l_z2[1] * e2[2],
+  xend = mu_x + l_z2[2] * e2[1], yend = mu_y + l_z2[2] * e2[2]
+)
+
+# Ticks en Z1
+k_z1 <- -3:3
+k_z1 <- k_z1[k_z1 != 0]
+ticks_z1 <- data.frame(
+  x = (mu_x + k_z1 * e1[1]) - 0.12 * e2[1],
+  y = (mu_y + k_z1 * e1[2]) - 0.12 * e2[2],
+  xend = (mu_x + k_z1 * e1[1]) + 0.12 * e2[1],
+  yend = (mu_y + k_z1 * e1[2]) + 0.12 * e2[2]
+)
+
+# Ticks en Z2
+k_z2 <- -2:2
+k_z2 <- k_z2[k_z2 != 0]
+ticks_z2 <- data.frame(
+  x = (mu_x + k_z2 * e2[1]) - 0.12 * e1[1],
+  y = (mu_y + k_z2 * e2[2]) - 0.12 * e1[2],
+  xend = (mu_x + k_z2 * e2[1]) + 0.12 * e1[1],
+  yend = (mu_y + k_z2 * e2[2]) + 0.12 * e1[2]
+)
+
+# 4. Gráfico principal sin el cuadro de texto
+ggplot() +
+  # Ejes coordenados originales (X1, X2)
+  geom_hline(yintercept = 0, color = "black", linewidth = 0.9) +
+  geom_vline(xintercept = 0, color = "black", linewidth = 0.9) +
+  
+  # Eje Z1 y marcas
+  geom_segment(data = eje_z1, aes(x = x, y = y, xend = xend, yend = yend),
+               color = "#1f77b4", linewidth = 1.2) +
+  geom_segment(data = ticks_z1, aes(x = x, y = y, xend = xend, yend = yend),
+               color = "#1f77b4", linewidth = 0.8) +
+  annotate("text", x = eje_z1$xend + 0.25, y = eje_z1$yend + 0.15,
+           label = "bolditalic(Z)[1]", color = "#1f77b4", size = 5.5, parse = TRUE) +
+  
+  # Eje Z2 y marcas
+  geom_segment(data = eje_z2, aes(x = x, y = y, xend = xend, yend = yend),
+               color = "#2ca02c", linewidth = 1.2) +
+  geom_segment(data = ticks_z2, aes(x = x, y = y, xend = xend, yend = yend),
+               color = "#2ca02c", linewidth = 0.8) +
+  annotate("text", x = eje_z2$xend - 0.25, y = eje_z2$yend + 0.25,
+           label = "bolditalic(Z)[2]", color = "#2ca02c", size = 5.5, parse = TRUE) +
+  
+  # Centro de medias (X_bar)
+  geom_point(aes(x = mu_x, y = mu_y), size = 3, color = "black") +
+  annotate("text", x = mu_x - 0.45, y = mu_y + 0.25,
+           label = "bold('(' * bar(X)[1] * ',' ~ bar(X)[2] * ')')", size = 4, parse = TRUE) +
+  
+  # Proyecciones a ejes originales X1 y X2
+  geom_segment(aes(x = P[1], y = 0, xend = P[1], yend = P[2]),
+               linetype = "dashed", color = "gray40") +
+  geom_segment(aes(x = 0, y = P[2], xend = P[1], yend = P[2]),
+               linetype = "dashed", color = "gray40") +
+  
+  # Proyecciones a ejes rotados Z1 y Z2
+  geom_segment(aes(x = P[1], y = P[2], xend = proj_z1[1], yend = proj_z1[2]),
+               linetype = "dashed", color = "#1f77b4", linewidth = 0.9) +
+  geom_segment(aes(x = P[1], y = P[2], xend = proj_z2[1], yend = proj_z2[2]),
+               linetype = "dashed", color = "#2ca02c", linewidth = 0.9) +
+  
+  # Punto de observación i
+  geom_point(aes(x = P[1], y = P[2]), size = 4, color = "#d62728") +
+  annotate("text", x = P[1] + 1.25, y = P[2] + 0.15,
+           label = "bold('Punto ') * bolditalic(i)", color = "#d62728", size = 4.5, parse = TRUE) +
+  
+  # Etiquetas de valores proyectados
+  annotate("text", x = proj_z1[1] + 0.25, y = proj_z1[2] - 0.25,
+           label = paste0("bolditalic(z)[i1] == ", round(z1_val, 2)), 
+           color = "#1f77b4", size = 4, parse = TRUE) +
+  annotate("text", x = proj_z2[1] - 0.5, y = proj_z2[2]  -0.55,
+           label = paste0("bolditalic(z)[i2] == ", round(z2_val, 2)), 
+           color = "#2ca02c", size = 4, parse = TRUE) +
+  
+  # Etiquetas de los ejes originales
+  annotate("text", x = 7.2, y = -0.3, label = "bolditalic(X)[1]", size = 5, parse = TRUE) +
+  annotate("text", x = -0.35, y = 6.2, label = "bolditalic(X)[2]", size = 5, parse = TRUE) +
+  
+  coord_fixed(xlim = c(-1, 7.5), ylim = c(-0.8, 6.5)) +
+  labs(
+    title = "Cambio de Base en ACP: Traslación y Rotación de Ejes",
+    subtitle = "Lectura de coordenadas (X1, X2) vs. Puntuaciones (Z1, Z2)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "gray35", margin = margin(b = 10)),
+    panel.grid.minor = element_blank()
+  )
+```
+
+Observando la figura anterior tenemos que:
+
+$X_1 = 5.5\to Z_1 = 1.95$ y $X_2 = 3.2\to Z_2 = -0.82$. Con lo siguiente $r_{x_1,x_2}=0.45\to r_{z_1,z_2}=0$
+
+
+¿Cómo se construyen los $Z$'s de la figura anterior?
+
++ Si se utliza la matriz de correlaciones, se deben estandarizar las variables, esto se hace cuando las escalas de las variables son similares. ($X_1^s,X_2^s\to S$)
+
++ Si se utiliza la matriz de covarianzas y varianzas, se debe centrar solamente, sin embargo esto se debe hacer solo cuando las escalas sean muy similares. ($X_1^c,X_2^c\to R$)
+
+
+**Proceso de obtención de los Z's**
+
+
+Sabemos que en el anterior ejercicio los vectores propios son:
+
+```{r, echo=FALSE}
+cat("El primer vector propio es", round(e1,2), "\nEl segundo vector propio es", round(e2,2))
+```
+Tenemos que las medias son:
+
+
+```{r, echo=FALSE}
+cat("Media de X1 es", mu_x, "\nMedia de X2 es", mu_y)
+```
+
+
+Hacemos las operaciones para llegar al resultado 
+
+$$
+\begin{aligned}
+Z_1 &= 0.74 \, X_1^c + 0.67 \, X_2^c \\
+    &= 0.74 \, (5.5 - 3.5) + 0.67 \, (3.2 - 2.5) \\
+    &= 0.74 \, (2.0) + 0.67 \, (0.7) \\
+    &= 1.48 + 0.469 \\
+    &= 1.95
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+Z_2 &= -0.67 \, X_1^c + 0.74 \, X_2^c \\
+    &= -0.67 \, (5.5 - 3.5) + 0.74 \, (3.2 - 2.5) \\
+    &=  -0.67 \, (2.0) + 0.74 \, (0.7) \\
+    &= -1.34 + 0.518 \\
+    &= -0.82
+\end{aligned}
+$$
+
+
+
+Haciendolo en una base de datos grande lo que se está haciendo es lo siguiente:
+
+
+$$
+\mathbf{X}^c = 
+\begin{bmatrix}
+x_{11} & x_{12} & x_{13} \\
+x_{21} & x_{22} & x_{23} \\
+\vdots & \vdots & \vdots \\
+x_{n1} & x_{n2} & x_{n3}
+\end{bmatrix}
+-
+\begin{bmatrix}
+\bar{x}_1 & \bar{x}_2 & \bar{x}_3 \\
+\bar{x}_1 & \bar{x}_2 & \bar{x}_3 \\
+\vdots & \vdots & \vdots \\
+\bar{x}_1 & \bar{x}_2 & \bar{x}_3
+\end{bmatrix}
+$$
+
+Luego se multiplica por el vector propio:
+
+
+
+$$\mathbf{X}^c = 
+\begin{bmatrix}
+x_{11}^c & x_{12}^c & x_{13}^c \\
+x_{21}^c & x_{22}^c & x_{23}^c \\
+\vdots & \vdots & \vdots \\
+x_{n1}^c & x_{n2}^c & x_{n3}^c
+\end{bmatrix}\cdot
+\begin{bmatrix}
+a_{11}  \\
+a_{22} \\
+a_{33} 
+\end{bmatrix}
+=
+\begin{bmatrix}
+Z_{1(1)}  \\
+Z_{2(1)} \\
+\vdots \\
+Z_{n(1)}
+\end{bmatrix}$$
+
+
+Con esto llegamos obtener el vector con los valores de la primera variable nueva, para todos los individuos de la base de datos o lo que es lo mismo que decir que el vector del primer componente principal.
+
+
+*Nota:* Si se calculan las varianzas de los $Z$'s da como resultado los $\lambda$'s encontrados para los vectores propios, por lo que la variabilidad total es igual si se mantiene el mismo número de variables originales.
