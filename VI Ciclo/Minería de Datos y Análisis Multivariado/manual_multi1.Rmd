@@ -354,4 +354,173 @@ PREGUNTAR
 
 + Si $X_1  < X_2$
 
+# Comparación de análisis factorial con componentes principales
+
+
++ La estructura del análisis de factores es similar a los componentes principales.
+
++ En componentes principales las variables conocidas $X$ se combinan con los coeficientes a para producir nuevas variables $Z$ llamadas componentes principales. Una propieda importante en el análisis de componentes principales es $Cov(Z_i,Z_j) = 0$
+
++ En factores se combinan factores latentes desconocidos $f$ para formar las variables conocidas $X$.  Esto es más complejo
+
+
+## Ejemplo de análisis factorial
+
+
+Tenemos un estudio con $f_1$ que es la habilidad cuantitativa de una persona y $f_2$ es la habilidad de razonamiento verbal, para estos dos variables no tienen una forma directa de medirse, ya que $f_1$ se podría medir mediante un problema o un cuestionario, pero dentro de las preguntas del cuestionario, mientras se mide la habilidad cuantivativa, también se podría estar midiendo el razonamiento verbal, ya que la persona necesita entender la pregunta para resolver el problema.
+
+Por ejemplo una persoan obtuvo en una pregunta un valor de $f_1 = 0.5$ y $f_2 = 0.5$, asuma que $\lambda_{11} = 7$ y $\lambda_{12} = 7.5$ 
+
+Esto nos lleva a que 
+
+$$7.25 = 0.5*7+0.5*7.5$$
+
+En otra pregunta se tiene el resultado de otro puntaje, sin embargo lo que cambia es $f_1$ y $f_2$, en el caso de los $\lambda$'s no cambian y se pueden obtener por medio de **PCA**, esta es la confusión que muchas personas tienen con este tema.
+
+
+| **Factores comunes** | **Componentes principales** |
+| :---: | :---: |
+| $\boxed{\begin{aligned} X_1 &= \lambda_{11}f_1 + \lambda_{12}f_2 + \dots + \lambda_{1m}f_m + \eta_1 \\ X_2 &= \lambda_{21}f_1 + \lambda_{22}f_2 + \dots + \lambda_{2m}f_m + \eta_2 \\ &\;\;\vdots \\ X_q &= \lambda_{q1}f_1 + \lambda_{q2}f_2 + \dots + \lambda_{qm}f_m + \eta_q \end{aligned}}$ | $\boxed{\begin{aligned} Z_1 &= a_{11}X_1^s + a_{12}X_2^s + \dots + a_{1q}X_q^s \\ Z_2 &= a_{21}X_1^s + a_{22}X_2^s + \dots + a_{2q}X_q^s \\ &\;\;\vdots \\ Z_q &= a_{q1}X_1^s + a_{q2}X_2^s + \dots + a_{qq}X_q^s \end{aligned}}$ |
+
+
+## Diferencias entre análisis factorial y PCA
+
+| Factores comunes | Componentes principales |
+| :--- | :--- |
+| • El interés es la explicación de la **estructura** de covarianza o de correlación (o ambas) entre las variables medidas. | • El interés se centra en la explicación de la **variabilidad total** del conjunto de variables (Como una regresión). |
+| • Puede haber **cambios sustanciales** en todos los factores si se cambia el número de factores. | • Si el número de componentes que se utilizan se incrementa, esos componentes **no cambian**. |
+| • El cálculo de los puntajes es **complejo** y existen varios métodos. | • El cálculo de los puntajes es **sencillo** y se basa en una única descomposición espectral. |
+| • Se obtienen resultados **equivalentes** si se usa la matriz de covarianza o la de correlaciones. | • **No hay relación** directa entre los componentes obtenidos de la matriz de covarianza y la de correlaciones. |
+|• Si las variables están casi no correlacionadas este análisis no tiene sentido. |•  Si las variables están casi no correlacionadas este análisis no tiene sentido. |
+|• En tal caso los factores no tienen nada que explicar. |• En tal caso se obtienen componentes que son muy similares a las variables originales.
+
+
+
+
+
+*Nota:* Al agregar $Z$'s en componentes principales, las coeficientes para obtener los componentes no cambien, en cambio en análisis factorial al yo incluir más cosas que quiero medir ($X$'s), las $f$ cambian. Además, si las variancias específicas son pequeñas ambos análisis dan resultados similares.
+
+
+# Valores y Vectores propios
+
+A continuaciión el siguiente tema se explica mediante un ejemplo.
+
+Tenemos la siguiente matriz de varianzas y covarianzas:
+
+$$
+\mathbf{S} = 
+\begin{bmatrix}
+8 & 10 & -3 \\
+10 & 6 & -4 \\
+-3 & 4 & -2
+\end{bmatrix}
+$$
+
+Note que la $tr(S)= 8+6+2=16$, esta corresponde a la suma de las varianzas, lo que signica que es la **Varianza total**
+
+
+Una vez teniendo esto podemos calcular la matriz de correlación por medio de la siguiente fórmula:
+
+$$r_{ij} = \frac{s_{ij}}{\sqrt{s_{ii} s_{jj}}} $$
+
+*Nota:* Recordar que en la diagonal la correlación es 1 ya que es la misma variable.
+
+$$
+\mathbf{R} = 
+\begin{bmatrix}
+1 &  1.44 & -0.75 \\
+1.44 &  1 & -1.16 \\
+-0.75 &  1.16 &  1
+\end{bmatrix}
+$$
+
+
+La $tr(R) = 3$, esta representa el número de variables. Además la matriz de correlaciones es la estandarización de una matriz de varianzas y covarianzas en este caso, ya que la varianza de cada una de las variables es 1. Esto nos lleva a la siguiente equivalencia:
+
+$$Cov(X_i^s,X_j^s)= r_{ij}$$
+
+
+Así que la  $tr(R) = 3$ representa que la varianza total de las variables estándarizadas.
+
+
+## ¿Cuándo centar y cuándo estandarizar?
+
+
+Cuando se tienen variables con las mismas escalas solo se necesitan centrar, pero cuando son muy diferentes es altamente recomendado estandarizarlos.
+
+
+## Valores y vectores propios en R
+
+**Valores propios**
+
+```{r}
+valores = c(8, 10, -3, 10,  6, 4,-3,  4,  2 )
+S = matrix(
+  valores,
+  nrow = 3,
+  ncol = 3,
+  byrow = TRUE
+)
+
+v = eigen(S)
+round(v$values,2)
+```
+
+Esto nos dice que $\lambda_1 = 17.07, \lambda_2 = 5.04,\lambda_3 = -6.11$
+
+Note que la suma de estos valores no da la varianza total original
+
+```{r}
+sum(v$values)
+```
+**Vectores propios**
+
+Estos deben complir con la propiedad de que:
+
+$$A\times a= \lambda\times a$$
+*A continuación se le representa el proceso en r, para obtenerlos*
+
+Tenemos la matriz asociada a los vectores propios
+
+```{r}
+v$vectors
+```
+
+Los extraemos de la misma matriz
+
+```{r}
+e1 = v$vectors[, 1]  # Asociado a lambda_1 = 17.06
+e2 = v$vectors[, 2]  # Asociado a lambda_2 = 5.05
+e3 = v$vectors[, 3]  # Asociado a lambda_3 = -6.11
+```
+
+
+Verificamos con la condición de modo que `S %*% e_1 == lambda_1 * e_1`
+
+```{r}
+t(round(S %*% e1, 4))
+```
+
+
+```{r}
+round(v$values[1] * e1, 4)
+```
+Observe que la condición se cumple.
+
+También otra propiedad que se tiene que resaltar es la ornormalidad de los mismos
+
+Verificación sobre si la norma es 1
+
+```{r}
+# Norma 1: ||e_1|| = 1
+sqrt(sum(e1^2))
+```
+
+Verificación de ortogonalidad
+
+```{r}
+# Ortogonales entre sí: e_1 %*% e_2 = 0
+round(t(e1) %*% e2, 4)
+```
+
 
