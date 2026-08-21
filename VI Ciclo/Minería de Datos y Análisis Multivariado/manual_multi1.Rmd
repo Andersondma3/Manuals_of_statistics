@@ -753,3 +753,340 @@ Con esto llegamos obtener el vector con los valores de la primera variable nueva
 
 
 *Nota:* Si se calculan las varianzas de los $Z$'s da como resultado los $\lambda$'s encontrados para los vectores propios, por lo que la variabilidad total es igual si se mantiene el mismo número de variables originales.
+
+
+# HEPTATLON
+
+
+```{r}
+setwd("~/GitHub/Apuntes-Modelos-lineales-Avanzados/VI Ciclo/Minería de Datos y Análisis Multivariado")
+```
+
+## Proceso de cambios en las variables
+
+Para cambiar el sistema de puntuación realizamos la siguiente transformación de tal manera que:
+
+
+| Observación ($i$) | $\to$| Observación Nueva|
+| :---: | :---: | :---: |
+| 3 | | 7 |
+| 5 | | 5 |
+| 8 | | 2 |
+| 10 | | 0 |
+
+
+La fórmula utlizada es:
+
+$$x_{new = }max -x_i$$
+
+```{r}
+load("Heptatlon.Rdata") 
+base$vallas=with(base,max(vallas)-vallas)
+base$car200=with(base,max(car200)-car200) 
+base$car800=with(base,max(car800)-car800) 
+```
+
+
+## Matriz de correlaciones
+
+### Cálculo en r 
+
+```{r}
+round(cor(base[,-8]), 2) 
+```
+
+### Gráfico de correlación librería corrgram de colores
+
+```{r}
+library(corrgram) 
+corrgram(base[,-8], lower.panel=panel.pts,order=T)  # order = T nos orderna las correlaciones
+```
+
+
+Los colores azules significam una correlación positiva, mientras que los rojos significa una correlación negatiiva. Adempas , en los gráficos de puntos, en los ejes están los valores de cada variables según corresponda.
+
+### Gráfico de correlación librería corrgram de números (correlaciones)
+
+```{r}
+corrgram(base[,-8], lower.panel=panel.pts, upper.panel=panel.conf, 
+         diag.panel=panel.density,order=T) 
+```
+
+
+
+### Gráfico del paquete corrplot
+
+```{r}
+library(corrplot) 
+corrplot(cor(base[,-8]), method = "square", type = "lower") # El parámetro lower ordena el correlograma de mannera decendente 
+```
+
+
+## Análisis de valores extremos mendiante leverage
+
+Recuerde que este proceso se realiza mediante el cálculo de la matriz:
+
+$$H=X(X^TX)^{-1}X^T$$
+
+*A continuación se le presenta el código en r, para los leverage*
+
+```{r}
+lev=hat(base[,-8]) 
+plot(lev) 
+lim=2*mean(lev) 
+abline(h=lim)
+```
+
+### Formas de averiguar y eliminar el valor extremo
+
+**Formas de averiguar**
+
+
+```{r}
+which.min(base$saltoalto) # Es el punto menor que se ve en los gráficos de correlación más arriba
+```
+```{r}
+which.max(lev) # El valor más alto que se sale de la linea en los leverage
+```
+**Formas de eliminar**
+
+```{r}
+base1 = subset(base, lev<lim)
+```
+
+```{r, eval=FALSE}
+base1 = base[-25,]
+```
+
+
+*Nota:* Recordar que en este caso se quitó el valor extremo por términos del ejericicio y nunca se puede quitar sin una justificación en concreto.
+
+
+## Obtención del determinante de la matriz R
+
+
+```{r}
+base2=base1[,-8] # Es una base sin la respuesta (solo con las X's)
+R=cor(base2) 
+det(R) 
+
+```
+
+Conforme las correlaciones, aumenta el determinante tiende a cero.
+
+$$\text{Correlación alta} \implies\text{Determinante casi cero}$$
+
+## Hipótesis de matriz de correlaciones
+
+Existe una prueba de hipótesis que verifica si la matriz de correlaciones es igual a la identidad, ya que si es similar a la identidad, indicaría que las correlaciones son prácticamente cero.
+
+*Nota:* Para hacer el análisis de PCA **mínimo**, se debe rechazar esta hipótesis.
+
+$$H_0: R = I$$
+
+
+
+```{r, message=FALSE, warning=FALSE}
+library(psych) 
+cortest.bartlett(R,n=nrow(base2)) # Proporcionadole a la función la matriz
+```
+
+
+```{r, message=FALSE}
+cortest.bartlett(base2) # En esta opción, la base de datos no puede contener la respuesta
+```
+
+
+## KMO 
+
+En ocasiones la prueba de correlaciones falla debido a la gran cantidad de datos, ya que debido a la gran potencia que tienen, ocasiona que la prueba se rechaze siempre.
+
+Una solución ante este problema es usar esta prubea prueba, que tiene como condición que solo si $n/q<5$, donde q es el número de variables.
+
+*A continuación se le presentan los criterios del KMO*
+
+| Rango KMO | Interpretación / Calidad |
+| :---: | :--- |
+| $[0.9, 1.0]$ | Muy bueno (Excelente) |
+| $[0.8, 0.9]$ | Meritorio |
+| $[0.7, 0.8]$ | Mediano (Aceptable) |
+| $[0.6, 0.7]$ | Mediocre (Regular) |
+| $[0.5, 0.6]$ | Bajo |
+| $[0.0, 0.5]$ | Inaceptable (Desaconsejable) |
+
+```{r}
+KMO(R)
+```
+
+En este caso la Correlación es aceptable
+
+## Análisis de covarianzas
+
+Cpmo se mencionó anteriormente, este análisis se recomienda hacerlo cuando las varianzas de las variables son bastantes similares, ya que en este caso las valores no están estandarizas, tal y como sucede con el análisis de la matriz de correlación.
+
+### Comparación de varianzas de la variables
+
+```{r}
+v=apply(base2, 2,var) # Note que el 2 es porque es la varianza para cada columna
+round(v,3) 
+```
+
+*Nota:* Con ver este resultado podemos concluir que no tiene sentido hacer un análisis por la matriz de covarianzas debido a la gran diferencia entre varianzas.
+
+Este cálculo lo puede hacer también de la siguiente forma:
+
+```{r}
+round(diag(var(base2)),3)
+```
+
+
+
+La variabilidad total de las variables originales la obtenemos, sumando todas las varianzas
+
+```{r}
+sum(v) 
+```
+
+
+
+### Descomposición espectral de matriz de covarianzas
+
+**Obtenemos la matriz de covarianzas**
+
+```{r}
+S=var(base2) 
+round(S,2) 
+```
+
+
+$$
+S = A\Lambda A' \\
+=A \Lambda^{\frac{1}{2}} \Lambda ^{\frac{1}{2}} A'
+$$
+
+donde: 
+
+
+$$
+\mathbf{\Lambda} = 
+\begin{bmatrix}
+\lambda_1 & 0 & \cdots & 0 \\
+0 & \lambda_2 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \lambda_n
+\end{bmatrix}
+$$
+
+
+Por medio de eigne hacemos la descomposición
+
+```{r}
+espec=eigen(S) 
+```
+
+
+*A continuación se le presenta código en r, de como obtener los valores y vectores propios*
+
+
+```{r}
+lambda=espec$val 
+round(lambda,2) 
+```
+*Nota:* Observe que la suma de los $\lambda$' es lo mismo que la varianza total
+
+
+
+```{r}
+sum(lambda) # Da lo mismmo que la varianza total (summa de las varianzas de cada predictor)
+```
+
+Esto nos lleva a escribir esta propiedad
+
+$$\sum_{i=1}^qS_i^2 = \sum_{i=1}^q\lambda_j$$
+
+```{r}
+A=espec$vec 
+round(A,2)
+```
+
+
+```{r}
+L = diag(lambda)
+L
+```
+
+
+**Aplicamos la fórmula que esta arriba para obtener la matriz de covarianzas**
+
+```{r}
+S1 = round(A%*%L%*%t(A),2)
+S1
+```
+
+## Obtención de los componentes principales $Z$'s
+
+
+```{r}
+basec=scale(base2,scale=F) # Datos centrados
+Z1=basec%*%A[,1] 
+Z1 # Z1 de las 25 competidoras
+```
+### Cálculo de cuánto porcentaje explica el componente
+
+$$\frac{Var(Z_1)}{Var_{total}}*100$$
+
+```{r}
+var(Z1)/sum(diag(var(base2)))*100
+
+```
+Otra forma de obtenerlo
+
+```{r}
+lambda[1]/sum(lambda)*100 
+```
+
+### ¿Es normal que tenga media cero?
+
+Es completamente normal, ya que cuando se usa la matriz de covarianzas al momento de centrar las variables, la media es prácticamente cero
+
+```{r}
+mean(Z1)
+```
+
+
+### Forma automática con `prcomp()`
+
+```{r}
+pca1=prcomp(base2) #Recordar que base2 no contiene la respuesta
+pca1
+```
+
+
+```{r}
+names(pca1) 
+```
+`sdev`: Son las desviaciones estándar para obetner hago lo siguiente:
+
+```{r}
+(round(pca1$sdev,2))^2
+```
+
+
+`rotation`: Es la matriz de los vectores propios
+
+
+```{r}
+round(pca1$rotation,2) # Los vectores propios
+```
+
+`x`: Es lo que contiene los $Z$'s
+
+```{r}
+round(pca1$x,2) 
+```
+*Note que da todos los z's de todos los individuos*
+
+```{r}
+summary(pca1) 
+```
+Esto nos resume todo lo del análisis y cuánto aporta cada componente
