@@ -920,7 +920,7 @@ KMO(R)
 
 En este caso la Correlación es aceptable
 
-## Análisis de covarianzas
+## Análisis con la matriz de covarianzas
 
 Cpmo se mencionó anteriormente, este análisis se recomienda hacerlo cuando las varianzas de las variables son bastantes similares, ya que en este caso las valores no están estandarizas, tal y como sucede con el análisis de la matriz de correlación.
 
@@ -1090,3 +1090,328 @@ round(pca1$x,2)
 summary(pca1) 
 ```
 Esto nos resume todo lo del análisis y cuánto aporta cada componente
+
+
+# Análisis con matriz de correlaciones
+
+## Estadarizando las variables prrimero
+
+```{r}
+v1=scale(base2$vallas) 
+```
+
+
+**Observe que la media es 0 y la varianza es 1.**
+
+```{r}
+mean(v1) 
+```
+
+
+```{r}
+var(v1) 
+```
+
+
+Estandarice todas las variables. Para hacerlo de una sola vez, puede usar: `scale(base2)`.
+
+```{r}
+base3=scale(base2) 
+```
+
+
+Verificación de que todas las medias son 0 y las variancias son 1.
+
+```{r}
+round(apply(base3,2,mean),10) 
+```
+
+```{r}
+apply(base3,2,var) 
+```
+## Descomposición espectral de la matriz de correlaciones y obtención de los valores propios.
+
+```{r}
+espec1=eigen(R) 
+lambda1=espec1$val 
+round(lambda1,2) 
+```
+
+```{r}
+S = var(base3)
+S1 = var(base2) # esro no es lo mismo que S, no tiene sentido porque las variables no están estandarizadas
+R = cor(base2)
+```
+
+Note que `S` y `R` son iguales 
+
+```{r}
+S;R
+```
+
+## Porcentaje de explicación de un componente principal
+
+Para averiguar ese porcentaje de explicación utlice la siguiente fórmula:
+
+
+$$\frac{Var(Z_j)}{\sum_{j=1}^q}$$
+
+donde $q$ es el número total de variables 
+
+*A continuación se le detalla el proceso en r*
+
+Obtenemos el primer valor propio
+
+
+```{r}
+lambda1[1]
+```
+
+Luego obtenemos el número total de variables o sumamos los valores propios.
+
+```{r}
+sum(lambda1)
+```
+
+```{r}
+round(lambda1[1]/sum(lambda1),2)
+```
+
+Esto quiere decir que $Z_1$ explica un 62% de la variabilidad total, cuando las variables están estadarizadas.
+
+
+## Forma automática
+
+```{r}
+pca1=prcomp(base2,scale=T) 
+lambda2=pca1$sdev**2 
+round(lambda2,2) 
+```
+
+Note que con `summary()`, podemos obtener directamente cuánto porcentaje explica cada componente.
+
+```{r}
+summary(pca1) 
+```
+
+
+
+Obtención del primer vector propio
+
+```{r}
+a1=pca1$rot[,1] 
+round(a1,2) 
+```
+
+
+Observe que la variables con más peso en este caso son: `vallas`, `saltolargo` y `saltolargo`. Además todos son negativos, esto es positiva ya que en terminos de interpretación estos se van a estabilizar.
+
+**Es importante fijarse en el signo de los coeficientes que pesen más. Si hay uno que pese muy poco comparado con los demás, pero tiene signo diferente lo que se puede hacer es ignorarlo ya que no va a afectar tanto**
+
+## Obtención del primer componente manualmente
+
+```{r}
+Z1=base3%*%a1 
+Z1a=pca1$x[,1] 
+cbind(Z1,Z1a) 
+```
+
+En contexto de este problema mientras más pequeño sea el número mejor es la puntuación, esto nos lleva que la atleta `Jeong-Mi (KOR)`, es la que peor puntuación tiene ya que tiene un valor de $Z_1$ alto. Otro aspecto importante a notar es que `Scheider (SWI)` se mantiene muy cerca del promedio, esto debido a su valor en el componente es casi cero.
+
+
+## Comparación de Varianzad y lambdas
+
+```{r}
+var(Z1a) 
+```
+
+```{r}
+lambda1[1] 
+```
+
+Observe que son iguales, **recuerde que esto siempre va a suceder**
+
+
+
+## Cambio a los signos de los coeficientes de $Z_1$
+
+
+```{r}
+Z1b=-Z1a 
+var(Z1b) 
+```
+
+*Nota:* Recuerde que la varianza es la misma ya que las constantes salen al cuadrado, por lo que el menos que le incluímos se le anula.
+
+
+
+# Biplot
+
+Este es el código para hacer el gráfico normal 
+
+```{r, eval=FALSE}
+biplot(pca1, cex=0.6)
+```
+
+*El gráfico que se le presenta a continuación fue arreglafo para términos de presentación y explicación*
+
+```{r, echo=FALSE}
+library(factoextra)
+library(ggplot2)
+
+n <- nrow(pca1$x)
+indices <- c(1, 22, 17,18,10)
+
+grupo <- factor(ifelse(seq_len(n) %in% indices, "Resaltado", "Normal"),
+                 levels = c("Normal", "Resaltado"))
+
+fviz_pca_biplot(pca1,
+                 geom.ind = "point",
+                 col.ind = grupo,
+                 shape.ind = grupo,
+                 pointsize = 2,
+                 palette = c("black", "red"),
+                 mean.point = FALSE) +   
+  scale_shape_manual(values = c(16, 17)) +
+  geom_text(data = data.frame(pca1$x)[indices, ],
+            aes(x = PC1, y = PC2),
+            label = rownames(pca1$x)[indices],
+            color = "red", vjust = -1) +
+  labs(shape = "Grupo", color = "Grupo")
+```
+
+
+Del gráfico podemos notar que  la paricipante `Joyner-Kersee (USA)` tienen a tener puntajes altos por ello se ubica en esa posición.  Por otro lado esta la participante `Geremias (BRA)`, esta posicionada al otro lado completamente de la participamos anteriormente, dicha posición es es resultado de que a la participante `Geremias (BRA)` no le fue tan bien en las tres flechas que van en esa dirección (`vallas`, `saltolargo` y `saltolargo`).
+
+
+Se puede observar que todas las flechas van hacia la izquierda debido a que su signo es negativo. Además, se puede ver que las que pesan más en el primer componente son aquellas que tienen una flecha más larga, por ejemplo en el gráfico anterior `javalina` es la que tiene una menor longitud en la flecha debido a que el peso de este es menor que el de las demás variables. Por otro lado, las que más pesan como habíamos visto anteriormente son `vallas`, `saltolargo` y `saltolargo`, estas mismas están agrupadas en este gráfico.
+
+Para el segundo componente primero debemos observar el siguiente vector propio:
+
+```{r}
+a2=pca1$rot[,2] 
+round(a2,2) 
+```
+
+
+Note que para este caso las que tiene más peso son las variables `saltoalto` y `car800`, por esta razón estos son los que tiene una flecha de mayor tamaño con respecto al eje vertical. Además note que el signo de `car800` es positivo, por eso es que la flecha tiene una dirección hacia arriba.
+
+Un aspecto importante a resaltar de la participante `Brown (USA)`, es que le fue mejor en `saltoalto` que en `car800`, mientras que en `vallas`, `saltolargo` y `saltolargo` está en el promedio, en el otro extremo del gráfico la participante `Bouraga (URS)`, le fue de manera intermedia (o se encuentra en el promedio) en las otras variables, pero le fue mucho mejor en `car800` en comparación con `saltoalto`.
+
+## Biplot categórico
+
+```{r, message=F}
+library(AMR) 
+library(dplyr) 
+data=data.frame(c("AM","EU","EU","EU","EU","EU","OC","AM","EU", 
+                  "EU","EU","EU","EU","EU","EU","AS","EU","AM", 
+                  "EU","EU","EU","AM","AS","AS"),row.names(base2),base2) 
+names(data)=c("Continente","Nombre",names(base2)) 
+pca2=data %>% 
+  pca(vallas,saltoalto,tiro,car200,saltolargo,javalina,car800)
+```
+
+```{r}
+ggplot_pca(pca2) 
+```
+
+
+# Gráfico de sedimentación
+
+este gráfico nos sirve para ver como va bajando la varianza explicada de cada componente
+
+```{r}
+plot(pca1,type="l") 
+```
+Para este gráfico puede usar `plot(pca$sdev^2)` o `plot(pca)`
+
+El criterio usando el gráfico dice que se deben escoger la cantidad de componentes antes de que caiga abruptamente la variabilidad, en este caso solo podríamos escoger uno, ya que en el gráfico anterior después del primer valor la varianza se desploma.
+
+Cuándo usamos los porcentajes la idea es que el PCA siempre represente al menos un 80% de la variabilidad, para este caso tenemos el siguiente resultado.
+
+```{r}
+sum(lambda1[1:3])/length(lambda1) 
+```
+Usaríamos tres componentes en lugar de uno, lo que pasa es que con dos componente no puedo lograr el objetivo de hacer los gráfico más fácil.
+
+
+**Si un componente tiene una varianza menor a uno, no se justifica incluirlo ya que una variable explica más que un componente, debido a que las variables como están estandarizas tienen varianza 1**. Normalmente esto ocurre porque las variables no se están tan correlacionadas entre sí.
+
+
+### Conclusión de estudio
+
+Debido a que según el gráfico solo debemos quedarnos con un componente y con el criterio del porcentaje con tres componentes, lo cual no nos sirve para el análisis, por lo que aplicar PCA para este estudio no fue satisfactorio.
+
+## Reproducción de la matriz de correlaciones
+
+Usando todos los componentes.
+
+```{r}
+A=pca1$rot 
+L=diag(pca1$sdev**2) 
+R1=A%*%L%*%t(A) 
+round(R1,2) 
+```
+Verificación
+
+```{r}
+round(R,2) 
+```
+
+
+```{r}
+round(abs(R1-R),10) 
+```
+
+Ahora con sólo dos componentes obtenemos una predicción de R y vea las discrepancias. Para facilidad vea las discrepancias con solo un decimal. 
+
+```{r}
+A2=pca1$rot[,1:2] 
+L2=diag(lambda1[1:2]) 
+R2=A2%*%L2%*%t(A2) 
+round(R2-R,1) 
+```
+
+
++	Haga lo mismo con tres componentes y decida si vale la pena usar 3 componentes.
+
+```{r}
+A3=pca1$rot[,1:3] 
+L3=diag(lambda1[1:3]) 
+R3=A3%*%L3%*%t(A3) 
+round(R3-R,1) 
+```
+## Obtención de correlaciones
+
+Obtenemos la correlación entre cada variable original y Z1a.
+
+
+```{r}
+cor(base2,Z1a) 
+```
+Obtenemos las correlaciones a partir del primer valor propio y el primer vector propio. Compare los resultados.
+
+```{r}
+a1*sqrt(lambda1[1]) # a1 es el primer vector propio
+```
+
+# Prueba de los componentes en una regresión
+
+
+```{r}
+Z1=pca1$x[,1] 
+Z2=pca1$x[,2] 
+Y=base1$puntaje 
+mod=lm(Y~Z1+Z2) 
+summary(mod) 
+```
+
+Observe que `Z1` es significativo y `Z2` no es significativo, recuerde que estos son variables así que puede ser que los resultados sean muy distintos para otros estudios.
+
+## Forma automática
+
+```{r}
+step(mod) 
+```
+
+
