@@ -1414,4 +1414,391 @@ Observe que `Z1` es significativo y `Z2` no es significativo, recuerde que estos
 step(mod) 
 ```
 
+## Interpretaciones de regresión
+
+Teneamos esta ecuación resultante del modelo anterior:
+
+
+$$\hat{y} = 6154.13-230.02(-0.45*vallas-0.31*\text{salto alto}-0.4*Tiro-0.43*car200-0.45*\text{salto largo}+0.24*javalina-0.3*car800)$$
+Multiplicamos los coeficientes de $Z_1$, por el coeficiente de $Z_1$
+
+```{r}
+a = c(-0.45,-0.31,-0.40,-0.43,-0.45,0.24,-0.3)
+
+-230.02*a
+```
+
+
+
+$$\hat{y} = 6154.13+103.54\text{ vallas}^s+71.03*\text{salto alto}^s+92*Tiro^s+98.9*car200^s+103.5*\text{salto largo}^s-55.2*javalina^s+69*car800^s$$
+
+
+**Obtenemos al desviación estándar de vallas**
+
+```{r}
+sd(base1$vallas)
+```
+
+Para este caso las $X's$ estaban estarizadas, pero la $Y$ no entonces la interpretación tiene la siguiente estructura:
+
+*Por un aumento de 1 desviación estándar en la variable $X_j$, la respuesta promedio $Y$ (aumenta/disminuye) en promedio $\beta_j^s$ unidades, manteniendo constantes los demás predictores*
+
+Aplicando esa estructura a el ejemplo nos quedaría así:
+
+*Por una disminución* (esto es por contexto) *de 0.51 segundos en la Vallas, la respuesta promedio aumenta*.
+
+Recordar que las variables que se le dieron vuelta fueron `vallas`, `car200` y `car800`.
+
+
+*Nota: El objetivo de PCA no es siempre hacer una regresión.*
+
+# Conglomerados
+
+## Distancias entre individuos 
+
+Dadas los valores de las variables para los individuos i-ésimo y j-ésimo, interesa tener una medida de la distancia multidimensional entre esos dos individuos.
+
+
+Si se cuenta con n individuos, la matriz de distancias es de tamaño nxn, con ceros en la diagonal, esto independientemente de q (número de variables).
+
+*A continuación se le presenta un ejemplo de la matriz de distancias*
+
+
+$$
+D = 
+\begin{pmatrix}
+0 & d_{12} & \cdots & d_{1n} \\
+d_{21} & 0 & \cdots & d_{2n} \\
+\vdots & \vdots & \ddots &  \\
+d_{n1} & d_{n2} & & 0
+\end{pmatrix}
+$$
+
+
+La distancia es un concepto opuesto al de similitud, entre mayor similitud exista entre dos sujetos, menor es la distancia entre ellos y viceversa.
+
+
+
+## Distancia Euclidea
+
+La distancia más común es la Euclídea, definida por:
+
+
+$$
+d_{ij} = \sqrt{\sum_{k=1}^{q} (x_{ik} - x_{jk})^2} = \sqrt{(X_i - X_j)^T (X_i - X_j)}
+$$
+
+donde $x_{ik}$ es el valor que toma el i-ésimo sujeto en la k-ésima variable, y $X_i$ es el vector de $q$ valores del i-ésimo sujeto:$X_i^T = (x_{i1}, \cdots, x_{ik}, \cdots, x_{iq}).$
+
+
+En dos dimensiones, es la medida de la hipotenusa del triángulo rectángulo que se forma a partir de los dos puntos que se están comparando.
+
+
+El cuadrado de la distancia Euclídea $(d^2_{ij})$ es otra medida de distancia que se puede usar en algunas ocasiones. 
+
+$$d_{ij}^2 = \sum_{k=1}^{q} (x_{ik} - x_{jk})^2$$
+
+**Ejemplo aplicado**
+
+Tenemos los siguientes datos tomados en el momento de la clase
+
+| id | Peso | Estatura (metros) | Edad |
+| :---: | :---: | :---: | :---: |
+| 1 | 94 | 1.73 | 23.40 |
+| 2 | 84 | 1.74 | 21.90 |
+| 3 | 60 | 1.58 | 21.60 |
+| 4 | 85 | 1.78 | 20.04 |
+| 5 | 71 | 1.66 | 25.30 |
+
+```{r, echo=FALSE, warning=FALSE}
+library(ggplot2)
+
+# 1. Definición del conjunto de datos
+datos <- data.frame(
+  id = 1:5,
+  Peso = c(94, 84, 60, 85, 71),
+  Estatura = c(1.73, 1.74, 1.58, 1.78, 1.66)
+)
+
+# 2. Puntos seleccionados para descomponer la distancia euclidiana (id 3 a id 4)
+p3 <- c(60, 1.58)
+p4 <- c(85, 1.78)
+
+# Polígono sombreado para el triángulo rectángulo
+triangulo <- data.frame(
+  x = c(p3[1], p4[1], p4[1]),
+  y = c(p3[2], p3[2], p4[2])
+)
+
+# Símbolo del ángulo recto (90°)
+tam_x <- 0.7
+tam_y <- 0.007
+angulo_recto <- data.frame(
+  x = c(p4[1] - tam_x, p4[1] - tam_x, p4[1]),
+  y = c(p3[2], p3[2] + tam_y, p3[2] + tam_y)
+)
+
+# 3. Gráfico enfocado en la distancia entre observaciones
+ggplot(datos, aes(x = Peso, y = Estatura)) +
+  # Área del triángulo rectángulo
+  geom_polygon(data = triangulo, aes(x = x, y = y), fill = "#3498db", alpha = 0.15) +
+  
+  # Catetos (Δ Peso y Δ Estatura)
+  geom_segment(aes(x = p3[1], y = p3[2], xend = p4[1], yend = p3[2]),
+               linetype = "dashed", color = "#e67e22", linewidth = 1) +
+  geom_segment(aes(x = p4[1], y = p3[2], xend = p4[1], yend = p4[2]),
+               linetype = "dashed", color = "#e67e22", linewidth = 1) +
+  
+  # Hipotenusa (Distancia Euclidiana d(id3, id4))
+  geom_segment(aes(x = p3[1], y = p3[2], xend = p4[1], yend = p4[2]),
+               color = "#e74c3c", linewidth = 1.3) +
+  
+  # Ángulo recto
+  geom_path(data = angulo_recto, aes(x = x, y = y), color = "#e67e22", linewidth = 0.8) +
+  
+  # Conexiones secundarias entre puntos vecinos
+  geom_segment(aes(x = 60, y = 1.58, xend = 71, yend = 1.66), linetype = "dotted", color = "gray60") +
+  geom_segment(aes(x = 71, y = 1.66, xend = 84, yend = 1.74), linetype = "dotted", color = "gray60") +
+  geom_segment(aes(x = 84, y = 1.74, xend = 85, yend = 1.78), linetype = "dotted", color = "gray60") +
+  geom_segment(aes(x = 84, y = 1.74, xend = 94, yend = 1.73), linetype = "dotted", color = "gray60") +
+  
+  # Puntos observados
+  geom_point(color = "#2c3e50", size = 4.5) +
+  
+  # Etiquetas de cada punto con sus coordenadas
+  geom_text(aes(label = paste0("id ", id, "\n(", Peso, " kg, ", Estatura, " m)")),
+            vjust = -0.5, size = 3.6, fontface = "bold", color = "#1a252f") +
+  
+  # Etiquetas de magnitud de distancia
+  annotate("text", x = 72.5, y = 1.572, 
+           label = "Delta * Peso == 25 * ' kg'", 
+           parse = TRUE, color = "#e67e22", size = 3.8) +
+  annotate("text", x = 86.5, y = 1.68, 
+           label = "Delta * Estatura == 0.20 * ' m'", 
+           parse = TRUE, color = "#e67e22", size = 3.8, angle = 90) +
+  annotate("text", x = 71, y = 1.71, 
+           label = "d[E](id[3], id[4]) == 25.00", 
+           parse = TRUE, color = "#e74c3c", size = 4.2, fontface = "bold") +
+  
+  # Ajuste centrado ajustando los límites exactamente al rango de los datos (+ margen)
+  coord_cartesian(
+    xlim = c(min(datos$Peso) - 3, max(datos$Peso) + 3),
+    ylim = c(min(datos$Estatura) - 0.02, max(datos$Estatura) + 0.03)
+  ) +
+  
+  scale_x_continuous(breaks = seq(60, 95, by = 5)) +
+  scale_y_continuous(breaks = seq(1.55, 1.80, by = 0.05)) +
+  
+  labs(
+    title = "Distancias Euclidianas entre Observaciones",
+    subtitle = "Descomposición geométrica de la distancia mediante diferencias ortogonales",
+    x = "Peso (kg)",
+    y = "Estatura (metros)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "gray30", margin = margin(b = 10)),
+    panel.grid.minor = element_blank()
+  )
+```
+
+Cálculamos las distancias entre los puntos
+
+$$
+\begin{aligned}
+d(1, 2) &= \sqrt{(94 - 84)^2 + (1.73 - 1.74)^2} = \sqrt{10^2 + (-0.01)^2} = \sqrt{100.0001} \approx 10.0000 \\
+d(1, 3) &= \sqrt{(94 - 60)^2 + (1.73 - 1.58)^2} = \sqrt{34^2 + 0.15^2} = \sqrt{1156.0225} \approx 34.0003 \\
+d(1, 4) &= \sqrt{(94 - 85)^2 + (1.73 - 1.78)^2} = \sqrt{9^2 + (-0.05)^2} = \sqrt{81.0025} \approx 9.0001 \\
+d(1, 5) &= \sqrt{(94 - 71)^2 + (1.73 - 1.66)^2} = \sqrt{23^2 + 0.07^2} = \sqrt{529.0049} \approx 23.0001 \\[0.8em]
+d(2, 3) &= \sqrt{(84 - 60)^2 + (1.74 - 1.58)^2} = \sqrt{24^2 + 0.16^2} = \sqrt{576.0256} \approx 24.0005 \\
+d(2, 4) &= \sqrt{(84 - 85)^2 + (1.74 - 1.78)^2} = \sqrt{(-1)^2 + (-0.04)^2} = \sqrt{1.0016} \approx 1.0008 \\
+d(2, 5) &= \sqrt{(84 - 71)^2 + (1.74 - 1.66)^2} = \sqrt{13^2 + 0.08^2} = \sqrt{169.0064} \approx 13.0002 \\[0.8em]
+d(3, 4) &= \sqrt{(60 - 85)^2 + (1.58 - 1.78)^2} = \sqrt{(-25)^2 + (-0.20)^2} = \sqrt{625.0400} \approx 25.0008 \\
+d(3, 5) &= \sqrt{(60 - 71)^2 + (1.58 - 1.66)^2} = \sqrt{(-11)^2 + (-0.08)^2} = \sqrt{121.0064} \approx 11.0003 \\[0.8em]
+d(4, 5) &= \sqrt{(85 - 71)^2 + (1.78 - 1.66)^2} = \sqrt{14^2 + 0.12^2} = \sqrt{196.0144} \approx 14.0005
+\end{aligned}
+$$
+
+
+Podemos ver que la diferencias entre el peso en kilogramos, tiene mayor importancia al momneto de hacer el cálculo, para solucionar este problema lo idea el estandarizar las variables.
+
+
+```{r}
+# Si no tienes ggforce instalado: install.packages("ggforce")
+library(ggplot2)
+library(ggforce)
+
+# 1. Definición del conjunto de datos con asignación de conglomerados/grupos
+datos <- data.frame(
+  id = factor(1:5),
+  Peso = c(94, 84, 60, 85, 71),
+  Estatura = c(1.73, 1.74, 1.58, 1.78, 1.66),
+  Grupo = factor(c("Grupo A (Pesados / Altos)", 
+                   "Grupo A (Pesados / Altos)", 
+                   "Grupo C (Bajo)", 
+                   "Grupo A (Pesados / Altos)", 
+                   "Grupo B (Medio)"))
+)
+
+# 2. Construcción del gráfico con elipses/círculos envolventes
+ggplot(datos, aes(x = Peso, y = Estatura)) +
+  # Encerrar los grupos con elipses suaves y sombreado
+  geom_mark_ellipse(
+    aes(group = Grupo, fill = Grupo, color = Grupo, label = Grupo),
+    expand = unit(5, "mm"),
+    alpha = 0.12,
+    linewidth = 0.9,
+    linetype = "dashed",
+    show.legend = FALSE,
+    label.fontsize = 9.5,
+    label.fontface = "bold"
+  ) +
+  
+
+  
+  # Puntos observados
+  geom_point(aes(color = Grupo), size = 4.5) +
+  
+  # Paleta de colores para los grupos
+  scale_color_manual(values = c("Grupo A (Pesados / Altos)" = "#2980b9",
+                                "Grupo B (Medio)" = "#27ae60",
+                                "Grupo C (Bajo)" = "#e67e22")) +
+  scale_fill_manual(values = c("Grupo A (Pesados / Altos)" = "#3498db",
+                               "Grupo B (Medio)" = "#2ecc71",
+                               "Grupo C (Bajo)" = "#f39c12")) +
+  
+  # Límites centrados en los datos
+  coord_cartesian(
+    xlim = c(min(datos$Peso) - 5, max(datos$Peso) + 6),
+    ylim = c(min(datos$Estatura) - 0.03, max(datos$Estatura) + 0.05)
+  ) +
+  scale_x_continuous(breaks = seq(55, 100, by = 5)) +
+  scale_y_continuous(breaks = seq(1.55, 1.85, by = 0.05)) +
+  
+  labs(
+    title = "Agrupamiento de Observaciones por Proximidad Euclidiana",
+    subtitle = "Identificación visual de conglomerados naturales entre Peso y Estatura",
+    x = "Peso (kg)",
+    y = "Estatura (metros)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "gray30", margin = margin(b = 10)),
+    panel.grid.minor = element_blank()
+  )
+```
+
+
+## Distancia de Mahalanobis 
+
+Esta medida de distancia incluye un procedimiento de estandarización dentro de la distancia Euclídea.
+
+No sólo hace una estandarización en los datos escalándolos en términos de su desviación estándar sino que ajusta según las correlaciones entre variables:
+
+
+$$
+d_{ij}^M =  \sqrt{(X_i - X_j)^T S^{-1}(X_i - X_j)}
+$$
+
+
+donde $S$ es la matriz de covariancias de dimensión $q\times q$
+
+Es invariante frente a transformaciones lineales de las variables.
+
+Toma en cuenta las correlaciones entre variables.
+
+No aumenta por el simple hecho de aumentar el número de variables, sino que aumentará cuando las nuevas variables den nueva información.
+
+**Aplicación basada en el ejemplo anterior**
+
+$$
+\begin{aligned}
+d_{35}^M &= \sqrt{(X_3 - X_5)^\top \mathbf{S}^{-1} (X_3 - X_5)} \\[1em]
+&= \sqrt{
+\begin{pmatrix} 60 - 71 & 1.58 - 1.66 \end{pmatrix}
+\begin{bmatrix} 177.7000 & 0.9320 \\ 0.9320 & 0.00622 \end{bmatrix}^{-1}
+\begin{pmatrix} 60 - 71 \\ 1.58 - 1.66 \end{pmatrix}
+} \\[1em]
+&= \sqrt{
+\begin{pmatrix} -11 & -0.08 \end{pmatrix}
+\begin{bmatrix} 0.0263 & -3.9380 \\ -3.9380 & 750.8345 \end{bmatrix}
+\begin{pmatrix} -11 \\ -0.08 \end{pmatrix}
+} \\[1em]
+&= \sqrt{
+\begin{pmatrix} 0.0259 & -16.7491 \end{pmatrix}
+\begin{pmatrix} -11 \\ -0.08 \end{pmatrix}
+} \\[1em]
+&= \sqrt{(-11)(0.0259) + (-0.08)(-16.7491)} \\[1em]
+&= \sqrt{-0.2849 + 1.3399} \\[1em]
+&= \sqrt{1.0550} \approx \mathbf{1.0269}
+\end{aligned}
+$$
+
+
+```{r}
+X <- as.matrix(datos[, c("Peso", "Estatura")])
+n <- nrow(X)
+S <- cov(X)
+S_inv <- solve(S)
+
+
+# Matriz de distancias de Mahalanobis par a par
+D_M <- matrix(0, nrow = n, ncol = n)
+for (i in 1:n) {
+  for (j in 1:n) {
+    diff <- X[i, ] - X[j, ]
+    D_M[i, j] <- sqrt(t(diff) %*% S_inv %*% diff)
+  }
+}
+rownames(D_M) <- colnames(D_M) <- paste0("id_", 1:5)
+
+print("Matriz de Distancias de Mahalanobis (pares):")
+print(round(D_M, 4))
+```
+
+Verifique la distancia $d_{35}^M$ es 1.0269
+
+## Distancia City-block (Manhattan)
+
+
+En esta medida se usa el valor absoluto de las diferencias en lugar de su cuadrado:
+
+
+$$d_{ij}^{(1)} = \sum_{k=1}^{q} |x_{ik} - x_{jk}|$$
+
+
+El nombre nace de la idea de moverse en una ciudad como Manhattan pues, aunque la distancia más corta sería la Euclidea, ésta implica pasar a través de los edificios, mientras que esta distancia asemeja a caminar por las aceras para llegar de un punto a otro.
+
+
+Es más robusta que la distancia euclídea debido a que no eleva al cuadrado las diferencias.
+
+Tiene la restricción de que asume que las variables no están correlacionadas.
+
+
+**Aplicación basada en el ejemplo anterior**
+
+
+$$\begin{aligned} d(1, 2) &= \vert{}94 - 84\vert{} + \vert{}1.73 - 1.74\vert{} = 10 + 0.01 = \mathbf{10.01} \\ d(1, 3) &= \vert{}94 - 60\vert{} + \vert{}1.73 - 1.58\vert{} = 34 + 0.15 = \mathbf{34.15} \\ d(1, 4) &= \vert{}94 - 85\vert{} + \vert{}1.73 - 1.78\vert{} = 9 + 0.05 = \mathbf{9.05} \\ d(1, 5) &= \vert{}94 - 71\vert{} + \vert{}1.73 - 1.66\vert{} = 23 + 0.07 = \mathbf{23.07} \\ d(2, 3) &= \vert{}84 - 60\vert{} + \vert{}1.74 - 1.58\vert{} = 24 + 0.16 = \mathbf{24.16} \\ d(2, 4) &= \vert{}84 - 85\vert{} + \vert{}1.74 - 1.78\vert{} = 1 + 0.04 = \mathbf{1.04} \\ d(2, 5) &= \vert{}84 - 71\vert{} + \vert{}1.74 - 1.66\vert{} = 13 + 0.08 = \mathbf{13.08} \\ d(3, 4) &= \vert{}60 - 85\vert{} + \vert{}1.58 - 1.78\vert{} = 25 + 0.20 = \mathbf{25.20} \\ d(3, 5) &= \vert{}60 - 71\vert{} + \vert{}1.58 - 1.66\vert{} = 11 + 0.08 = \mathbf{11.08} \\ d(4, 5) &= \vert{}85 - 71\vert{} + \vert{}1.78 - 1.66\vert{} = 14 + 0.12 = \mathbf{14.12} \end{aligned}$$
+
+*Aplicación en r*
+
+
+```{r}
+# Distancia de Manhattan para Peso y Estatura
+D_manhattan_2v <- dist(datos[, c("Peso", "Estatura")], method = "manhattan")
+print(as.matrix(round(D_manhattan_2v, 2)))
+```
+
+
+```{r, warning=FALSE}
+# Distancia de Manhattan completa (3 variables)
+D_manhattan_3v <- dist(datos, method = "manhattan")
+print(as.matrix(round(D_manhattan_3v, 2)))
+```
+
+### Nota importante de las distancias
+
+Puede ser que usando algunos de los métodos, las agrupaciones que se estén realizando, por lo que dependiendo del caso se debe escoger el tipo de distancia que tenga más sentido. De modo que los grupos sean muy parecidos dentro de ellos, pero muy desiguales entre los grupos existentes.
 
