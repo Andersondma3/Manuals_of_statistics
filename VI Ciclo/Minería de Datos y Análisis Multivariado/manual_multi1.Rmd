@@ -1624,7 +1624,7 @@ $$
 Podemos ver que la diferencias entre el peso en kilogramos, tiene mayor importancia al momneto de hacer el cálculo, para solucionar este problema lo idea el estandarizar las variables.
 
 
-```{r}
+```{r, echo=FALSE}
 # Si no tienes ggforce instalado: install.packages("ggforce")
 library(ggplot2)
 library(ggforce)
@@ -1677,7 +1677,7 @@ ggplot(datos, aes(x = Peso, y = Estatura)) +
   scale_y_continuous(breaks = seq(1.55, 1.85, by = 0.05)) +
   
   labs(
-    title = "Agrupamiento de Observaciones por Proximidad Euclidiana",
+    title = "Agrupamiento de Observaciones",
     subtitle = "Identificación visual de conglomerados naturales entre Peso y Estatura",
     x = "Peso (kg)",
     y = "Estatura (metros)"
