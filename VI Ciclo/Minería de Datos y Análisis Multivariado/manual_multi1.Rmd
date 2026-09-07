@@ -43,7 +43,7 @@ No estamos interesados en ajustar pares (entrada, salida), sino en aumentar el c
 
 # Diferencia entre aprendizaje supervisado y no supervisado
 
-El aprendizaje supervisado tiene variable respuesta $Y$, mientras que el aprendizaje supervisado no la tiene. Además es importante resalatr que el no supervisado es más descriptivo. 
+El aprendizaje supervisado tiene variable respuesta $Y$, mientras que el aprendizaje no supervisado, no la tiene. Además es importante resaltar que el no supervisado es más descriptivo. 
 
 
 # Características del aprendizaje no supervisado
@@ -76,7 +76,7 @@ $$X_1,\ldots{},X_k \text{ Altamente Correlacionadas}$$
 Note que este conjunto de variable es de dimensión $k$, esto lo que nos dice en realidad es que estas X's miden un subconjunto menor de conceptos, lo quye nos lleva al siguiente conjunto:
 
 $$Z_1,\dots,Z_q$$
-Donde $ q < k \text{ (No Correlacionadas)}$
+Donde $q < k \text{ (No Correlacionadas)}$
 
 
 Reemplanzado en el modelo original tenemos el siguiente resultado:
@@ -89,7 +89,7 @@ En este modelo la primera parte es no supervisado ya que no utilzamos la variabl
 
 **Ejemplo 2**
 
-1. Se tienen $X_1,\ldots{},X_p $ Grupos
+1. Se tienen $X_1,\ldots{},X_p$ Grupos
 
 2. Formo $k$ grupos 
 
@@ -291,7 +291,7 @@ print("Matriz Estandarizada Z (Z-scores):")
 print(round(Z, 4))
 ```
 
-**Interpretación** El ID_4 en $X_1$ esta 1.16 desviaciones estándar debajo la media (recuerde que la desvación estándar de $X_1$ es 1.29). Para el ID_1 está 0.1 desviaciones estándar sobre la media, es decir está practicamente en la media.
+**Interpretación** El ID_4 en $X_1$ esta 1.16 desviaciones estándar debajo la media (recuerde que la desvación estándar de $X_1$ es 1.29). También en $X_2$ el ID_1 está 0.1 desviaciones estándar sobre la media, es decir está practicamente en la media.
 
 
 *Nota:* El máximo de desviaciones estándar en una normal son 3 que son el 99.7% de los datos. 
