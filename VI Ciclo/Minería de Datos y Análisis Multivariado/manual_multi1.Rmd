@@ -149,7 +149,7 @@ Note que la Altura (cm), N.° de Hojas, Grosor del Tallo (mm), Peso del Racimo (
 Con esas variables correlaciondas puede crear una variable $Z_1$
 
 
-```{r, message=FALSE}
+```{r, message=FALSE, echo=FALSE}
 library(ggplot2)
 library(dplyr)
 # 1. Definir los datos de la tabla (8 observaciones)
@@ -797,7 +797,7 @@ round(cor(base[,-8]), 2)
 
 ### Gráfico de correlación librería corrgram de colores
 
-```{r}
+```{r, message=FALSE}
 library(corrgram) 
 corrgram(base[,-8], lower.panel=panel.pts,order=T)  # order = T nos orderna las correlaciones
 ```
@@ -807,7 +807,7 @@ Los colores azules significam una correlación positiva, mientras que los rojos 
 
 ### Gráfico de correlación librería corrgram de números (correlaciones)
 
-```{r}
+```{r, message=FALSE}
 corrgram(base[,-8], lower.panel=panel.pts, upper.panel=panel.conf, 
          diag.panel=panel.density,order=T) 
 ```
@@ -816,7 +816,7 @@ corrgram(base[,-8], lower.panel=panel.pts, upper.panel=panel.conf,
 
 ### Gráfico del paquete corrplot
 
-```{r}
+```{r, message=FALSE}
 library(corrplot) 
 corrplot(cor(base[,-8]), method = "square", type = "lower") # El parámetro lower ordena el correlograma de mannera decendente 
 ```
@@ -1255,7 +1255,7 @@ biplot(pca1, cex=0.6)
 
 *El gráfico que se le presenta a continuación fue arreglafo para términos de presentación y explicación*
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, message=FALSE}
 library(factoextra)
 library(ggplot2)
 
@@ -1300,7 +1300,7 @@ Un aspecto importante a resaltar de la participante `Brown (USA)`, es que le fue
 
 ## Biplot categórico
 
-```{r, message=F}
+```{r, message=F, warning=FALSE}
 library(AMR) 
 library(dplyr) 
 data=data.frame(c("AM","EU","EU","EU","EU","EU","OC","AM","EU", 
