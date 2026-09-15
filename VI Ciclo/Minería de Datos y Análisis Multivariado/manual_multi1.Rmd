@@ -758,7 +758,7 @@ Con esto llegamos obtener el vector con los valores de la primera variable nueva
 # HEPTATLON
 
 
-```{r}
+```{r,echo=FALSE}
 setwd("~/GitHub/Apuntes-Modelos-lineales-Avanzados/VI Ciclo/Minería de Datos y Análisis Multivariado")
 ```
 
@@ -797,7 +797,7 @@ round(cor(base[,-8]), 2)
 
 ### Gráfico de correlación librería corrgram de colores
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(corrgram) 
 corrgram(base[,-8], lower.panel=panel.pts,order=T)  # order = T nos orderna las correlaciones
 ```
@@ -807,7 +807,7 @@ Los colores azules significam una correlación positiva, mientras que los rojos 
 
 ### Gráfico de correlación librería corrgram de números (correlaciones)
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 corrgram(base[,-8], lower.panel=panel.pts, upper.panel=panel.conf, 
          diag.panel=panel.density,order=T) 
 ```
@@ -818,7 +818,8 @@ corrgram(base[,-8], lower.panel=panel.pts, upper.panel=panel.conf,
 
 ```{r, message=FALSE}
 library(corrplot) 
-corrplot(cor(base[,-8]), method = "square", type = "lower") # El parámetro lower ordena el correlograma de mannera decendente 
+corrplot(cor(base[,-8]), method = "square", type = "lower") 
+# El parámetro lower ordena el correlograma de mannera decendente 
 ```
 
 
@@ -1802,3 +1803,239 @@ print(as.matrix(round(D_manhattan_3v, 2)))
 
 Puede ser que usando algunos de los métodos, las agrupaciones que se estén realizando, por lo que dependiendo del caso se debe escoger el tipo de distancia que tenga más sentido. De modo que los grupos sean muy parecidos dentro de ellos, pero muy desiguales entre los grupos existentes.
 
+
+## Ejemplo de aplicación con temperaturas de diferentes cantones de Costa Rica
+
+```{r}
+load("Temp_Cantones.Rdata")
+```
+
+Observe la estrucutura de la base
+
+```{r}
+head(base)
+```
+
+
+Para solucionar este problema debemos pivotear la base de datos con el siguiente código:
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(tibble)
+base2 = base %>%
+  select(canton, mes, temp_c) %>% 
+  pivot_wider(
+    names_from = mes,
+    values_from = temp_c
+  ) %>%
+  column_to_rownames(var = "canton")
+```
+
+```{r}
+head(base2)
+```
+
+### Cálculo distancia euclidiana
+
+*A continuación se le proporcionar la disntancia euclideana entre dos individuos*
+
+```{r}
+x1=base2[1,]
+x2=base2[2,]
+x12=as.matrix(x1-x2,ncol=1)
+sqrt(x12%*%t(x12))
+```
+
+### ¿Que sucede si transponemos la base?
+
+```{r}
+base3 = t(base2)
+head(base3)
+```
+
+En el cálculo de la distancia lo que cambia es la posición de los datos y el lugar de la matriz transpuesta en la multiplicación de matrices
+
+```{r}
+x1=as.numeric(base3[,1])
+x2=as.numeric(base3[,2])
+x12=as.matrix(x1-x2,ncol=1)
+sqrt(t(x12)%*%x12)
+```
+*A continuación se le presenta una forma automática de calculare todas las ditancias por medio de la función* `dist()`
+
+```{r}
+(d=dist(base2))
+```
+
+
+Observe la clase del objeto `d`
+
+```{r}
+class(d)
+```
+
+### Extración de valores de un objeto dist()
+
+```{r}
+d2= as.matrix(d) # Pasamos el objeto dist a una matriz
+d2sup = d2 
+# Para evitar los ceros en la diagonal extraemos la matriz trangular superior
+d2sup[lower.tri(d2, diag = TRUE)] <- NA # Se extrae la matriz trangular superior y reemplazan los otros valores con NA
+```
+
+
+*Cantones con Mayor distancia*
+
+```{r}
+#Extraemos la posición de la distancia más grande 
+max_pos = which(d2sup == max(d2sup, na.rm = TRUE), arr.ind = TRUE) 
+#Obtenemos los nombres de las variables de forma automática
+cantones_max <- data.frame(
+  Canton_1 = rownames(d2)[max_pos[, 1]],
+  Canton_2 = colnames(d2)[max_pos[, 2]],
+  Distancia = d2[max_pos]
+)
+cantones_max
+```
+
+*Cantones con menor distancia*
+
+```{r}
+min_pos = which(d2sup == min(d2sup, na.rm = TRUE), arr.ind = TRUE)
+cantones_min = data.frame(
+  Canton_1 = rownames(d2)[min_pos[, 1]],
+  Canton_2 = colnames(d2)[min_pos[, 2]],
+  Distancia = d2[min_pos]
+)
+cantones_min
+```
+### Cálculo distancia de Mahalannobis
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
+library(biotools)
+S=var(base2)
+dM=D2.dist(base2,S) 
+# DA ERROR PORQUE S NO SE PUEDE INVERTIR
+```
+
+### Cálculo distancia de Manhattan
+
+```{r}
+dMan=dist(base2,method = "manhattan")
+as.matrix(dMan)[1,2]
+```
+
+## Creación de dendogramas
+
+### K-vecino más cercano 
+
+Para crear un dendograma de este tipo de distncia se debe indicar con `method = "single"`.
+
+```{r}
+cs = hclust(d,method = "single") 
+```
+
+
+```{r}
+plot(cs,xlab="",main="Vecino más cercano con distancia Euclídea",
+     ylab="Distancia",sub="")
+
+```
+
+
+
+```{r, eval=FALSE}
+csM = hclust(dM,method = "single") 
+plot(csM,xlab="",main="Vecino más cercano con distancia de Mahalannobis",
+     ylab="Distancia",sub="")
+
+```
+
+
+```{r}
+csMan = hclust(dMan,method = "single") 
+plot(csMan,xlab="",main="Vecino más cercano con distancia de Manhattan",
+     ylab="Distancia",sub="")
+
+```
+
+
+
+### K-vecino más lejano 
+
+Para crear un dendograma de este tipo de distncia se debe indicar con `method = "complete"`.
+
+
+```{r}
+c.com = hclust(d,method = "complete") 
+plot(c.com, xlab = "", main = "Vecino más lejano con distancia Euclídea",
+     ylab = "Distancia", sub = "")
+```
+```{r, eval=FALSE}
+cM.com = hclust(dM,method = "complete") 
+plot(cM.com,xlab="",main="Vecino más lejano con distancia de Mahalannobis",
+     ylab="Distancia",sub="")
+```
+
+
+```{r}
+cMan.com = hclust(dMan,method = "complete") 
+plot(cMan.com,xlab="",main="Vecino más lejano con distancia de Manhattan",
+     ylab="Distancia",sub="")
+
+```
+
+### Salto promedio 
+
+
+```{r}
+c.av = hclust(d,method = "average") 
+plot(c.av,xlab="",main="Salto promedio con distancia Euclidea",
+     ylab="Distancia",sub="")
+
+```
+
+
+```{r, eval=FALSE}
+cM.av = hclust(dM,method = "average") 
+plot(cM.av,xlab="",main="Salto promedio con distancia de Mahalannobis",
+     ylab="Distancia",sub="")
+
+```
+
+
+```{r}
+cMan.av = hclust(dMan,method = "average") 
+plot(cMan.av,xlab="",main="Salto promedio con distancia de Manhattan",
+     ylab="Distancia",sub="")
+
+```
+
+
+### Distancia de Ward
+
+
+```{r}
+c.w = hclust(d,method = "ward.D") 
+plot(c.w,xlab="",main="Distancia de Ward con distancia Euclidea",
+     ylab="Distancia",sub="")
+
+```
+
+
+```{r, eval=FALSE}
+cM.w = hclust(dM,method = "ward.D") 
+plot(cM.w,xlab="",main="Distancia de Ward con distancia de Mahalannobis",
+     ylab="Distancia",sub="")
+
+```
+
+
+```{r}
+cMan.w = hclust(dMan,method = "ward.D") 
+plot(cMan.w,xlab="",main="Distancia de Ward con distancia de Manhattan",
+     ylab="Distancia",sub="")
+
+```
