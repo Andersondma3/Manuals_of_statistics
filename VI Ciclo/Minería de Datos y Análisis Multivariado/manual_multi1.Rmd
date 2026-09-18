@@ -1804,7 +1804,7 @@ print(as.matrix(round(D_manhattan_3v, 2)))
 Puede ser que usando algunos de los métodos, las agrupaciones que se estén realizando, por lo que dependiendo del caso se debe escoger el tipo de distancia que tenga más sentido. De modo que los grupos sean muy parecidos dentro de ellos, pero muy desiguales entre los grupos existentes.
 
 
-## Ejemplo de aplicación con temperaturas de diferentes cantones de Costa Rica
+# Ejemplo de aplicación con temperaturas de diferentes cantones de Costa Rica
 
 ```{r}
 load("Temp_Cantones.Rdata")
@@ -2039,3 +2039,327 @@ plot(cMan.w,xlab="",main="Distancia de Ward con distancia de Manhattan",
      ylab="Distancia",sub="")
 
 ```
+
+
+## ¿Los dos cantones más correlacionados son los cantones que menor distancia tienen?
+
+*A continuación se le presenta un gráfico con las temperaturas de todos los meses por cantón*
+
+```{r, echo=FALSE}
+# 1. Reestructuración de formato ancho a formato largo
+datos_largos <- base2 %>%
+  as.data.frame() %>%
+  rownames_to_column(var = "canton") %>%
+  pivot_longer(
+    cols = JAN:DEC,
+    names_to = "mes",
+    values_to = "temp_c"
+  ) %>%
+  mutate(
+    # Fijar el orden cronológico estricto del eje X
+    mes = factor(mes, levels = c("JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                                 "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"))
+  )
+```
+
+
+```{r}
+ #datos largos son los datos pivioteados
+ggplot(datos_largos, aes(x = mes, y = temp_c, group = canton, color = canton)) +
+  geom_line(linewidth = 0.9, alpha = 0.85) +
+  geom_point(size = 2) +
+  labs(
+    title = "Ciclo anual de temperatura por cantón (2025)",
+    x = "Mes",
+    y = "Temperatura (°C)",
+    color = "Cantón"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position = "right"
+  )
+```
+
+Recordermos que la menor distancia entre cantones se encontraba entre:
+
+```{r}
+cantones_min #Buscar en las páginas de arriba como se obtuvo este resultado 
+```
+
+
+*A continuación se le presenta un gráfico de la matriz de correlaciones*
+
+
+```{r,warning=FALSE}
+corrgram(base3, lower.panel=panel.pts, upper.panel=panel.conf, 
+         diag.panel=panel.density,order=T) 
+```
+
+Basado en el gráfico anterior y con la función `cor()` obtenemos la mayor correlación entre cantones.
+
+```{r}
+R = cor(base3)
+Rsup = R
+Rsup[lower.tri(R, diag = TRUE)] <- NA # Se extrae la matriz trangular superior y reemplazan los otros valores con NA
+max_r = which(Rsup == max(Rsup, na.rm = TRUE), arr.ind = TRUE)
+```
+
+
+```{r}
+#Obtenemos los nombres de las variables de forma automática
+cantones_maxr <- data.frame(
+  Canton_1 = rownames(R)[max_r[, 1]],
+  Canton_2 = colnames(R)[max_r[, 2]],
+  Correlación = R[max_r]
+)
+```
+
+Basado en el proceso anterior tenemos los siguientes `dataframe()`
+
+
+```{r}
+cantones_min # el código se encuentra más arriba
+```
+
+```{r}
+cantones_maxr
+```
+Obtenemos los nombres para poder graficarlos en un solo gráfico
+
+```{r}
+d1 = cantones_min[1,1] #Nicoya
+d2 = cantones_min[1,2] #Santa Cruz
+r1 = cantones_maxr[1,1] #Cartago
+r2 = cantones_maxr[1,2] #Talamanca
+```
+
+
+```{r}
+
+# Unir cantones a graficar (sin duplicados)
+cantones_a_graficar <- unique(c(d1,d2,r1,r2))
+
+# Filtrar y pivotar a formato largo
+datos_lineas <- base2 %>%
+  as.data.frame() %>%
+  rownames_to_column(var = "canton") %>%
+  filter(canton %in% cantones_a_graficar) %>%
+  pivot_longer(
+    cols = JAN:DEC,
+    names_to = "mes",
+    values_to = "temp_c"
+  ) %>%
+  mutate(
+    mes = factor(mes, levels = c("JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                                 "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"))
+  )
+
+# Gráfico lineal comparativo
+ggplot(datos_lineas, aes(x = mes, y = temp_c, group = canton, color = canton)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 2.5) +
+  scale_color_brewer(palette = "Set1") +
+  labs(
+  title = "Gráfico comparativo de los cantones más correlacionados y \ncon menor distancia",
+    x = "Mes",
+    y = "Temperatura (°C)",
+    color = "Cantón"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+Se puede ver en el anterior gráfico que los cantones de Cartago y Talamanca, tienen el mismo comportamiento, pero no son tan cercanos. Por otro lado, los cantones Santa Cruz y Nicoya son muy cercanos, pero su comportamiento si es más distinto, estos dos tipos de disntancia nos sirven dependiendo del tipo de pregunta que buscamos resolver.
+
+
+A partir de una matriz de correlaciones $R$, se puede obtener una matriz de distancias de la siguiente forma:
+
+$$D = 1-R$$
+
+*A continuación se le presenta la forma de hacerlo en R*
+
+```{r}
+D = 1-R
+dr = as.dist(D)
+```
+
+
+Hacemos un dendograma y lo comparamos con el que se obtiene con la distancia euclidea. Es importante resaltar que el mejor tipo de distancia es la distancia de `Ward`, por esa razón es que los siguientes gráficos van con esta distancia. *Los demás tipos de distancia se encuentran en la anterior sección*
+
+```{r}
+c.w = hclust(d,method = "ward.D") 
+plot(c.w,xlab="",main="Distancia de Ward con distancia Euclidea",
+     ylab="Distancia",sub="")
+```
+
+
+```{r}
+c.w = hclust(dr,method = "ward.D") 
+plot(c.w,xlab="",main="Distancia de Ward con distancia de correlación",
+     ylab="Distancia",sub="")
+```
+
+
+```{r}
+grupos <- cutree(cMan.w, k = 2)
+# Ver la asignación de cantones por grupo en consola
+print(split(names(grupos), grupos))
+```
+
+
+
+```{r}
+# 2. Preparar el data frame calculando la temperatura media anual por cantón
+datos_cajas <- as.data.frame(base2) %>%
+  rownames_to_column(var = "canton") %>%
+  mutate(
+    Grupo = factor(paste("Grupo", grupos[canton])),
+    temp_media = rowMeans(across(JAN:DEC))
+  )
+
+# 3. Boxplot con exactamente dos cajas
+ggplot(datos_cajas, aes(x = Grupo, y = temp_media, fill = Grupo)) +
+  geom_boxplot(
+    width = 0.45, 
+    alpha = 0.7, 
+    outlier.shape = NA,
+    show.legend = FALSE
+  ) +
+  # Puntos observados (cantones) con dispersión horizontal leve
+  geom_jitter(
+    width = 0.08, 
+    size = 3.2, 
+    aes(color = Grupo), 
+    show.legend = FALSE
+  ) +
+  # Etiquetas con el nombre del cantón
+  geom_text(
+    aes(label = canton), 
+    hjust = -0.15, 
+    vjust = 0.5, 
+    size = 3.3, 
+    fontface = "bold"
+  ) +
+  scale_fill_manual(values = c("Grupo 1" = "skyblue", "Grupo 2" = "#e74c3c")) +
+  scale_color_manual(values = c("Grupo 1" = "#1b4f72", "Grupo 2" = "#922b21")) +
+  labs(
+    title = "Comparación térmica entre conglomerados",
+    subtitle = "Agrupamiento jerárquico (Ward + Manhattan, Con dos grupos)",
+    x = "Conglomerado",
+    y = "Temperatura media anual (°C)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "gray30", margin = margin(b = 10)),
+    panel.grid.minor = element_blank()
+  )
+```
+
+
+## ¿Que ocurre cuando tenemos variables categóricas?
+
+Luego de ver el laboratorio colocar la función `daisy()`, que saca la distancias entre categóricas y numéricas (EXPLICAR)
+
+Cuando se tienen tanto variables métricas como variables nominales y/o ordinales se recomienda usar la distancia de Gower:
+
+
+$$d_{ij}^G=\frac{1}{q} \left [ \sum_{h=1}^{p_1} \frac{|x_{ih}-x_{jh}|}{R_h}+\beta_{ij}\right ]$$
+
+
+donde:
+
+
++ $R_h:$ RAngo de la h-ésima variable cuantitativa
+
++ $\beta_{ij}:$ número de variables cualitativas que no son idénticas
+
++ $q:$ número total de variables
+
+
+### Ejemplo de las universidades
+
+Se cuenta con información de un gran número de universidades de los E.U.A de la edición de 1995 del US News and World Report. 
+
+Variables de tipo continuo:
+
+
++ Tasa de aceptación (número aceptados / número aplicaciones)
+
++ Costo de la matrícula para estudiantes de otros estados
+
++ Número de nuevos estudiantes
+
++ Tasa de graduación
+
+Variables de tipo categórico (binarias):
+
++ Tipo de universidad (pública o privada)
+
++ Elite: si más del 50% de los estudiantes provienen de colegios del top-10%.
+
+*A continuación se le presenta el formato de la base de datos del ejemplo*
+
+| Universidad / Institución | tasa.acept | costo | nuevos | tasa.grad | privado | elite |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| Abilene Christian University | 0.74 | 7440 | 721 | 60 | Yes | No |
+| Adelphi University | 0.88 | 12280 | 512 | 56 | Yes | No |
+| Adrian College | 0.77 | 11250 | 336 | 54 | Yes | No |
+| Agnes Scott College | 0.84 | 12960 | 137 | 59 | Yes | Yes |
+| Alaska Pacific University | 0.76 | 7560 | 55 | 15 | Yes | No |
+| Albertson College | 0.82 | 13500 | 158 | 55 | Yes | No |
+
+
+Para el cálculo de la distancia de Gower se necesitan los rangos de las variables continuas: 
+
+*A continuación se le presenta los rangos de cada una de las varibles del ejemplo*
+
+*Nota:* Recuerde que el rango es la diferencia entre el valor máximo y el valor mínimo 
+
+| tasa.acept | costo | nuevos | tasa.grad |
+| :---: | :---: | :---: | :---: |
+| 0.846 | 19360 | 6357 | 108 |
+
+
+*Rangos en cada uno de las universidades*
+
+| Universidad / Institución | tasa.acept | costo | nuevos | tasa.grad |
+| :--- | :---: | :---: | :---: | :---: |
+| Abilene Christian University | 0.74 | 7440 | 721 | 60 |
+| Adelphi University | 0.88 | 12280 | 512 | 56 |
+
+
+*Aplicamos la fórmula para la distancia de Gower*
+
+$$
+\begin{aligned}
+\sum_{h=1}^{4} \frac{|x_{1h} - x_{2h}|}{R_h} &= \frac{0.74-0.88}{0.846} + \frac{7440-12280}{19360} + \frac{721-512}{6357} + \frac{60-56}{108} \\[0.8em]
+&=\frac{0.14}{0.846} + \frac{4840}{19360} + \frac{209}{6357} + \frac{4}{108}\\[0.8em]
+&\approx 0.1655 + 0.2500 + 0.0329 + 0.0370 \\[0.8em]
+&= 0.4854 \quad (\approx 0.483)
+\end{aligned}
+$$
+
+Observe que en este caso lad que aporta más son la tasas de acptación y el costo debido a que tienen un aporte de 0.16 y 0.25 respectivamente.
+
+
+*Se tiene la siguiente información de las dos universidad*
+
+| Universidad / Institución | privado | elite |
+| :--- | :---: | :---: |
+| Abilene Christian University | Yes | No |
+| Adelphi University | Yes | No |
+
+
+En este caso como ambas variables cualitativas son cero entonces $\beta_{12}=0$
+
+
+$$
+\boxed{d_{12}^G = \frac{1}{q} \left[ \sum_{h=1}^{4} \frac{|x_{1h} - x_{2h}|}{R_h} + \beta_{12} \right] = \frac{1}{6}[0.483 + 0] = 0.0805}
+$$
+
+Luego de obtener este resultado lo tenemos que visualizar en un dendograma
