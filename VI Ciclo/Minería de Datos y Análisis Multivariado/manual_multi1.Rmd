@@ -269,13 +269,7 @@ X <- matrix(
     4, 3, 3, 2,
     2, 7, 4, 0
   ),
-  nrow = 4,
-  byrow = TRUE,
-  dimnames = list(paste0("ID_", 1:4), paste0("X", 1:4))
-)
-
-
-
+nrow = 4,byrow = TRUE,dimnames = list(paste0("ID_", 1:4), paste0("X", 1:4)))
 # 2. Visualizar resultados
 print("Matriz Original X:")
 print(X)
@@ -346,11 +340,11 @@ Caso inusual
 $$Z_4 = 0.5X_1-0.5X_2+0.01x_3+0.01X_4$$
 
 
-+ Si $X_1 = X_2 = 0 $ significa que está muy parecido
++ Si $X_1 = X_2 = 0$ significa que está muy parecido
 
 PREGUNTAR
 
-+ Si $X_1  > X_2 $
++ Si $X_1  > X_2$
 
 + Si $X_1  < X_2$
 
@@ -831,7 +825,7 @@ $$H=X(X^TX)^{-1}X^T$$
 
 *A continuación se le presenta el código en r, para los leverage*
 
-```{r}
+```{r,fig.width=5, fig.height=3.5, out.width="60%"}
 lev=hat(base[,-8]) 
 plot(lev) 
 lim=2*mean(lev) 
@@ -1625,73 +1619,6 @@ $$
 Podemos ver que la diferencias entre el peso en kilogramos, tiene mayor importancia al momneto de hacer el cálculo, para solucionar este problema lo idea el estandarizar las variables.
 
 
-```{r, echo=FALSE}
-# Si no tienes ggforce instalado: install.packages("ggforce")
-library(ggplot2)
-library(ggforce)
-
-# 1. Definición del conjunto de datos con asignación de conglomerados/grupos
-datos <- data.frame(
-  id = factor(1:5),
-  Peso = c(94, 84, 60, 85, 71),
-  Estatura = c(1.73, 1.74, 1.58, 1.78, 1.66),
-  Grupo = factor(c("Grupo A (Pesados / Altos)", 
-                   "Grupo A (Pesados / Altos)", 
-                   "Grupo C (Bajo)", 
-                   "Grupo A (Pesados / Altos)", 
-                   "Grupo B (Medio)"))
-)
-
-# 2. Construcción del gráfico con elipses/círculos envolventes
-ggplot(datos, aes(x = Peso, y = Estatura)) +
-  # Encerrar los grupos con elipses suaves y sombreado
-  geom_mark_ellipse(
-    aes(group = Grupo, fill = Grupo, color = Grupo, label = Grupo),
-    expand = unit(5, "mm"),
-    alpha = 0.12,
-    linewidth = 0.9,
-    linetype = "dashed",
-    show.legend = FALSE,
-    label.fontsize = 9.5,
-    label.fontface = "bold"
-  ) +
-  
-
-  
-  # Puntos observados
-  geom_point(aes(color = Grupo), size = 4.5) +
-  
-  # Paleta de colores para los grupos
-  scale_color_manual(values = c("Grupo A (Pesados / Altos)" = "#2980b9",
-                                "Grupo B (Medio)" = "#27ae60",
-                                "Grupo C (Bajo)" = "#e67e22")) +
-  scale_fill_manual(values = c("Grupo A (Pesados / Altos)" = "#3498db",
-                               "Grupo B (Medio)" = "#2ecc71",
-                               "Grupo C (Bajo)" = "#f39c12")) +
-  
-  # Límites centrados en los datos
-  coord_cartesian(
-    xlim = c(min(datos$Peso) - 5, max(datos$Peso) + 6),
-    ylim = c(min(datos$Estatura) - 0.03, max(datos$Estatura) + 0.05)
-  ) +
-  scale_x_continuous(breaks = seq(55, 100, by = 5)) +
-  scale_y_continuous(breaks = seq(1.55, 1.85, by = 0.05)) +
-  
-  labs(
-    title = "Agrupamiento de Observaciones",
-    subtitle = "Identificación visual de conglomerados naturales entre Peso y Estatura",
-    x = "Peso (kg)",
-    y = "Estatura (metros)"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    plot.title = element_text(face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(hjust = 0.5, color = "gray30", margin = margin(b = 10)),
-    panel.grid.minor = element_blank()
-  )
-```
-
-
 ## Distancia de Mahalanobis 
 
 Esta medida de distancia incluye un procedimiento de estandarización dentro de la distancia Euclídea.
@@ -1739,10 +1666,10 @@ $$
 
 
 ```{r}
-X <- as.matrix(datos[, c("Peso", "Estatura")])
-n <- nrow(X)
-S <- cov(X)
-S_inv <- solve(S)
+X = as.matrix(datos[, c("Peso", "Estatura")])
+n = nrow(X)
+S = cov(X)
+S_inv = solve(S)
 
 
 # Matriz de distancias de Mahalanobis par a par
