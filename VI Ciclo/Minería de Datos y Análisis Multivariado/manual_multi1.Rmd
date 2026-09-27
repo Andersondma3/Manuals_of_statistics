@@ -2920,8 +2920,6 @@ clust.ward = cutree(c.w, k=3)
 **Con difereres análisis**
 
 
-
-
 ```{r}
 clust.km=km$cluster
 clust.kmedoid=kmedoids$cluster
@@ -2938,3 +2936,208 @@ table(clust.km,clust.kmedoid)
 ```
 
 *Nota: Recordar hacer el boxplot o algún gráfico que me ayuda a observar las diferencias entre grupos y ver que claramente estos grupos tienen sentido. Ya que lo que se quiere observar es que los grupos sean lo mas diferentes posibles, pero dentro de estos no sean muy variables*
+
+```{r,echo=FALSE}
+S = var(base1)
+library(biotools)
+dM=D2.dist(base1,S)
+
+```
+
+
+
+```{r,eval= F}
+library(dendextend)
+corden=cor.dendlist(dendlist("cs"=as.dendrogram(cs),"csM"=as.dendrogram(csM),"csMan"=as.dendrogram(csMan),"c.com" =as.dendrogram(c.com),"cM.com"=as.dendrogram(cM.com),"cMan.com"=as.dendrogram(cMan.com),"c.av"=as.dendrogram(c.av),"cM.av"=as.dendrogram(cM.av),"cMan.av"=as.dendrogram(cMan.av),"c.w"=as.dendrogram(c.w),"cM.w"=as.dendrogram(cM.w),"cMan.w"=as.dendrogram(cMan.w)))
+round(corden,1)
+
+```
+### Comparación de grupos con variables continuas
+
+
+```{r}
+par_orig = par(no.readonly = TRUE)
+par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
+
+p = ncol(base1)
+nombres = colnames(base1)
+
+# 2. Bucle de boxplots
+for(i in 1:p){
+  boxplot(base1[, i] ~ clust.km,
+          xlab = "Grupo",
+          ylab = nombres[i],
+          main = nombres[i])
+}
+par(par_orig)
+```
+La idea de hacer estos boxplots es observar diferencias entre grupos y dentro de los mismos poca variabilidad
+
+### Comparación de grupos con variables categóricas
+
+A continuación se tienen los siguentes datos
+
+```{r, echo=FALSE}
+# 1. Simulación de datos reproducibles
+set.seed(123)
+
+n <- 150
+# Asignamos proporciones diferenciadas para notar la asociación entre clusters y facultades
+facultades <- c("Ingeniería", "Económicas", "Ciencias Sociales")
+grupos     <- c("Cluster 1", "Cluster 2", "Cluster 3")
+
+cluster_vec <- sample(grupos, size = n, replace = TRUE, prob = c(0.4, 0.35, 0.25))
+
+facultad_vec <- sapply(cluster_vec, function(cl) {
+  if (cl == "Cluster 1") {
+    sample(facultades, size = 1, prob = c(0.70, 0.20, 0.10))
+  } else if (cl == "Cluster 2") {
+    sample(facultades, size = 1, prob = c(0.15, 0.65, 0.20))
+  } else {
+    sample(facultades, size = 1, prob = c(0.10, 0.30, 0.60))
+  }
+})
+
+datos_cat <- data.frame(
+  Cluster  = factor(cluster_vec, levels = grupos),
+  Facultad = factor(facultad_vec, levels = facultades)
+)
+
+# 2. Tabla de contingencia bidimensional
+tabla_contingencia <- table(Cluster = datos_cat$Cluster, Facultad = datos_cat$Facultad)
+print(tabla_contingencia)
+```
+
+
+```{r}
+#par(mar = c(4, 4, 3, 2))
+mosaicplot(
+  tabla_contingencia,
+  shade = TRUE,
+  main  = "Distribución de Facultades por Conglomerado",
+  xlab  = "Conglomerado (Cluster)",
+  ylab  = "Facultad",
+  las   = 1,
+  cex.axis = 0.85
+)
+```
+### K-medias con PCA, para graficar
+
+
+
+La cantidad de grupos la personalizamos dentro del cálculo de `kmeans` que se le da a la función.
+
+
+```{r}
+fviz_cluster(kmeans(base1,centers=4), base1, show.clust.cent = TRUE,
+             ellipse.type = "euclid", repel = TRUE) +
+  labs(title = "Resultados K-medias") +
+  theme_bw() + theme(legend.position = "none")
+
+```
+
+
+La idea es que todos los puntos se encuentren dentro de los elipses.
+
+### Combinación de dendograma con gráfico de clúster
+
+
+```{r}
+c.w2 = eclust(base1, k=3,"hclust", hc_metric = "euclidean",hc_method = "ward.D",nboot = 2)
+```
+
+
+```{r}
+fviz_cluster(c.w2, base1,show.clust.cent = TRUE,
+             ellipse.type = "euclid", repel = TRUE) +
+  labs(title = "Resultados Distancia de Ward") +
+  theme_bw() +
+  theme(legend.position = "none")
+
+```
+## Métodos difusos
+
+ La función `fanny` (fuzzy analysis) de la librería `cluster` permite aplicar el algoritmo c-means clustering (FCM). El parámetro `diss=T` se usa cuando se trabaja a partir de una matriz de distancias, de lo contrario se usa `diss=F` cuando se trabaja con los datos originales.  Se debe indicar en `metric` la distancia entre individuos, en `k` el número de grupos y en `stand` si se quiere estandarizar los datos.  
+ 
+*A continuación se le presenta este método con la distancia euclideana para 3 grupos*
+
+```{r, warning=FALSE}
+fcm=fanny(base1,k=3,diss=F,metric="euclidean",stand = F)
+# Si se quiere usar una matriz de distancias específicas se tiene que colocar diss = T
+```
+
+
+```{r}
+head(fcm$membership,5)
+```
+
+
+La idea es que las probabilidades sean lo mas distintas entre sí, de modo que haya una muy grande y las demás muy pequeñas. En la tabla anterior no sucede lo que se quiere con este análisis. Cuándo muchos puntos tienen las probabilidades muy similares, como sucedió en el caso anterior se dice que es una base de datos difusa.
+
+
+Si se usa la distancia de Manhattan en ocasiones el algoritmo de este método no converge por lo que se tiene que usar la siguiente función:
+
+```{r}
+fcm=fanny(base1,k=3,diss=F,metric="manhattan",stand = F,maxit = 10000)
+```
+
+
+```{r}
+head(fcm$membership,5)
+```
+
+En este caso la situación mejoró ya que se eliminaron un poco los empates.
+
+### Código para sacar la distancia entre la mayor y menor probabilidad de cada observación
+
+
+```{r}
+U = fcm$membership
+n = nrow(U)
+dif_top2 = c()
+
+for (i in 1:n) {
+  fila = U[i, ]
+  top2 = sort(fila, decreasing = TRUE)[1:2]
+  dif_top2[i] = top2[1] - top2[2]
+}
+idx_menor = which(dif_top2 < 0.03)   
+idx_mayor = which(dif_top2 >= 0.03)  # Casos bien definidos
+
+# Conteos
+table(dif_top2 > 0.03) # Condición de cuales tienen una diferencia mayor al umbral
+```
+
+
+### ¿Que tán difusos están los datos?
+
+Note que hay individuos que tienen probabilidades de pertenencia muy similares en varios grupos. Esto es una indicación de que hay mucho puntos frontera (difusos).  Para medir el nivel de difusión, existe el índice de Dunn, los valores normalizados próximos a 0 indican que la estructura tiene un alto nivel difuso y valores próximos a 1 lo contrario.  Para obtener esto use `fcm$coef`.
+
+```{r}
+fcm$coeff
+```
+
+## Obtención del número de grupos óptimo mediante el método de la silueta promedio
+
+Para cada observación $i$ se calcula el coeficiente silueta de la siguiente forma:  
+
++ Calcular el promedio de las distancias entre la observación $i$ y el resto de observaciones que pertenecen al mismo cluster. Este valor se llama $a_i$. Cuanto menor sea $a_i$, mejor ha sido la asignación de $i$ a su cluster.  
+
++ Calcular la distancia promedio entre la observación $i$ y el resto de clusters. Entendiendo por distancia promedio entre $i$ y un determinado clúster $C$ como la media de las distancias entre $i$ y las observaciones del clúster $C$. 
+
++ Llame $b_i$ a la menor de las distancias promedio entre $i$ y el resto de los clústers, es decir, la distancia al cluster más próximo.   
+
+```{r, echo=FALSE}
+d = dist(base1)
+```
+
+
+$$
+s_i = \frac{b_i - a_i}{\max(a_i, b_i)}
+$$
+
+*A continuación se le presenta el código en r de este proceso*
+
+```{r}
+fviz_nbclust(base1, kmeans, method = "silhouette", diss = d)
+```
