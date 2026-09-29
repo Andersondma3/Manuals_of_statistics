@@ -3129,6 +3129,7 @@ Para cada observación $i$ se calcula el coeficiente silueta de la siguiente for
 
 ```{r, echo=FALSE}
 d = dist(base1)
+c.com = hclust(d,method = "complete") 
 ```
 
 
@@ -3144,6 +3145,12 @@ fviz_nbclust(base1, kmeans, method = "silhouette", diss = d)
 
 
 ### Cluster Jerárquico con Silueta
+
+```{r}
+length(cutree(c.com, 2))  # Observaciones en el árbol c.com
+nrow(base1)               # Observaciones en base1
+
+```
 
 
 ```{r}
@@ -3186,13 +3193,13 @@ Calcular el estadístico gap para cada valor de k:
 
 
 $$
-\begin{align*}
+\begin{aligned}
 gap(k) &= \frac{1}{B} \sum_{b=1}^{B} \log(W_{kb}) - \log(W_k) \\
        &= \frac{1}{B} \sum_{b=1}^{B} \log\left( \frac{W_{kb}}{W_k} \right)
-\end{align*}
+\end{aligned}
 $$
 
-*Nota*: Si $\frac{W_{kb}}{W_k} \to 1 $, el resultado tiende a cero.
+*Nota*: Si $\frac{W_{kb}}{W_k} \to 1$, el resultado tiende a cero.
 
 *A continuación se le presenta el código en r para realizar el cálculo de este estadístico*
 
