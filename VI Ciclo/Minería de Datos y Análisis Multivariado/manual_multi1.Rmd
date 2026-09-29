@@ -3141,3 +3141,151 @@ $$
 ```{r}
 fviz_nbclust(base1, kmeans, method = "silhouette", diss = d)
 ```
+
+
+### Cluster Jerárquico con Silueta
+
+
+```{r}
+sil.k=c()
+n.clust=2:15
+for(i in 1:length(n.clust)){
+  s=silhouette(cutree(c.com,n.clust[i]),get_dist(x = base1, method = "euclidean"))
+  sil.k[i]=summary(s)[[4]]
+}
+
+data.frame(clusters = 2:15, silueta = sil.k) %>%
+  ggplot(aes(x = clusters, y = silueta)) +
+    geom_line() +
+    geom_point() +
+    scale_x_continuous(breaks = 2:15) +
+    theme_bw()
+
+```
+
+
+## Estadístico GAP
+
+
+
+Este estadístico compara, para diferentes valores de *k*, la varianza total *intra-cluster* observada frente al valor esperado acorde a una distribución uniforme de referencia. 
+
+
+La estimación del número óptimo de clusters es el valor *k* con el que se consigue maximizar el estadístico gap, es decir, encuentra el valor de *k* con el que se consigue una estructura de clusters lo más alejada posible de una distribución uniforme aleatoria. 
+
+Este método puede aplicarse a cualquier tipo de *clustering.*
+
+
+### Construcción del estadístico WAP
+
+Hacer clustering de los datos para un rango de valores de k y para cada uno calcular la variancia total intracluster ($W_k$). Es decir que tan separados están los clusters.
+
+Simular B conjuntos de datos de referencia, todos con una distribución uniforme. Aplicar clustering a cada uno de los conjuntos con el mismo rango de valores k empleado en los datos originales, calculando en cada caso la varianza total intra-cluster ($W_{kb}$). Se recomienda $B=500$.
+
+Calcular el estadístico gap para cada valor de k:
+
+
+$$
+\begin{align*}
+gap(k) &= \frac{1}{B} \sum_{b=1}^{B} \log(W_{kb}) - \log(W_k) \\
+       &= \frac{1}{B} \sum_{b=1}^{B} \log\left( \frac{W_{kb}}{W_k} \right)
+\end{align*}
+$$
+
+*Nota*: Si $\frac{W_{kb}}{W_k} \to 1 $, el resultado tiende a cero.
+
+*A continuación se le presenta el código en r para realizar el cálculo de este estadístico*
+
+
+```{r, message=FALSE}
+fviz_nbclust(base1, kmeans, method = "gap", diss = d)
+```
+
+
+
+## Validación
+
+
+El uso combinado de las funciones `eclust` y `fviz_silhouette` de la librería `factoextra` permiten obtener los coeficientes de silueta de forma sencilla. La función `eclust`, gracias a su argumento `FUNcluster`, facilita el uso de múltiples algoritmos de clustering mediante una misma función 
+(internamente llama a las funciones kmeans, hclust, pam, clara, etc).  Use las siguientes instrucciones:
+
+
+```{r}
+km1 = eclust(base1, FUNcluster = "kmeans", k = 3, hc_metric = "euclidean", nstart = 50, graph = F)
+fviz_silhouette(sil.obj = km1, print.summary = TRUE) 
+
+```
+
+
+
+
+La idea con este gráfico es que todos los valores siempre se vean positivos, en este caso el cluster tres podemos ver que tienen algunos puntos con una muy baja silueta, esto nos indica que algunos puntos están como en la frontera, para solucionar ese problema usamos los métodos difusos que vimos anteriormente y que se encuentran en páginas anteriores.
+
+
+## Indice Dunn
+
+
+### Índice Dunn
+
+Para cada clúster, se calcula la distancia intracluster como el máximo de las distancias entre todos los individuos de ese clúster.
+
+$$
+\Delta_i = \max_{x, y \in C_i} (x, y)
+$$
+
+También puede usar como distancia intraclusters la distancia media entre todos los pares del clúster, o la distancia media de todos los puntos a su centroide.
+
+Para cada par de clústers, se calcula una medida de distancia entre clústers ($D_{ij}$).
+
+El índice Dunn se calcula como:
+
+$$
+D = \frac{\min_{i \ne j} D_{ij}}{\max_{k} \Delta_k}
+$$
+
+
+Si la estructura contiene *clusters* compactos y bien separados, el numerador es grande y el denominador pequeño, dando lugar a valores altos de D.
+
+El objetivo es maximizar el índice *Dunn*.
+
+Esta forma de evaluar la calidad del *clustering* tiene un inconveniente. Si todos los *clusters* tienen un comportamiento ideal excepto uno, cuya calidad es baja, dado que el denominador emplea el máximo en lugar de la media, el índice estará totalmente influenciado por este *clúster* enmascarando al resto. Es importante tener en cuenta que se trata de un indicador de tipo "el peor de los casos".
+
+
+*A continuación se le presenta el código en r para obtener el indice*
+
+
+```{r, warning=F}
+#install.packages("fpc")
+library(fpc)
+km_indices = cluster.stats(d,clust.km)
+km_indices$dunn
+
+```
+
+*Nota:* Lo que se quiere siempre es buscar un índice de Dunn lo más bajo posible.
+
+## Mapas de calor (heatmaps)
+
+
+Los mapas de calor son el resultado obtenido al representar una matriz de valores en la que, en lugar de números, se muestra un gradiente de color proporcional al valor de cada variable en cada posición.
+
+La combinación de un dendrograma con un heatmap permite ordenar por semejanza las filas y/o columnas de la matriz, a la vez que se muestra con un código de colores el valor de las variables.
+
+Se consigue así representar más información que con un simple dendrograma y se facilita la identificación visual de posibles patrones característicos de cada cluster.
+
+
+```{r}
+heatmap(base1, scale = "none",
+        distfun = function(x){dist(x, method = "euclidean")},
+        hclustfun = function(x){hclust(x, method = "ward.D")},
+        cexRow = 0.7)
+
+```
+
+
+Observe que en el anterior gráfico se puede ver que el dendograma del eje vertical divide dos grupos, por esta razón es que la parte de abajo es más claro que las partes de arriba. Lo mismo ocurre con el dendograma de la parte superior en donde igualmente se divide en dos grupos y por ello la parte de la izquierda del mapa de calor es más claro que las parte que siguen a la derecha.
+
+*Nota:* Este gráfico está hecho para dendograma si el análisis que está ganando es el de k-medias o el de k-mediodes, esta figura no aplica.
+
+
+
