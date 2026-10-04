@@ -14,3 +14,342 @@ output:
     toc_depth: '3'
 ---
 
+# Escalamiento multidimensional (MDS)
+
+Se trata de agrupar los individuos según las distancias de sus observaciones en las distintas variables (entre más cerca se encuentren dos individuos más parecidos son).
+
+En la construcción de las nuevas coordenadas basadas en la distancia no existe una variable respuesta. Todas las variables funcionan al mismo nivel y se construyen nuevas variables a partir de ese conjunto de variables disponibles.
+
+
+## Escalamiento multidimensional métrico (MMDS)
+
+El escalamiento multidimensional métrico es también conocido como escalamiento multidimensional clásico (CMDS) o análisis de coordenadas principales (PCoA).
+
+El escalamiento multidimensional clásico se puede hacer con cualquier distancia que el investigador considere pertinente: euclídea, manhattan, mahalanobis, etc. 
+
+
+### Datos Curiosos de MMDS
+
+
+Si se realiza el MMDS con la distancia euclídea se obtiene el mismo resultado que realizar un análisis de componentes principales.
+
+Por ende, agrupar minimizando las distancias lineales entre individuos (MMDS) es lo mismo que agrupar maximizando las correlaciones lineales entre esos mismos individuos (PCA). 
+
+
+```{r echo=FALSE, fig.width=8, fig.height=4.5, fig.align='center', warning=FALSE, message=FALSE}
+library(ggplot2)
+
+ggplot() +
+  # Título principal de la figura
+  annotate("text", x = 0, y = 3.6, label = "Comparativa de PCA vs MDS", 
+           size = 7.5, fontface = "bold", color = "#1a365d") +
+  annotate("segment", x = -3.8, xend = 3.8, y = 3.2, yend = 3.2, 
+           color = "#cbd5e1", linewidth = 1.2) +
+  
+  # Nodos superiores: PCA y MDS
+  annotate("text", x = -2.2, y = 2.4, 
+           label = "bold(PCA)\nscriptstyle('(Correlación entre variables)')", 
+           parse = TRUE, size = 5.2, color = "#0f172a", lineheight = 0.9) +
+  annotate("text", x = 2.2, y = 2.4, 
+           label = "bold(MDS)\nscriptstyle('(Distancias entre individuos)')", 
+           parse = TRUE, size = 5.2, color = "#0f172a", lineheight = 0.9) +
+  
+  # Flechas hacia el centro
+  geom_segment(aes(x = -1.6, y = 1.9, xend = -0.7, yend = 1.2),
+               arrow = arrow(length = unit(0.3, "cm"), type = "closed"), 
+               linewidth = 1, color = "#475569") +
+  geom_segment(aes(x = 1.6, y = 1.9, xend = 0.7, yend = 1.2),
+               arrow = arrow(length = unit(0.3, "cm"), type = "closed"), 
+               linewidth = 1, color = "#475569") +
+  
+  # Nodo central: Descomposición en valores propios
+  annotate("label", x = 0, y = 0.9, 
+           label = "Descomposición en\nvalores propios", 
+           size = 5.5, fontface = "bold", color = "#0f172a",
+           fill = "#f8fafc", label.size = 0.6, label.padding = unit(0.5, "lines")) +
+  
+  # Límites y tema vacío
+  xlim(-4, 4) + ylim(0.3, 4) +
+  theme_void()
+```
+
+1. **Coordenadas*para una representación gráfica más simple.
+2. **Porcentaje de variación explicada*/ proporción de los valores propios.
+3. **Acomodo*de los componentes principales / las coordenadas en orden de importancia.
+
+A partir de la matriz de datos $\mathbf{X}$ se obtiene una matriz de distancias $\mathbf{D}$ de dimensión $n \times n$.
+El MMDS parte de $\mathbf{D}$ y trata de encontrar $\mathbf{X}$.
+
+Para comprender la mecánica se asume que $\mathbf{X}$ es conocida y se obtiene el producto $\mathbf{B} = \mathbf{X}\mathbf{X}^\top$. Entonces cada elemento de $\mathbf{B}$ se puede expresar como:
+
+$$
+b_{ij} = \sum_{k=1}^{q} x_{ik} x_{jk}
+$$
+
+De esta forma la distancia Euclídea al cuadrado se puede expresar como:
+
+$$
+d_{ij}^2 = b_{ii} + b_{jj} - 2b_{ij}
+$$
+
+
+
+Se impone la restricción de que los datos de cada variable estén centrados en cero, por lo que $\sum_{i=1}^{n} x_{ik} = 0$.
+De esta forma todos los elementos de $\mathbf{B}$ son tales que la suma de cualquier fila (o columna) es cero: $\sum_{j=1}^{n} b_{ij} = 0$.
+Se obtienen las siguientes relaciones:
+
+$$
+\sum_{i=1}^{n} d_{ij}^2 = T + n b_{jj} \qquad\qquad \sum_{j=1}^{n} d_{ij}^2 = T + n b_{ii} \qquad\qquad \sum_{i=1}^{n} \sum_{j=1}^{n} d_{ij}^2 = 2nT
+$$
+
+donde $T = \text{tr}(\mathbf{B}) = \sum_{i=1}^{n} b_{ii}$. De esta forma:
+
+$$
+b_{ij} = -\frac{1}{2} \left( d_{ij}^2 - d_{i\cdot}^2 - d_{\cdot j}^2 + d_{\cdot\cdot}^2 \right)
+$$
+
+donde las medias marginales y global de las distancias al cuadrado se definen como:
+
+$$
+d_{i\cdot}^2 = \frac{1}{n} \sum_{j=1}^{n} d_{ij}^2 \qquad\qquad d_{\cdot j}^2 = \frac{1}{n} \sum_{i=1}^{n} d_{ij}^2 \qquad\qquad d_{\cdot\cdot}^2 = \frac{1}{n^2} \sum_{i=1}^{n}\sum_{j=1}^{n} d_{ij}^2
+$$
+
+
+Ahora se hace la descomposición espectral de $\mathbf{B}$:
+
+$$
+\mathbf{B} = \mathbf{V} \mathbf{\Lambda} \mathbf{V}^\top
+$$
+
+La matriz $\mathbf{\Lambda}$ es diagonal con los $n$ valores propios de $\mathbf{B}$ en la diagonal. Si el rango de $\mathbf{B}$ es $q$, entonces los últimos $n-q$ valores propios son cero por lo que se pueden eliminar y escribir $\mathbf{B}$ en función solamente de los primeros $q$ vectores y valores propios.
+Finalmente se puede escribir la matriz $\mathbf{X}$ como:
+
+$$
+\mathbf{X} = \mathbf{V}_1 \mathbf{\Lambda}_1^{1/2}
+$$
+
+Donde $\mathbf{V}_1$ es la matriz que contiene solo los primeros $q$ vectores propios, y $\mathbf{\Lambda}_1$ es la matriz diagonal con solo los primeros $q$ valores propios.
+La mejor representación de dimensión $k$ está dada por los $k$ vectores propios de $\mathbf{B}$, asociados a los $k$ valores propios más grandes.
+
+
+*A continuación todo los ejemplos de este de tema se basaran en los siguientes datos*
+
+```{r}
+base = cbind(c(3,5,6,1,4,2,0,0,7,2),
+            c(4,1,2,1,7,2,4,6,6,1),
+            c(4,1,0,1,3,5,1,4,5,4),
+            c(6,7,2,0,6,1,1,3,1,3),
+            c(1,3,6,3,2,0,1,5,4,1))
+
+```
+
+```{r}
+d = dist(base)
+```
+
+### Escalamiento Multidimensional en r 
+
+'cmds<-cmdscale(d,k=5,eig=TRUE,x.ret=TRUE)', donde
+ 
++ d <- es la matriz de distancias
++ k <- indica el número de dimensiones requeridas 
++ eig <- indica si debería devolver los valores propios 
++ X.ret <- devuelve parte de la matriz B (La matriz B se obtiene multiplicando (-1/2)*cmds$x)
+
+Tienen que agregarse todos estos argumentos porque de lo contrario solo da los primeros vectores propios.
+
+
+```{r}
+cmds = cmdscale(d,k=5,eig=TRUE,x.ret=TRUE) # 5 dimensiones, # d tiene que seer un objeto distancia
+```
+
+```{r}
+cmds2 = cmdscale(d,k=2,eig=TRUE,x.ret=TRUE) # 2 dimensiones
+```
+
+
+### Reconstrucción por la matriz B
+
+Los elementos de la matriz B se pueden obtener de acuerdo a las fórmulas vistas en la presentación en clase o también utilizando la siguiente fórmula: $B=-\frac{1}{2}CD^2C$. Donde $D^2$ es la matriz de distancias al cuadrado y $C$ está definida como $C=I-\frac{1}{n}J_n$. Aquí $I$ es la matriz identidad de dimensión $n \times n$ y $J_n$ es una matriz de unos, de dimensión  $n \times n$.
+
+
+
+
+
+
+```{r}
+n = dim(base)[1]
+D = as.matrix(dist(base,diag = T,upper = T))
+Jn = matrix(1,n,n)
+C = diag(n)-(1/n)*Jn
+
+B = -0.5*C%*%(D^2)%*%C
+
+```
+
+## Bondad de ajuste (Mardia et al. 1979)
+
+La idoneidad de las nuevas coordenadas resultantes del escalamiento multidimensional, se puede juzgar según la proporción de valores propios representados por dichas coordenadas.
+
+$$
+P_k^{(1)} = \frac{\sum_{i=1}^{k} |\lambda_i|}{\sum_{i=1}^{n} |\lambda_i|} \qquad\qquad P_k^{(2)} = \frac{\sum_{i=1}^{k} \lambda_i^2}{\sum_{i=1}^{n} \lambda_i^2}
+$$
+
+Donde entre más cercano esté a uno, mejor es la representación de los datos en las nuevas coordenadas.
+
+*Nota:Note que la cantidad de valores propios es igual al número de observaciones.
+
+
+
+Sin embargo, dicha proporción nunca es igual a uno puesto que lo que se quiere es disminuir dimensiones, para poder tener una representación más sencilla de los datos.
+
+$$
+k < q
+$$
+
+donde:
+
++ $q$: es el número de dimensiones originales.
+
+
++ $k$: es el número de dimensiones escogidas después de aplicar el escalonamiento multidimensional.
+
+Se recomiendan valores mayores que *0,8* para ambos criterios.
+
+
+
+### Obtención de valores propios (Eigen values)
+
+
+```{r}
+round(cmds$eig,2)
+```
+
+
+### Aplicación de la bondad de ajuste 
+
+**Primer Criterio**
+
+Si $k = 2$, entonces el calculo es el siguiente:
+
+
+```{r}
+round(sum(abs(cmds$eig[1:2]))/sum(abs(cmds$eig))*100,2)
+```
+Si $k = 3$
+
+
+```{r}
+round(sum(abs(cmds$eig[1:3]))/sum(abs(cmds$eig))*100,2)
+```
+
+
+Se necesitarian al menos 3 dimensiones para alcanzar más de un 80%. Por lo que en este caso obtener una representación con dos dimensiones no es muy buena.
+
+
+**Segundo Criterio**
+
+Si $k = 2$, entonces el calculo es el siguiente:
+
+
+```{r}
+round(sum(cmds$eig[1:2]^2)/sum(cmds$eig^2)*100,2)
+```
+el ajuste es mejor que con el otro criterio
+
+Si $k = 3$
+
+```{r}
+round(sum(cmds$eig[1:3]^2)/sum(cmds$eig^2)*100,2)
+```
+
+NO hay ninguno mejor que otro, lo mejor es tener un equilibrio entre los dos criterios.
+
+## Falta de ajuste (stress)
+
+Es una medida de la falta de ajuste que consiste en la diferencia de las distancias observadas y las distancias predichas, estandarizadas por las distancias observadas al cuadrado para obtener valores entre 0 y 1.
+
+Me dice que tan bien puedo reproducir los datos
+
+$$
+stress = \sqrt{\frac{\sum (d_{ij} - \hat{d}_{ij})^2}{\sum d_{ij}^2}}
+$$
+
+Donde entre más cercano esté a cero, mejor es la representación de los datos en las nuevas coordenadas.
+
+
+Al evaluar bondad de ajuste del MDS, para este propósito Kruskal en 1964, propuso la siguiente regla de dedo:
+
+| Stress | Bondad de ajuste |
+| :---: | :--- |
+| 0.000 | perfecto |
+| 0.025 | excelente |
+| 0.050 | bueno |
+| 0.100 | aceptable |
+| 0.200 | pobre |
+
+*Notas:*
+
++ Recuerde que puede usar cualquier distancia que sea pertinente para los datos.
+
++ El *stresspuede* usarse también para calificar la falta de ajuste de un escalamiento multidimensional no métrico.
+
+
+### Aplicación del strees
+
+Para este caso el mayor número de dimensiones puede ser $k = 5$, debido a la cantidad de filas que tienen nuestros datos (cantidad de sujetos)
+
+Para $k = 2$
+
+```{r}
+k = 2
+coor2=cmds$points[,1:k]
+d2=as.matrix(dist(coor2))
+d=as.matrix(d)
+sqrt(sum((d-d2)^2)/sum(d^2)) # d es la matriz de distancias observadas
+
+```
+
+
+Para $k = 2$
+
+```{r}
+k = 4
+coor2=cmds$points[,1:k]
+d2=as.matrix(dist(coor2))
+d=as.matrix(d)
+sqrt(sum((d-d2)^2)/sum(d^2))
+
+```
+
+Con el resultado anterior podemos observar que con cuatro dimensiones alcanza un ajuste bueno, mas no excelente.
+
+### Comparación de valores de r de coordernadas con los valores propios 
+
+```{r}
+eB = eigen(B)
+```
+
+
+```{r}
+cmds$points[,1:2]
+```
+
+```{r}
+eB$vectors[,1:2]
+```
+
+
+
+```{r}
+plot(cmds$points[,1:2])
+```
+
+```{r}
+plot(eB$vectors[,1:2])
+```
+
+
+Se pueden observar en los anteriores gráficos, los coordenadas son prácticamente iguales.
+
+
