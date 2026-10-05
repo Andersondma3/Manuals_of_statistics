@@ -353,3 +353,23 @@ plot(eB$vectors[,1:2])
 Se pueden observar en los anteriores gráficos, los coordenadas son prácticamente iguales.
 
 
+# Clasificación
+
+Clasificación consiste en asignar una observación con q variables en uno de varios grupos preestablecidos.
+El objetivo básico es construir una regla que tome la información de las q variables para resumirla en un indicador con el cual se pueda clasificar la observación de manera correcta en uno de los grupos. 
+La regla se conoce como función discriminante.
+Varios métodos desarrollados para abordar el problema de clasificación:
+
++ Análisis discriminante.
+
++ Regresión logística (binomial/multinomial).
+
++ K-vecinos más cercanos.
+
++ Máquinas vectoriales de soporte.
+
++ Métodos basados en árboles.
+
+
+
+
