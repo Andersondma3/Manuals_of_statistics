@@ -107,7 +107,7 @@ En este modelo la primera parte es no supervisado ya que no utilzamos la variabl
 
 *Nota:* Si agregamos una variable edad, podríamos realizar un análisis de varianza, ya que dicha variable funcionaría como una variable respuesta.
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width=5,fig.height = 3.5, fig.align="center"}
 set.seed(42)
 n <- 100
 
@@ -149,7 +149,7 @@ Note que la Altura (cm), N.° de Hojas, Grosor del Tallo (mm), Peso del Racimo (
 Con esas variables correlaciondas puede crear una variable $Z_1$
 
 
-```{r, message=FALSE, echo=FALSE}
+```{r, message=FALSE, echo=FALSE,fig.width=5.2,fig.height = 3.5, fig.align="center"}
 library(ggplot2)
 library(dplyr)
 # 1. Definir los datos de la tabla (8 observaciones)
@@ -179,9 +179,8 @@ ggplot(datos, aes(x = ph_suelo, y = Z1)) +
   geom_smooth(method = "lm", se = TRUE, color = "#d62728", linetype = "dashed", fill = "#e0e0e0", alpha = 0.5) +
   labs(
     title = expression(bold("Diagrama de Dispersión:") ~ bolditalic(Z)[1] ~ bold("vs. pH del Suelo")),
-    subtitle = expression(italic(Z)[1] ~ "construida como el primer componente principal (" * CP[1] * ")"),
     x = "pH del Suelo",
-    y = expression(italic(Z)[1] ~ "(Índice Morfológico /" ~ CP[1] * ")")
+    y = expression(italic(Z)[1])
   ) +
   theme_minimal(base_size = 13) +
   theme(
@@ -350,6 +349,10 @@ PREGUNTAR
 
 # Comparación de análisis factorial con componentes principales
 
+| **Factores comunes** | **Componentes principales** |
+| :---: | :---: |
+| $\boxed{\begin{aligned} X_1 &= \lambda_{11}f_1 + \lambda_{12}f_2 + \dots + \lambda_{1m}f_m + \eta_1 \\ X_2 &= \lambda_{21}f_1 + \lambda_{22}f_2 + \dots + \lambda_{2m}f_m + \eta_2 \\ &\;\;\vdots \\ X_q &= \lambda_{q1}f_1 + \lambda_{q2}f_2 + \dots + \lambda_{qm}f_m + \eta_q \end{aligned}}$ | $\boxed{\begin{aligned} Z_1 &= a_{11}X_1^s + a_{12}X_2^s + \dots + a_{1q}X_q^s \\ Z_2 &= a_{21}X_1^s + a_{22}X_2^s + \dots + a_{2q}X_q^s \\ &\;\;\vdots \\ Z_q &= a_{q1}X_1^s + a_{q2}X_2^s + \dots + a_{qq}X_q^s \end{aligned}}$ |
+
 
 + La estructura del análisis de factores es similar a los componentes principales.
 
@@ -363,7 +366,7 @@ PREGUNTAR
 
 Tenemos un estudio con $f_1$ que es la habilidad cuantitativa de una persona y $f_2$ es la habilidad de razonamiento verbal, para estos dos variables no tienen una forma directa de medirse, ya que $f_1$ se podría medir mediante un problema o un cuestionario, pero dentro de las preguntas del cuestionario, mientras se mide la habilidad cuantivativa, también se podría estar midiendo el razonamiento verbal, ya que la persona necesita entender la pregunta para resolver el problema.
 
-Por ejemplo una persoan obtuvo en una pregunta un valor de $f_1 = 0.5$ y $f_2 = 0.5$, asuma que $\lambda_{11} = 7$ y $\lambda_{12} = 7.5$ 
+Por ejemplo una persona obtuvo en una pregunta un valor de $f_1 = 0.5$ y $f_2 = 0.5$, asuma que $\lambda_{11} = 7$ y $\lambda_{12} = 7.5$ 
 
 Esto nos lleva a que 
 
@@ -372,9 +375,7 @@ $$7.25 = 0.5*7+0.5*7.5$$
 En otra pregunta se tiene el resultado de otro puntaje, sin embargo lo que cambia es $f_1$ y $f_2$, en el caso de los $\lambda$'s no cambian y se pueden obtener por medio de **PCA**, esta es la confusión que muchas personas tienen con este tema.
 
 
-| **Factores comunes** | **Componentes principales** |
-| :---: | :---: |
-| $\boxed{\begin{aligned} X_1 &= \lambda_{11}f_1 + \lambda_{12}f_2 + \dots + \lambda_{1m}f_m + \eta_1 \\ X_2 &= \lambda_{21}f_1 + \lambda_{22}f_2 + \dots + \lambda_{2m}f_m + \eta_2 \\ &\;\;\vdots \\ X_q &= \lambda_{q1}f_1 + \lambda_{q2}f_2 + \dots + \lambda_{qm}f_m + \eta_q \end{aligned}}$ | $\boxed{\begin{aligned} Z_1 &= a_{11}X_1^s + a_{12}X_2^s + \dots + a_{1q}X_q^s \\ Z_2 &= a_{21}X_1^s + a_{22}X_2^s + \dots + a_{2q}X_q^s \\ &\;\;\vdots \\ Z_q &= a_{q1}X_1^s + a_{q2}X_2^s + \dots + a_{qq}X_q^s \end{aligned}}$ |
+
 
 
 ## Diferencias entre análisis factorial y PCA
@@ -520,7 +521,7 @@ round(t(e1) %*% e2, 4)
 ## Construcción de Z's
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,fig.width=5.5,fig.height = 3.5, fig.align="center"}
 
 # 1. Parámetros del gráfico
 mu_x <- 3.5   # Media X1
@@ -749,7 +750,7 @@ Con esto llegamos obtener el vector con los valores de la primera variable nueva
 *Nota:* Si se calculan las varianzas de los $Z$'s da como resultado los $\lambda$'s encontrados para los vectores propios, por lo que la variabilidad total es igual si se mantiene el mismo número de variables originales.
 
 
-# HEPTATLON
+# Aplicación de PCA ejemplo de HEPTATLON
 
 
 ```{r,echo=FALSE}
@@ -791,17 +792,17 @@ round(cor(base[,-8]), 2)
 
 ### Gráfico de correlación librería corrgram de colores
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE,fig.width=5,fig.height = 3.5, fig.align="center"}
 library(corrgram) 
 corrgram(base[,-8], lower.panel=panel.pts,order=T)  # order = T nos orderna las correlaciones
 ```
 
 
-Los colores azules significam una correlación positiva, mientras que los rojos significa una correlación negatiiva. Adempas , en los gráficos de puntos, en los ejes están los valores de cada variables según corresponda.
+Los colores azules significam una correlación positiva, mientras que los rojos significa una correlación negatiiva. Además , en los gráficos de puntos, en los ejes están los valores de cada variables según corresponda.
 
 ### Gráfico de correlación librería corrgram de números (correlaciones)
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE,fig.width=5,fig.height = 3, fig.align="center"}
 corrgram(base[,-8], lower.panel=panel.pts, upper.panel=panel.conf, 
          diag.panel=panel.density,order=T) 
 ```
@@ -810,12 +811,14 @@ corrgram(base[,-8], lower.panel=panel.pts, upper.panel=panel.conf,
 
 ### Gráfico del paquete corrplot
 
-```{r, message=FALSE}
+```{r, message=FALSE,fig.width=5,fig.height = 3, fig.align="center",warning=FALSE}
 library(corrplot) 
 corrplot(cor(base[,-8]), method = "square", type = "lower") 
 # El parámetro lower ordena el correlograma de mannera decendente 
 ```
 
+
+\newpage
 
 ## Análisis de valores extremos mendiante leverage
 
@@ -825,7 +828,7 @@ $$H=X(X^TX)^{-1}X^T$$
 
 *A continuación se le presenta el código en r, para los leverage*
 
-```{r,fig.width=5, fig.height=3.5, out.width="60%"}
+```{r,fig.width=5, fig.height=3.5, out.width="60%",fig.align="center"}
 lev=hat(base[,-8]) 
 plot(lev) 
 lim=2*mean(lev) 
@@ -917,7 +920,7 @@ En este caso la Correlación es aceptable
 
 ## Análisis con la matriz de covarianzas
 
-Cpmo se mencionó anteriormente, este análisis se recomienda hacerlo cuando las varianzas de las variables son bastantes similares, ya que en este caso las valores no están estandarizas, tal y como sucede con el análisis de la matriz de correlación.
+Como se mencionó anteriormente, este análisis se recomienda hacerlo cuando las varianzas de las variables son bastantes similares, ya que en este caso las variables no están estandarizas, tal y como sucede con el análisis de la matriz de correlación.
 
 ### Comparación de varianzas de la variables
 
@@ -973,7 +976,7 @@ $$
 $$
 
 
-Por medio de eigne hacemos la descomposición
+Por medio de `eigen()` hacemos la descomposición
 
 ```{r}
 espec=eigen(S) 
@@ -1024,7 +1027,7 @@ S1
 ```{r}
 basec=scale(base2,scale=F) # Datos centrados
 Z1=basec%*%A[,1] 
-Z1 # Z1 de las 25 competidoras
+head(Z1,5) # Z1 de las 25 competidoras
 ```
 ### Cálculo de cuánto porcentaje explica el componente
 
@@ -1053,7 +1056,7 @@ mean(Z1)
 
 ```{r}
 pca1=prcomp(base2) #Recordar que base2 no contiene la respuesta
-pca1
+summary(pca1)
 ```
 
 
@@ -1077,7 +1080,7 @@ round(pca1$rotation,2) # Los vectores propios
 `x`: Es lo que contiene los $Z$'s
 
 ```{r}
-round(pca1$x,2) 
+head(round(pca1$x,2),5) 
 ```
 *Note que da todos los z's de todos los individuos*
 
@@ -1099,7 +1102,7 @@ v1=scale(base2$vallas)
 **Observe que la media es 0 y la varianza es 1.**
 
 ```{r}
-mean(v1) 
+round(mean(v1),2)
 ```
 
 
@@ -1141,7 +1144,7 @@ R = cor(base2)
 Note que `S` y `R` son iguales 
 
 ```{r}
-S;R
+round(S,2) == round(R,2)
 ```
 
 ## Porcentaje de explicación de un componente principal
@@ -1149,7 +1152,7 @@ S;R
 Para averiguar ese porcentaje de explicación utlice la siguiente fórmula:
 
 
-$$\frac{Var(Z_j)}{\sum_{j=1}^q}$$
+$$\frac{Var(Z_j)}{\sum_{j=1}^qVar(Z_j)}$$
 
 donde $q$ es el número total de variables 
 
