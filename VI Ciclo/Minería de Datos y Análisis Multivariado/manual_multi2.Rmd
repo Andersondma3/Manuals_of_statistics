@@ -551,3 +551,327 @@ $$\pi_1+ \frac{A\pi_3}{B}+\pi_3 = 1 $$
 Despejando los tres $\pi$ llegamos al siguiente resultado:
 
 $$\pi_3 = \frac{B}{1+A+B}\qquad\qquad \pi_2= \frac{A}{1+A+B}\qquad\qquad \pi_1 =  \frac{1}{1+A+B} \text{ ó }1-\left(\frac{B}{1+A+B}+\frac{A}{1+A+B}\right)$$
+
+### ¿Qué situaciones en la muestra nos podría generar problemas en la muestra?
+
+Si tenemos el siguiente caso donde un grupo tiene 0 unidades de estudio es un gran problema ya que nos genera problemas al momento de hacer el modelo, por lo menos para solucionar el problema deber haber 1 unidad. En ocasiones no se realizan estas tablas de contingencia y se generan problemas cuando se hace el modelo.
+
+| | Y = 1 | Y = 2 | Y = 3 |
+| :--- | :---: | :---: | :---: |
+| **H** | 30 | 60 | 0 |
+| **M** | 30 | 10 | 20 |
+
+
+Otro ejemplo es el siguiente 
+
+Si alguna de las categorías de respuesta nos da como un 1% o hasta 5% y las otras son muy grandes nos puede dar problemas ya que no está del todo balanceado para generar el modelo. Esto se nota mucho cuando son por ejemplo 1000 datos y una categoría solo tiene un 1% corresponderá a 10 unidades mientras que las otras tienen 400 lo cuál sería muy desbalanceado.
+
+| | Y = 1 | Y = 2 | Y = 3 |
+| :--- | :---: | :---: | :---: |
+| **H** | 30 | 60 | 1 |
+| **M** | 30 | 10 | 20 |
+| **Total** | 60 | 70| 21 |
+| **(%) total** | 40% | 46% | 14%|
+
+
+
+## Validación cruzada
+
+Suponga que tiene una base de datos de $n = 526$
+
+*A continuación se le detallan los pasos de este proceso* 
+
+
+```{r, fig.width=9.5, fig.height=5.2, fig.align='center', message=FALSE, warning=FALSE, echo=FALSE}
+library(ggplot2)
+library(dplyr)
+
+# 1. Parámetros de la base de datos
+n_obs <- 526
+k_folds <- 10
+
+# Fijar semilla para reproducibilidad en la asignación aleatoria
+set.seed(42)
+
+# 2. Asignación balanceada de las 526 observaciones a los 10 pliegues
+df_folds <- data.frame(id = 1:n_obs) %>%
+  mutate(
+    # Asignación aleatoria balanceada a los 10 pliegues
+    pliegue = sample(rep(1:k_folds, length.out = n_obs))
+  ) %>%
+  group_by(pliegue) %>%
+  mutate(
+    # Crear coordenadas para una cuadrícula tipo mosaico dentro de cada pliegue
+    indice_en_pliegue = row_number(),
+    col = (indice_en_pliegue - 1) %% 6 + 1,
+    row = (indice_en_pliegue - 1) %/% 6 + 1,
+    # Definir el rol: Pliegue 1 = Entrenamiento; Pliegues 2:10 = Test
+    rol = ifelse(pliegue == 1,"Prueba (Test)" , "Entrenamiento (Train)"),
+    etiqueta_pliegue = paste0("Pliegue ", pliegue, "\n(n = ", n(), ")")
+  ) %>%
+  ungroup() %>%
+  mutate(
+    etiqueta_pliegue = factor(etiqueta_pliegue, levels = unique(etiqueta_pliegue[order(pliegue)]))
+  )
+
+# 3. Construcción del gráfico de mosaico con ggplot2
+ggplot(df_folds, aes(x = col, y = -row, fill = rol)) +
+  geom_tile(color = "white", linewidth = 0.6, width = 0.9, height = 0.9) +
+  facet_wrap(~ etiqueta_pliegue, nrow = 2) +
+  scale_fill_manual(
+    values = c(
+      "Entrenamiento (Train)" = "#e74c3c",  # Rojo/Coral destacado
+      "Prueba (Test)"          = "#3498db"   # Azul para prueba
+    )
+  ) +
+  labs(
+    title = "Mosaico de Partición en 10 Pliegues (N = 526)",
+    subtitle = "1 pliegue seleccionado para Entrenamiento (~10%) y 9 pliegues para Prueba (~90%)",
+    caption = "Distribución: 6 pliegues de 53 observaciones y 4 pliegues de 52 observaciones",
+    fill = "Subconjunto:"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    strip.text = element_text(face = "bold", size = 9.5),
+    strip.background = element_rect(fill = "#f1f5f9", color = NA),
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", color = "#1e293b", size = 13),
+    plot.subtitle = element_text(color = "#64748b", size = 10.5),
+    plot.caption = element_text(face = "italic", color = "#94a3b8")
+  )
+```
+
+
+
+
+1. Ajustar un modelo de 9 pliegues (fit)
+
+
+2. Uso el modelo para estimar valores de la base de datos del test.
+
+3. Comparar el valor estimado con el  valor observado, esto es una medida de ajuste $y-\hat{y}$, pero como en este caso la respuesta es categoríca el resultado se debe observar como la siguiente tabla: 
+
+| Observado \ Estimado | 1 | 2 | 3 | Total Observado |
+| :---: | :---: | :---: | :---: | :---: |
+| **1** | 15 | 45 | 35 | 95 |
+| **2** | 75 | 10 | 90 | 175 |
+| **3** | 50 | 19 | 18 | 87 |
+| **Total Estimado** | 140 | 74 | 143 | 357 |
+
+
+Para un total Total de casos evaluados: $n = 357$
+
+Clasificaciones correctas (diagonal principal): $15 + 10 + 18 = 43$. Lo ideal es que este número sea más alto porque para este caso la tasa de exactiud fue de $\text{Accuracy} = \frac{43}{357} \approx 12{,}04\%$
+
+
+## Ejemplo con datos Iris
+
+```{r, warning=FALSE}
+  load("iris.Rdata")
+  RNGkind(sample.kind = "Rounding") #Esto es para estandarizar la semilla según la versión de R
+  set.seed(10)
+  n=nrow(base)
+  m     = sample(1:n,100)
+  basea = base[m,] # Selecciona los números de la muestra creada en m 
+  basev = base[-m,] # Elimina los número seleccionados en m
+
+```
+
+```{r}
+table(basea$especie)
+```
+
+Si se diera el caso de que se quiere la misma cantidad de unidades por especie existen dos formas para realizar este tipo de muestreo:
+
+
+### Forma manual de muestreo balanceado
+
+```{r}
+basese = base[base$especie == "setosa",]
+n=nrow(basese)
+  mse     = sample(1:n,33)
+  basease = basese[mse,]
+  basevse = basese[-mse,]
+```
+
+
+```{r}
+basevir = base[base$especie == "virginica",]
+n=nrow(basevir)
+  mvir    = sample(1:n,33)
+  baseavir = basevir[mvir,]
+  basevvir = basevir[-mvir,]
+```
+
+
+```{r}
+basever = base[base$especie == "versicolor",]
+n=nrow(basever)
+  mver     = sample(1:n,33)
+  baseaver = basever[mver,]
+  basevver = basever[-mver,]
+```
+
+```{r}
+base_comple= rbind(basease,baseavir,baseaver)
+base_rest =  rbind(basevse,basevvir,basevver)
+```
+
+```{r}
+table(base_comple$especie) #muestra por especie
+table(base_rest$especie) # Resto de cada una de las especies
+```
+### Forma automática
+
+```{r, message=FALSE}
+library(dplyr)
+muestra = base %>%
+  group_by(especie) %>%
+  slice_sample(n = 33, replace = FALSE) %>%
+  ungroup()
+```
+
+
+```{r}
+table(muestra$especie)
+```
+### Gráfico para ver agrupaciones de forma descriptiva
+
+```{r}
+sp=unclass(basea$especie)
+pairs(basea[,-5],col=sp,pch=18)
+```
+
+
+
+Cuándo hay separaciones perfectas por ejemplo con la variable `ancho.pet` el modelo puede identificar perfectamente las clases, lo que causas que lso coeficientes de regresión logística dirverjan hacia el infinito y no se pueden obtener estimaciones estables.
+
+Esto también lo podemos verificar por medio de un `boxplot()`, para que se observe bien el gráfico se tiene que colocar de forma que `boxplot(X~Y, data = base)`
+
+```{r}
+boxplot(ancho.pet~especie, data = base)
+```
+
+En este caso se traslapan un poco por lo que el modelo podría funcionar. Sin embargo, si están separados totalmente es lo que no puede generar problemas con la convergencia de los coeficientes.
+
+
+
+### Modelo multi-logístico en r
+
+```{r}
+library(nnet)
+mod1=multinom(especie~.,basea)
+
+```
+
+
+```{r}
+mod1$convergence
+```
+
+
+En este caso podemos ver que el modelo si convergió
+
+
+*A continuación observe el siguiente caso*
+
+
+```{r}
+x = c(25,30,32,31,42,45,60,70)
+y = c(1,1,1,1,2,2,2,2)
+y = factor(y)
+```
+
+```{r}
+boxplot(x~y)
+```
+
+
+```{r}
+modx=multinom(y~x)
+```
+```{r}
+modx$convergence
+```
+
+
+En este casi el modelo si convergió pero observe los errores estándar
+
+```{r}
+summary(modx)
+```
+
+Observe que el error estándar es 87.64 lo cuál es extremandamente grande.Por lo que la estimación del coeficiente no es para nada confiable. Por lo que se afecta la credibilidad de la estimación.
+
+
+## Validación del modelo de forma manual 
+
+Observe el individuo número 32 de la base de validación
+
+```{r}
+basev[32,]
+```
+
+Observe la posición de los coeficientes
+
+```{r}
+summary(mod1)
+```
+
+
+```{r}
+x=cbind(1,basev[32,1:4])
+beta1=summary(mod1)$coefficients[1,] # Versicolor 
+beta2=summary(mod1)$coefficients[2,] #virginica
+
+PL1=sum(x*beta1)
+PL2=sum(x*beta2)
+
+```
+
+
+Probabilidad de pertenecer al grupo de Versicolor
+
+```{r}
+den=1+exp(PL1)+exp(PL2)
+round(exp(PL1)/den,3)
+
+```
+
+Probabilidad de pertecer al grupo de Virginica
+
+```{r}
+round(exp(PL2)/den,3)
+```
+
+
+Probabiliad de setosa
+
+```{r}
+round(1/den,3)
+```
+o la otra forma
+
+```{r}
+round(1-(exp(PL1)/den+exp(PL2)/den),3)
+```
+
+
+## Validación del modelo de forma automática
+
+```{r}
+probs=predict(mod1,basev,type="probs")
+round(probs[32,],3)  
+
+```
+**Tabla de confusión**
+
+```{r}
+sp2=predict(mod1,basev)
+  table(basev$especie,sp2)
+```
