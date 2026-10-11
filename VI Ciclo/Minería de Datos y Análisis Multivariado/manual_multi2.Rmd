@@ -414,7 +414,6 @@ donde teníamos el siguiente caso:
 $$
 Y < \begin{matrix} 0 \\ 1 \end{matrix} \implies 
 \begin{aligned}
-
   \pi_x &= P(Y = 1 \mid X)
 \end{aligned}
 $$
@@ -505,3 +504,50 @@ Siguiendo con el mismo ejemplo como tenemos 3 categorías tenemos dos ecuaciones
 $$log\left(\frac{\pi_2}{\pi_1} \right ) = \beta_0^{(2)}+\beta_1^{(2)}D$$
 
 $$log\left(\frac{\pi_3}{\pi_1} \right ) = \beta_0^{(3)}+\beta_1^{(3)}D$$
+
+
+La regla general de cuántos coeficientes tiene que calcular el modelo es $(k-1)\cdot p$, donde $k$ es el número de categorías y $p$ el número de coeficientes por ecuación.
+
+
+**Riego relativo**
+
+De estas ecuacione podemos obtener el riesgo relativo de la siguiente manera:
+
+$$\frac{\pi_2}{\pi_1}$$
+
+
+Teniendo en cuenta el ejemplo anterior y la fórmula del riesgo relativo, tenemos lo siguiente:
+
+$$
+\frac{\pi_2}{\pi_1} = e^{\beta_0^{(2)}+\beta_1^{(2)}D} = A \qquad\qquad \frac{\pi_3}{\pi_1} = e^{\beta_0^{(3)}+\beta_1^{(3)}D} = B
+$$
+
+Para simplificar el proceso asuma que los RR son  A y B
+
+Despejamos $\pi_1$ en las dos ecuaciones
+
+$$\pi_1 = \frac{\pi_2}{A} \qquad\qquad \pi_1 = \frac{\pi_3}{B} $$
+
+
+Igualamos las dos ecuaciones de $\pi_1$ 
+
+
+$$\frac{\pi_2}{A} =   \frac{\pi_3}{B} $$
+
+De esta ecuación despejamos $\pi_2$
+
+$$\pi_2=   \frac{A\pi_3}{B} $$
+
+Sabemos que:
+
+$$\pi_1+\pi_2+\pi_3 = 1$$
+
+
+Reemplazamos $\pi_2$ y nos lleva al siguiente resultado 
+
+
+$$\pi_1+ \frac{A\pi_3}{B}+\pi_3 = 1 $$
+
+Despejando los tres $\pi$ llegamos al siguiente resultado:
+
+$$\pi_3 = \frac{B}{1+A+B}\qquad\qquad \pi_2= \frac{A}{1+A+B}\qquad\qquad \pi_1 =  \frac{1}{1+A+B} \text{ ó }1-\left(\frac{B}{1+A+B}+\frac{A}{1+A+B}\right)$$
