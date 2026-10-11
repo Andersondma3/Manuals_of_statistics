@@ -372,4 +372,136 @@ Varios métodos desarrollados para abordar el problema de clasificación:
 
 
 
+## Apredizaje o entrenamiento 
 
+Se parte de un conjunto de observaciones cuya pertenencia a uno de los $k$ grupos es conocida.  Este conjunto se llama muestra de aprendizaje.
+
+En cada grupo se tienen $n_j$ observaciones medidas en $q$ variables.
+
+Con este conjunto de $n$ observaciones $(n=\sum n_j)$ se construye la función discriminante o regla de clasificación.
+
+
+
+## Validación 
+
+Se utiliza otro conjunto de datos para los cuales también se conoce su pertenencia a cada uno de los $k$ grupos. Este conjunto se llama muestra de validación.
+
+Se aplica la función discriminante a ese conjunto de datos y se evalúa qué tan bien fueron clasificados. 
+
+La ventaja de hacer esto es que estos individuos no participaron en la construcción de la regla.
+
+Sin embargo, si hay pocos datos se puede usar como muestra de validación la misma muestra de entrenamiento.
+
+Existen métodos secuenciales de validación.
+
+
+## Predicción
+
+Una vez que la regla ha sido validada se puede aplicar a nuevos datos para los cuales no se conoce su pertenencia a uno de los $k$ grupos.
+
+Se confía en que la regla hará una buena clasificación.
+
+
+
+## Regresión logística multinomial 
+
+Anteriormente en el curso de modelos avanzados vimos que la regresión logística era:
+
+$$log\left(\frac{\pi_x}{1-\pi_x} \right ) = \beta_0+\beta_1X_1+ ...+\beta_nX_n$$
+
+donde teníamos el siguiente caso:
+
+$$
+Y < \begin{matrix} 0 \\ 1 \end{matrix} \implies 
+\begin{aligned}
+
+  \pi_x &= P(Y = 1 \mid X)
+\end{aligned}
+$$
+Por lo tante la regresión logística multinomial  es
+
+Es una extensión del modelo de regresión logístico cuando la respuesta condicional es categórica pero hay más de dos categorías.
+
+Entra dentro de los modelos lineales generalizados.
+
+Puede incluir tanto variables métricas como categóricas en la parte sistemática, es decir, en las variables independientes.
+
+Las variables métricas no deben seguir ninguna distribución particular. (LAS X'S NO SON NORMALES)
+
+Matemáticamente se veería de la siguiente manera:
+
+$$
+Y \left\langle
+\begin{array}{ccl}
+  a & \implies & \pi_{a}(x) = P(Y = a \mid X) \\
+  b & \implies & \pi_{b}(x) = P(Y = b \mid X) \\
+  c & \implies & \pi_{c}(x) = P(Y = c \mid X) \\
+  d & \implies & \pi_{d}(x) = P(Y = d \mid X)
+\end{array}
+\right.
+$$
+
+
+### Supuesto 
+
+
+Se basa en el supuesto de independencia de alternativas irrelevantes (IIA, siglas en inglés), lo que no siempre es deseable. 
+
+Las probabilidades de preferir una clase sobre otra no dependen de la presencia o ausencia de otras alternativas "irrelevantes". 
+
+Por ejemplo, las probabilidades relativas de ir al trabajo en automóvil o autobús no cambian si se agrega una bicicleta como posibilidad adicional. 
+
+
+Los individuos a menudo violan esta suposición al tomar decisiones.
+
+Si las opciones incluyen un automóvil y un autobús azul y se introduce la opción de un autobús rojo, una persona puede ser indiferente entre un autobús rojo y un autobús azul. Aquí, la opción del autobús rojo no es irrelevante, porque un autobús rojo es un sustituto perfecto del autobús azul.
+
+
+### Modelo 
+
+
+El modelo se utiliza para calcular la probabilidad de que el i-ésimo individuo pertenerza al j-ésimo grupo, tomando como referencia el grupo 1 (puede tomarse cualquier otro grupo).
+
+Se deriva un conjunto de $k-1$ ecuaciones.
+
+
+Cada ecuación tiene un vector de coeficientes $\beta^{(j)}$.
+
+$$log\left(\frac{\pi_j}{\pi_1} \right ) = \beta_0^{(j)}+\beta_1^{(j)}X_1+ ...+\beta_q^{(j)}X_q$$
+
+### Ejemplo aplicado en clase
+
+Para este ejemplo nuestra variable respuesta será de que depende el medio de transporte según la cantidad de kilométros.
+
+Hay tres respuestas:
+
+1: Transporte Público
+
+2: Moto o automóvil
+
+3: Bicicleta o caminando
+
+
+
+| Y | D |
+| :-: | :-: |
+| 1 | 4 |
+| 1 | 12 |
+| 1 | 21 |
+| 2 | 11 |
+| 2 | 12 |
+| 2 | 1 |
+| 2 | 2 |
+| 2 | 5 |
+| 2 | 9 |
+
+Lo que trata el modelo es crear un modelo para predecir nuevas unidades de forma certera, un ejemplo de aplicación de esto puede ser en fraude o en casas de apuestas.
+
+Note que en el modelo se pone la primera categoría de referencia en este caso es $\pi_1$.
+
+
+Siguiendo con el mismo ejemplo como tenemos 3 categorías tenemos dos ecuaciones del modelo
+
+$$log\left(\frac{\pi_2}{\pi_1} \right ) = \beta_0^{(2)}+\beta_1^{(2)}D$$
+
+$$log\left(\frac{\pi_3}{\pi_1} \right ) = \beta_0^{(3)}+\beta_1^{(3)}D$$
