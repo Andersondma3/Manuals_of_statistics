@@ -1253,7 +1253,7 @@ biplot(pca1, cex=0.6)
 
 *El gráfico que se le presenta a continuación fue arreglafo para términos de presentación y explicación*
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE,fig.height=4, out.width="60%",fig.align="center"}
 library(factoextra)
 library(ggplot2)
 
@@ -1298,7 +1298,7 @@ Un aspecto importante a resaltar de la participante `Brown (USA)`, es que le fue
 
 ## Biplot categórico
 
-```{r, message=F, warning=FALSE}
+```{r, message=F, warning=FALSE,fig.height=3.5, out.width="60%",fig.align="center"}
 library(AMR) 
 library(dplyr) 
 data=data.frame(c("AM","EU","EU","EU","EU","EU","OC","AM","EU", 
@@ -1309,7 +1309,7 @@ pca2=data %>%
   pca(vallas,saltoalto,tiro,car200,saltolargo,javalina,car800)
 ```
 
-```{r}
+```{r,fig.height=3.5, out.width="60%",fig.align="center"}
 ggplot_pca(pca2) 
 ```
 
@@ -1318,7 +1318,7 @@ ggplot_pca(pca2)
 
 este gráfico nos sirve para ver como va bajando la varianza explicada de cada componente
 
-```{r}
+```{r,fig.height=3.2, out.width="60%",fig.align="center"}
 plot(pca1,type="l") 
 ```
 Para este gráfico puede usar `plot(pca$sdev^2)` o `plot(pca)`
@@ -1508,7 +1508,7 @@ Tenemos los siguientes datos tomados en el momento de la clase
 | 4 | 85 | 1.78 | 20.04 |
 | 5 | 71 | 1.66 | 25.30 |
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE,fig.height=3.5, out.width="60%",fig.align="center"}
 library(ggplot2)
 
 # 1. Definición del conjunto de datos
@@ -1619,7 +1619,7 @@ d(4, 5) &= \sqrt{(85 - 71)^2 + (1.78 - 1.66)^2} = \sqrt{14^2 + 0.12^2} = \sqrt{1
 $$
 
 
-Podemos ver que la diferencias entre el peso en kilogramos, tiene mayor importancia al momneto de hacer el cálculo, para solucionar este problema lo idea el estandarizar las variables.
+Podemos ver que la diferencias entre el peso en kilogramos, tiene mayor importancia al momento de hacer el cálculo, para solucionar este problema lo idea el estandarizar las variables.
 
 
 ## Distancia de Mahalanobis 
@@ -1683,10 +1683,19 @@ for (i in 1:n) {
     D_M[i, j] <- sqrt(t(diff) %*% S_inv %*% diff)
   }
 }
-rownames(D_M) <- colnames(D_M) <- paste0("id_", 1:5)
+rownames(D_M) <- colnames(D_M) <- paste0("id_", 1:n)
 
 print("Matriz de Distancias de Mahalanobis (pares):")
 print(round(D_M, 4))
+```
+
+### Forma automática
+
+```{r, message=FALSE}
+#install.packages("biotools")
+library(biotools)
+dM=D2.dist(X,S) #Esto cálcula la distancia de Mahalanobis al Cuadrado 
+round(sqrt(dM),4)
 ```
 
 Verifique la distancia $d_{35}^M$ es 1.0269
@@ -1755,11 +1764,12 @@ library(dplyr)
 library(tidyr)
 library(tibble)
 base2 = base %>%
-  select(canton, mes, temp_c) %>% 
+  dplyr::select(canton, mes, temp_c) %>% 
   pivot_wider(
     names_from = mes,
     values_from = temp_c
   ) %>%
+  as.data.frame() %>%
   column_to_rownames(var = "canton")
 ```
 
@@ -1769,7 +1779,7 @@ head(base2)
 
 ### Cálculo distancia euclidiana
 
-*A continuación se le proporcionar la disntancia euclideana entre dos individuos*
+*A continuación se le va a proporcionar la distancia euclideana entre dos individuos*
 
 ```{r}
 x1=base2[1,]
@@ -1874,7 +1884,7 @@ cs = hclust(d,method = "single")
 ```
 
 
-```{r}
+```{r,fig.height=3.5, out.width="60%",fig.align="center"}
 plot(cs,xlab="",main="Vecino más cercano con distancia Euclídea",
      ylab="Distancia",sub="")
 
@@ -1882,7 +1892,7 @@ plot(cs,xlab="",main="Vecino más cercano con distancia Euclídea",
 
 
 
-```{r, eval=FALSE}
+```{r, eval=FALSE,fig.height=3.5, out.width="60%",fig.align="center"}
 csM = hclust(dM,method = "single") 
 plot(csM,xlab="",main="Vecino más cercano con distancia de Mahalannobis",
      ylab="Distancia",sub="")
@@ -1890,7 +1900,7 @@ plot(csM,xlab="",main="Vecino más cercano con distancia de Mahalannobis",
 ```
 
 
-```{r}
+```{r,fig.height=3.5, out.width="60%",fig.align="center"}
 csMan = hclust(dMan,method = "single") 
 plot(csMan,xlab="",main="Vecino más cercano con distancia de Manhattan",
      ylab="Distancia",sub="")
@@ -1908,7 +1918,7 @@ $$
 Para crear un dendograma de este tipo de distncia se debe indicar con `method = "complete"`.
 
 
-```{r}
+```{r,fig.height=4.4, out.width="60%",fig.align="center"}
 c.com = hclust(d,method = "complete") 
 plot(c.com, xlab = "", main = "Vecino más lejano con distancia Euclídea",
      ylab = "Distancia", sub = "")
@@ -1920,7 +1930,7 @@ plot(cM.com,xlab="",main="Vecino más lejano con distancia de Mahalannobis",
 ```
 
 
-```{r}
+```{r,fig.height=4, out.width="60%",fig.align="center"}
 cMan.com = hclust(dMan,method = "complete") 
 plot(cMan.com,xlab="",main="Vecino más lejano con distancia de Manhattan",
      ylab="Distancia",sub="")
@@ -1936,7 +1946,7 @@ $$
 $$
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 c.av = hclust(d,method = "average") 
 plot(c.av,xlab="",main="Salto promedio con distancia Euclidea",
      ylab="Distancia",sub="")
@@ -1952,7 +1962,7 @@ plot(cM.av,xlab="",main="Salto promedio con distancia de Mahalannobis",
 ```
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 cMan.av = hclust(dMan,method = "average") 
 plot(cMan.av,xlab="",main="Salto promedio con distancia de Manhattan",
      ylab="Distancia",sub="")
@@ -1969,7 +1979,7 @@ $$
 donde: $g_A$ es el centroide del clúster A
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 c.w = hclust(d,method = "ward.D") 
 plot(c.w,xlab="",main="Distancia de Ward con distancia Euclidea",
      ylab="Distancia",sub="")
@@ -1985,7 +1995,7 @@ plot(cM.w,xlab="",main="Distancia de Ward con distancia de Mahalannobis",
 ```
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 cMan.w = hclust(dMan,method = "ward.D") 
 plot(cMan.w,xlab="",main="Distancia de Ward con distancia de Manhattan",
      ylab="Distancia",sub="")
@@ -2142,14 +2152,14 @@ dr = as.dist(D)
 
 Hacemos un dendograma y lo comparamos con el que se obtiene con la distancia euclidea. Es importante resaltar que el mejor tipo de distancia es la distancia de `Ward`, por esa razón es que los siguientes gráficos van con esta distancia. *Los demás tipos de distancia se encuentran en la anterior sección*
 
-```{r}
+```{r,fig.height=4.5, out.width="60%",fig.align="center"}
 c.w = hclust(d,method = "ward.D") 
 plot(c.w,xlab="",main="Distancia de Ward con distancia Euclidea",
      ylab="Distancia",sub="")
 ```
 
 
-```{r}
+```{r,fig.height=4.5, out.width="60%",fig.align="center"}
 c.w = hclust(dr,method = "ward.D") 
 plot(c.w,xlab="",main="Distancia de Ward con distancia de correlación",
      ylab="Distancia",sub="")
@@ -2164,7 +2174,7 @@ print(split(names(grupos), grupos))
 
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 # 2. Preparar el data frame calculando la temperatura media anual por cantón
 datos_cajas <- as.data.frame(base2) %>%
   rownames_to_column(var = "canton") %>%
@@ -2215,7 +2225,7 @@ ggplot(datos_cajas, aes(x = Grupo, y = temp_media, fill = Grupo)) +
 
 ## ¿Que ocurre cuando tenemos variables categóricas?
 
-Luego de ver el laboratorio colocar la función `daisy()`, que saca la distancias entre categóricas y numéricas (EXPLICAR)
+Nos podemos ayudar con la función `daisy()`. La función daisy() (del paquete cluster) calcula matrices de disimilitud para observaciones con variables de tipo mixto (cuantitativas, nominales, ordinales y binarias) aplicando principalmente el coeficiente generalizado de Gower, el cual proyecta la diferencia de cada variable al intervalo $[0, 1]$ (dividiendo entre el rango empírico en numéricas, aplicando coincidencia booleana en nominales, rangos normalizados en ordinales y tratamiento asimétrico en binarias) para luego promediar esas distancias parciales; esto permite medir la separación entre individuos heterogéneos sin distorsionar la geometría de los datos mediante one-hot encoding, produciendo un objeto de clase dist directamente compatible con métodos no euclídeos como PAM (Partitioning Around Medoids) o agrupamiento jerárquico.
 
 Cuando se tienen tanto variables métricas como variables nominales y/o ordinales se recomienda usar la distancia de Gower:
 
@@ -2226,7 +2236,7 @@ $$d_{ij}^G=\frac{1}{q} \left [ \sum_{h=1}^{p_1} \frac{|x_{ih}-x_{jh}|}{R_h}+\bet
 donde:
 
 
-+ $R_h:$ RAngo de la h-ésima variable cuantitativa
++ $R_h:$ Rango de la h-ésima variable cuantitativa
 
 + $\beta_{ij}:$ número de variables cualitativas que no son idénticas
 
@@ -2324,7 +2334,7 @@ Luego de obtener este resultado lo tenemos que visualizar en un dendograma.
 
 Si tenemos dos variables numéricas y ubicamos sus centroides, luego de eso cálculamos su distancia y obtenemos el siguiente posible resultado:
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,fig.height=3.8, out.width="60%",fig.align="center"}
 # 1. Datos en la partición inicial (P4 asignado erróneamente al Grupo B)
 datos_iter1 <- data.frame(
   id = paste0("P", 1:8),
@@ -2407,7 +2417,7 @@ ggplot() +
 
 Luego se hace esa reasignación y se llega al siguiente resultado
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,,fig.height=3.8, out.width="60%",fig.align="center"}
 # 1. Datos en estado final convergido (P4 pertenece al Grupo A)
 datos_convergencia <- data.frame(
   id = paste0("P", 1:8),
@@ -2550,7 +2560,7 @@ centros
 Los centroides dan muy similares en este caso por pura aleatoriedad, pero puede que no sea así
 
 
-```{r}
+```{r,fig.height=3.3, out.width="60%",fig.align="center"}
 plot(base1[,1],base1[,2],col=grupo,pch=18,xlab="Expectativas",ylab="Evaluación")
 points(centros[,1],centros[,2],col=1:3,pch="*",cex=2)
 
@@ -2598,7 +2608,7 @@ it = 1
 ```
 
 
-```{r}
+```{r,,fig.height=3.8, out.width="60%",fig.align="center"}
 # 1. Guardar la configuración gráfica original y definir la matriz 2x3
 par_orig <- par(no.readonly = TRUE)
 par(mfrow = c(2, 3), mar = c(4, 4, 2.5, 1))
@@ -2630,7 +2640,7 @@ while(check > 0 & it < n.it){
 par(par_orig)
 ```
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 plot(scdg1,xlab="iteración",ylab="SCDG",type="o")
 ```
 Conforme la cantidad de reagrupaciones aumenta, la SCDG disminuye.
@@ -2646,13 +2656,13 @@ SCDG1
 
 **Gráficamos el resultado anterior**
 
-```{r}
+```{r,,fig.height=3.8, out.width="60%",fig.align="center"}
 plot(1:6, SCDG1, type = "b", xlab = "Número de grupos",ylab = "SCDG")
 ```
 
 **Forma automática de hacer todo lo anterior**
 
-```{r}
+```{r,,fig.height=3.8, out.width="60%",fig.align="center"}
 library(factoextra)
 d = dist(base1)
 fviz_nbclust(base1, kmeans, method = "wss", diss = d)
@@ -2756,7 +2766,7 @@ apply(m, 2, \(x) mean(x[x != 0])) # Este código es para no incluir a el cero en
 En este caso el medoide es el punto 2
 
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,fig.height=3.8, out.width="60%",fig.align="center"}
 # 1. Definición del conjunto de datos
 datos <- data.frame(
   id     = paste0("P", 1:3),
@@ -2829,7 +2839,7 @@ ggplot() +
   # Etiquetas de los ejes
   labs(
     title = "Comparación entre Centroide (Media) y Medoide (Punto Real)",
-    subtitle = "El centroide es un punto sintético; el medoide es la observación real más central (P2)",
+    subtitle = "El centroide es un punto sintético; el medoide es la observación real más central",
     x = "Peso (kg)",
     y = "Altura (cm)"
   ) +
@@ -2940,7 +2950,7 @@ table(clust.km,clust.kmedoid)
 
 *Nota: Recordar hacer el boxplot o algún gráfico que me ayuda a observar las diferencias entre grupos y ver que claramente estos grupos tienen sentido. Ya que lo que se quiere observar es que los grupos sean lo mas diferentes posibles, pero dentro de estos no sean muy variables*
 
-```{r,echo=FALSE}
+```{r,echo=FALSE, warning=FALSE, message=FALSE}
 S = var(base1)
 library(biotools)
 dM=D2.dist(base1,S)
@@ -2958,7 +2968,7 @@ round(corden,1)
 ### Comparación de grupos con variables continuas
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 par_orig = par(no.readonly = TRUE)
 par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
 
@@ -2980,7 +2990,7 @@ La idea de hacer estos boxplots es observar diferencias entre grupos y dentro de
 
 A continuación se tienen los siguentes datos
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,fig.height=3.8, out.width="60%",fig.align="center"}
 # 1. Simulación de datos reproducibles
 set.seed(123)
 
@@ -3012,7 +3022,7 @@ print(tabla_contingencia)
 ```
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 #par(mar = c(4, 4, 3, 2))
 mosaicplot(
   tabla_contingencia,
@@ -3024,6 +3034,8 @@ mosaicplot(
   cex.axis = 0.85
 )
 ```
+
+
 ### K-medias con PCA, para graficar
 
 
@@ -3031,7 +3043,7 @@ mosaicplot(
 La cantidad de grupos la personalizamos dentro del cálculo de `kmeans` que se le da a la función.
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 fviz_cluster(kmeans(base1,centers=4), base1, show.clust.cent = TRUE,
              ellipse.type = "euclid", repel = TRUE) +
   labs(title = "Resultados K-medias") +
@@ -3050,7 +3062,7 @@ c.w2 = eclust(base1, k=3,"hclust", hc_metric = "euclidean",hc_method = "ward.D",
 ```
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 fviz_cluster(c.w2, base1,show.clust.cent = TRUE,
              ellipse.type = "euclid", repel = TRUE) +
   labs(title = "Resultados Distancia de Ward") +
@@ -3142,7 +3154,7 @@ $$
 
 *A continuación se le presenta el código en r de este proceso*
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 fviz_nbclust(base1, kmeans, method = "silhouette", diss = d)
 ```
 
@@ -3156,7 +3168,7 @@ nrow(base1)               # Observaciones en base1
 ```
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 sil.k=c()
 n.clust=2:15
 for(i in 1:length(n.clust)){
@@ -3207,7 +3219,7 @@ $$
 *A continuación se le presenta el código en r para realizar el cálculo de este estadístico*
 
 
-```{r, message=FALSE}
+```{r, message=FALSE,fig.height=3.8, out.width="60%",fig.align="center"}
 fviz_nbclust(base1, kmeans, method = "gap", diss = d)
 ```
 
@@ -3220,7 +3232,7 @@ El uso combinado de las funciones `eclust` y `fviz_silhouette` de la librería `
 (internamente llama a las funciones kmeans, hclust, pam, clara, etc).  Use las siguientes instrucciones:
 
 
-```{r}
+```{r,fig.height=3.8, out.width="60%",fig.align="center"}
 km1 = eclust(base1, FUNcluster = "kmeans", k = 3, hc_metric = "euclidean", nstart = 50, graph = F)
 fviz_silhouette(sil.obj = km1, print.summary = TRUE) 
 
