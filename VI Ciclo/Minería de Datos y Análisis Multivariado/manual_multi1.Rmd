@@ -3310,4 +3310,126 @@ Observe que en el anterior gráfico se puede ver que el dendograma del eje verti
 *Nota:* Este gráfico está hecho para dendograma si el análisis que está ganando es el de k-medias o el de k-mediodes, esta figura no aplica.
 
 
+# Códigos extras 
+
+```{r}
+load("datos.Rdata")
+```
+
+En el archivo “datos.Rdata” se cuenta con la información de tasa de asesinatos y tasa de asaltos de 10 ciudades de los Estados Unidos en 1970.  Se busca hacer dos grupos usando el método de k-medias y se inicia con las asignaciones dadas en la base llamada crimen1.
+
+## Centroides nuevos a partir de una base de datos
+
+```{r}
+head(crimen1)
+```
+
+
+```{r}
+cent1<-apply(crimen1[,1:2],2,tapply,as.factor(crimen1$grupo),mean) # se calculan los nuevos centroides
+datosc1<-rbind(cent1,crimen1[,1:2]) # Se colocan los centroides en la base de datos 
+dmat1<-as.matrix(dist(datosc1)) # Se calculan las distancia de las ciudades a los centroides
+dmat1[1:3,] #observe que las 2 primeras filas son los centroides, así como las dos primeras columnas
+```
+
+
+```{r}
+dg1=dmat1[3:12,1:2] # se extraen las disntancias con los centroides para cada ciudad
+(grupo2<-apply(dg1,1,which.min)) # Se ubica cuál es la columna con menor distancia (el mejor centroide)
+
+```
+
+
+## Evaluar el agrupamiento a partir de la SCDG
+
+**Se realiza un nuevo agrupamiento**
+
+```{r}
+cent2<-apply(crimen1[,1:2],2,tapply,as.factor(grupo2),mean)
+datosc2<-rbind(cent2,crimen1[,1:2])
+dmat2<-as.matrix(dist(datosc2))
+dg2=dmat2[3:12,1:2]
+```
+
+
+```{r}
+dc1=c();dc2=c()
+for (i in 1:nrow(dg1)){
+  dc1[i]=dg1[i,crimen1$grupo[i]] # se obtiene la distancia del grupo asignado 
+  }
+for (i in 1:nrow(dg2)){
+  dc2[i]=dg2[i,grupo2[i]]
+  }
+sc1=sum(dc1^2);sc2=sum(dc2^2) # Se elevan al cuadrado las distancias
+sc1;sc2 # Observe que la segunda es más pequeña por lo que la nueva agrupación es mejor 
+
+```
+
+## K-means de forma manual 
+
+
+
+```{r,eval=FALSE}
+# PASO 1: Cálculo de los nuevos centroides
+
+# Se inicializa una matriz vacía de 2 filas (para 2 grupos/clusters) 
+# y 5 columnas (correspondientes a las primeras 5 variables del dataset)
+centros1 = matrix(nrow = 2, ncol = 5)
+
+# Se itera por cada una de las 5 variables numéricas (columnas 1 a 5)
+# tapply calcula la media de la variable j separada por la pertenencia a 'grupo'
+for (j in 1:5) {
+  centros1[, j] = tapply(senti1[, j], senti1$grupo, mean)
+}
+
+# PASO 2: Reasignación de observaciones al centroide más cercano
+
+# Vector vacío para almacenar la nueva asignación de cluster de cada observación
+grupo1 = c()
+
+# Iterar sobre cada fila (observación) del conjunto de datos
+for (i in 1:nrow(senti1)) {
+  
+  # Vector temporal para almacenar las distancias del punto i a cada centroide
+  disti = c()
+  
+  # Iterar sobre los dos centroides calculados previamente
+  for (j in 1:2) {
+    # Se calcula la distancia euclidiana entre el centroide j (centros1[j, ])
+    # y la observación i (excluyendo la columna 6 que contiene la etiqueta 'grupo')
+    disti[j] = dist(rbind(centros1[j, ], senti1[i, -6]))
+  }
+  
+  # Se asigna la observación al índice del centroide que tenga la menor distancia
+  grupo1[i] = which(disti == min(disti))
+}
+
+# PASO 3: Matriz de confusión / Evaluación de convergencia
+
+# Tabla cruzada entre la asignación anterior (senti1$grupo) y la nueva (grupo1)
+# Permite verificar cuántas observaciones cambiaron de cluster en esta iteración
+table(senti1$grupo, grupo1)
+```
+
+
+```{r, eval=FALSE}
+# PARTE 1: Cálculo de los CENTROIDES (vector de medias por grupo)
+# Centroide del Grupo 1: media de cada una de las variables (columnas 1 a 5)
+# Se filtra el subconjunto de filas con grupo == 1 y se excluye la columna 6 ('grupo')
+cen1 = colMeans(senti1[senti1$grupo == 1, -6])
+
+# Centroide del Grupo 2: media de cada una de las variables para el grupo 2
+cen2 = colMeans(senti1[senti1$grupo == 2, -6])
+
+# PARTE 2: Cálculo del MEDOIDE (observación más central del grupo)
+# Subconjunto de datos correspondiente únicamente a las observaciones del Grupo 1
+base1 = senti1[senti1$grupo == 1, -6]
+# dist(base1) calcula la matriz de distancias por pares entre todas las observaciones del grupo 1
+# as.matrix() la convierte a matriz cuadrada simétrica
+# colMeans() calcula la distancia promedio de cada observación hacia todas las demás
+# min() devuelve el valor numérico de la menor distancia promedio encontrada
+min(colMeans(as.matrix(dist(base1))))
+```
+
+
 
