@@ -2328,6 +2328,114 @@ Luego de obtener este resultado lo tenemos que visualizar en un dendograma.
 
 
 
+### Ejemplo de universidades aplicado en r 
+
+```{r, echo=FALSE}
+# ==============================================================================
+# CHUNK 1: Generación de los datos del ejemplo
+# ==============================================================================
+
+# Data frame con la información de las 6 universidades del ejemplo
+universidades <- data.frame(
+  institucion = c(
+    "Abilene Christian University",
+    "Adelphi University",
+    "Adrian College",
+    "Agnes Scott College",
+    "Alaska Pacific University",
+    "Albertson College"
+  ),
+  tasa.acept = c(0.74, 0.88, 0.77, 0.84, 0.76, 0.82),
+  costo      = c(7440, 12280, 11250, 12960, 7560, 13500),
+  nuevos     = c(721, 512, 336, 137, 55, 158),
+  tasa.grad  = c(60, 56, 54, 59, 15, 55),
+  privado    = c("Yes", "Yes", "Yes", "Yes", "Yes", "Yes"),
+  elite      = c("No", "No", "No", "Yes", "No", "No"),
+  stringsAsFactors = TRUE
+)
+
+# Vector con los rangos teóricos de las variables continuas dados en el ejemplo
+# (calculados previamente sobre la base completa de la edición 1995 del reporte)
+rangos <- c(
+  tasa.acept = 0.846,
+  costo      = 19360,
+  nuevos     = 6357,
+  tasa.grad  = 108
+)
+```
+
+
+```{r}
+head(universidades)
+```
+
+```{r, warning=FALSE}
+# 1. Base principal
+base = universidades
+
+# 2. Selección de las filas que componen los dos grupos iniciales (3 por grupo)
+base1 = base[c(1, 2, 3, 4, 5, 6), ]
+
+# 3. Cálculo de la matriz de disimilitud usando la distancia de Gower
+library(cluster)
+d = daisy(base1, metric = "gower")
+D = as.matrix(d)
+
+# 4. Submatrices de distancias internas para el Grupo 1 (filas 1:3) y Grupo 2 (filas 4:6)
+d1 = D[1:3, 1:3]
+d2 = D[4:6, 4:6]
+```
+
+
+Se determinan los medoides de ambos grupos 
+
+```{r, warning=FALSE}
+# 5. Distancia promedio hacia los otros miembros del grupo (n - 1 = 2)
+# Distancias promedio de cada grupo
+dist_prom_g1 = apply(d1, 2, sum) / 2
+dist_prom_g2 = apply(d2, 2, sum) / 2
+
+# Identificar automáticamente el nombre del medoide
+medoide_g1 = names(which.min(dist_prom_g1))
+medoide_g2 = names(which.min(dist_prom_g2))
+
+# Imprimir los resultados
+medoide_g1
+medoide_g2
+```
+
+
+Se calcula la distancia de cada punto respecto a los 2 medoides y decida cuáles deben cambiar de grupo
+
+```{r}
+D[c(3,6),]
+```
+En el grupo 1 deben quedarse son `1,3,5` y en el grupo 2 `2,4,6`
+
+
+La distancia entre los dos grupos originales con vecino-más lejano
+
+
+```{r}
+# Definir los vectores con los índices de cada grupo
+g1 = c(1, 3, 5)
+g2 = c(2, 4, 6)
+
+# Extraer el bloque de distancias cruzadas entre G1 y G2
+dist_cruzadas = D[g1, g2]
+
+# Distancia por vecino más lejano (valor máximo)
+dist_vecino_lejano = max(dist_cruzadas)
+
+# Visualizar la submatriz y el resultado
+dist_cruzadas
+```
+
+
+```{r}
+dist_vecino_lejano
+```
+
 # Método de k-medias y k-mediodes
 
 ## k-medias
