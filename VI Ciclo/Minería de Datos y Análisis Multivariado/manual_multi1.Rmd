@@ -913,7 +913,7 @@ Una solución ante este problema es usar esta prubea prueba, que tiene como cond
 | $[0.0, 0.5]$ | Inaceptable (Desaconsejable) |
 
 ```{r}
-KMO(R)
+KMO(R) #library(psych) 
 ```
 
 En este caso la Correlación es aceptable
@@ -3430,6 +3430,8 @@ base1 = senti1[senti1$grupo == 1, -6]
 # min() devuelve el valor numérico de la menor distancia promedio encontrada
 min(colMeans(as.matrix(dist(base1))))
 ```
+
+
 
 
 
