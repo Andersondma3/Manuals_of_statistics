@@ -2306,7 +2306,7 @@ $$
 \end{aligned}
 $$
 
-Observe que en este caso lad que aporta más son la tasas de acptación y el costo debido a que tienen un aporte de 0.16 y 0.25 respectivamente.
+Observe que en este caso la que aporta más son la tasas de acptación y el costo debido a que tienen un aporte de 0.16 y 0.25 respectivamente.
 
 
 *Se tiene la siguiente información de las dos universidad*
@@ -3747,6 +3747,10 @@ for (i in 1:nrow(senti1)) {
 # Tabla cruzada entre la asignación anterior (senti1$grupo) y la nueva (grupo1)
 # Permite verificar cuántas observaciones cambiaron de cluster en esta iteración
 table(senti1$grupo, grupo1)
+
+# Forma de ubicar cuáles son lo que se cambiaron de grupo
+nums = which(grupo1 != grupo)
+base3[nums, c("grupo","grupo1")]
 ```
 
 
