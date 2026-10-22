@@ -215,7 +215,7 @@ $$\mu_{y|x_1,x_3}=\beta_0+\beta_1 X_1+\beta_3X_3$$
 
 *Nota:* Es importante resaltar que los tres modelos anteriores no son lo mismo, cada uno tiene sus ventajas y desventajas.
 
-El PCA sirva para eliminar la multicolinealidad, solo si lo queremos usar para una regresión. Otro uso que se le puede dar es para obtener gráficos más simples.
+El PCA sirve para eliminar la multicolinealidad, solo si nuestro objetivo es usarlo para una regresión. Otro uso que se le puede dar es para obtener gráficos más simples.
 
 ## Maldición de la dimensionalidad
 
@@ -297,7 +297,7 @@ Luego obtenemos los coeficientes para $Z_1$ y hacemos la siguiente regresión:
 $Z_1=0.2X_1^s+0.4X_2^s+0.01X_3^s+0.5X_4^s$
 
 
-*Nota:* En regresión estanrizabamos los coefcientes para poder compararlos en este caso, estadarizamos y la que tiene más peso en el resultado de $Z_1$ es $X_4$
+*Nota:* En regresión estandarizabamos los coeficientes para poder compararlos en este caso, estadarizamos y la que tiene más peso en el resultado de $Z_1$ es $X_4$
 
 Luego sustituimos con los valores que tenemos
 
@@ -312,7 +312,7 @@ $$\begin{aligned} Z_1^{(4)} &= 0.2(-1.16) + 0.4(1.30) + 0.01(1.16) + 0.5(-1.20) 
 *Nota:* Si uno tiene $p$ variables originales, puede llegar a $p$ variables nuevas, la idea es siempre obtener menos que $p$
 
 
-Más adelante se explicará la obtención de los $Z$'s mediante la descomposición esprectra.
+Más adelante se explicará la obtención de los $Z$'s mediante la descomposición esprectral.
 
 
 Además los coeficentes de los $Z$'s, como está normalizados la suma de ellos es igual a 1.
@@ -341,11 +341,19 @@ $$Z_4 = 0.5X_1-0.5X_2+0.01x_3+0.01X_4$$
 
 + Si $X_1 = X_2 = 0$ significa que está muy parecido
 
-PREGUNTAR
 
 + Si $X_1  > X_2$
 
+Resultado algebraico: La diferencia $(X_1 - X_2)$ es positiva, por lo que $Z_4 > 0$.
+
+Interpretación: La unidad de estudio (persona, empresa o institución) tiene un predominio o sesgo a favor de la variable $X_1$ sobre $X_2$. Cuanto mayor sea el valor positivo de $Z_4$, más sobresale $X_1$ en relación con $X_2$.
+
 + Si $X_1  < X_2$
+
+
+Resultado algebraico: La diferencia $(X_1 - X_2)$ es negativa, por lo que $Z_4 < 0$.
+
+Interpretación: La unidad de estudio presenta un predominio o concentración hacia $X_2$ sobre $X_1$. Cuanto más negativo sea $Z_4$, mayor es la ventaja o concentración relativa de $X_2$ respecto a $X_1$.
 
 # Comparación de análisis factorial con componentes principales
 
@@ -356,7 +364,7 @@ PREGUNTAR
 
 + La estructura del análisis de factores es similar a los componentes principales.
 
-+ En componentes principales las variables conocidas $X$ se combinan con los coeficientes a para producir nuevas variables $Z$ llamadas componentes principales. Una propieda importante en el análisis de componentes principales es $Cov(Z_i,Z_j) = 0$
++ En componentes principales las variables conocidas $X$ se combinan con los coeficientes a para producir nuevas variables $Z$ llamadas componentes principales. Una propiedad importante en el análisis de componentes principales es $Cov(Z_i,Z_j) = 0$
 
 + En factores se combinan factores latentes desconocidos $f$ para formar las variables conocidas $X$.  Esto es más complejo
 
@@ -407,7 +415,7 @@ $$
 \begin{bmatrix}
 8 & 10 & -3 \\
 10 & 6 & -4 \\
--3 & 4 & -2
+-3 & 4 & 2
 \end{bmatrix}
 $$
 
@@ -463,7 +471,7 @@ round(v$values,2)
 
 Esto nos dice que $\lambda_1 = 17.07, \lambda_2 = 5.04,\lambda_3 = -6.11$
 
-Note que la suma de estos valores no da la varianza total original
+Note que la suma de estos valores n¿da como resultado la varianza total original
 
 ```{r}
 sum(v$values)
@@ -750,6 +758,76 @@ Con esto llegamos obtener el vector con los valores de la primera variable nueva
 *Nota:* Si se calculan las varianzas de los $Z$'s da como resultado los $\lambda$'s encontrados para los vectores propios, por lo que la variabilidad total es igual si se mantiene el mismo número de variables originales.
 
 
+## Estudio de intervalos en los que se encuentran los datos generados por un componente 
+
+Tenemos los siguientes datos
+
+**Valores propios**
+
+| PC1 | PC2 | PC3 | PC4 |
+| :---: | :---: | :---: | :---: |
+| 2.73 | 0.76 | 0.38 | 0.13 |
+
+**Vectores propios**
+
+| Variable | PC1 | PC2 | PC3 | PC4 |
+| :--- | :---: | :---: | :---: | :---: |
+| vallas | -0.57 | -0.07 | -0.18 | -0.80 |
+| saltoalto | -0.38 | 0.89 | -0.14 | 0.22 |
+| tiro | -0.51 | -0.14 | 0.82 | 0.20 |
+| car200 | -0.51 | -0.43 | -0.52 | 0.53 |
+
+
+Al obtener los puntajes del primer componente, ¿será posible que uno de ellos sea 8.1? 
+
+Debemos aplicar la siguiente propiedad:
+
+$$Var(Z_j) = \lambda_j \implies sd(Z_j) = \sqrt{\lambda_j}$$
+
+```{r}
+vp1 = 2.73
+desv1 = sqrt(vp1)
+desv1
+```
+```{r}
+2*desv1
+```
+
+```{r}
+3*desv1
+```
+
+No es posible que uno de los valores del primer componente sea 8.1. Si consideramos que la desviación estándar es de 1.65, y que la media es de cero (por propiedades de estandarización, se espera que los valores estén en el rango entre -2 y 2 desviaciones estándar, es decir entre -3.3 y 3.3
+
+
+## Correlación entre Componentes y variables 
+
+uando el Análisis de Componentes Principales se realiza sobre variables estandarizadas (usando la matriz de correlaciones $\mathbf{R}$), la correlación entre la $i$-ésima variable original estandarizada $Z_i$ y el $j$-ésimo componente principal $Y_j$ (llamada comúnmente factor loading o carga factorial) viene dada por la propiedad:
+$$\operatorname{Corr}(Z_i, Y_j) = a_{ij} \sqrt{\lambda_j}$$
+donde:
+
++ $a_{ij}$ es el coeficiente (peso) de la variable 
+
++ $i$ en el vector propio del componente $j$.
+
++ $\lambda_j$ es el valor propio asociado al componente $j$ (que corresponde a su varianza).
+
+
+Dado esta propiedad, basado en el anterior ejemplo:
+
+¿Cómo espera que sea la correlación entre el segundo componente principal y la variable C10? Justifique
+su respuesta
+
+
+```{r}
+coef_saltoalto = 0.89 #el coeficiente de la variable en el segundo componente 
+lambda_2 = 0.76 # la varianza del segundo componente 
+
+coef_saltoalto*sqrt(lambda_2)
+```
+
+
+
 # Aplicación de PCA ejemplo de HEPTATLON
 
 
@@ -798,7 +876,7 @@ corrgram(base[,-8], lower.panel=panel.pts,order=T)  # order = T nos orderna las 
 ```
 
 
-Los colores azules significam una correlación positiva, mientras que los rojos significa una correlación negatiiva. Además , en los gráficos de puntos, en los ejes están los valores de cada variables según corresponda.
+Los colores azules significan una correlación positiva, mientras que los rojos significa una correlación negatiiva. Además , en los gráficos de puntos, en los ejes están los valores de cada variables según corresponda.
 
 ### Gráfico de correlación librería corrgram de números (correlaciones)
 
@@ -817,8 +895,6 @@ corrplot(cor(base[,-8]), method = "square", type = "lower")
 # El parámetro lower ordena el correlograma de mannera decendente 
 ```
 
-
-\newpage
 
 ## Análisis de valores extremos mendiante leverage
 
@@ -899,7 +975,7 @@ cortest.bartlett(base2) # En esta opción, la base de datos no puede contener la
 
 En ocasiones la prueba de correlaciones falla debido a la gran cantidad de datos, ya que debido a la gran potencia que tienen, ocasiona que la prueba se rechaze siempre.
 
-Una solución ante este problema es usar esta prubea prueba, que tiene como condición que solo si $n/q<5$, donde q es el número de variables.
+Una solución ante este problema es usar esta prueba, que tiene como condición que solo si $n/q<5$, donde q es el número de variables.
 
 *A continuación se le presentan los criterios del KMO*
 
@@ -1217,7 +1293,7 @@ cbind(Z1,Z1a)
 En contexto de este problema mientras más pequeño sea el número mejor es la puntuación, esto nos lleva que la atleta `Jeong-Mi (KOR)`, es la que peor puntuación tiene ya que tiene un valor de $Z_1$ alto. Otro aspecto importante a notar es que `Scheider (SWI)` se mantiene muy cerca del promedio, esto debido a su valor en el componente es casi cero.
 
 
-## Comparación de Varianzad y lambdas
+## Comparación de Varianzas y lambdas
 
 ```{r}
 var(Z1a) 
@@ -1251,7 +1327,7 @@ Este es el código para hacer el gráfico normal
 biplot(pca1, cex=0.6)
 ```
 
-*El gráfico que se le presenta a continuación fue arreglafo para términos de presentación y explicación*
+*El gráfico que se le presenta a continuación fue arreglado para términos de presentación y explicación*
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE,fig.height=4, out.width="60%",fig.align="center"}
 library(factoextra)
@@ -1316,12 +1392,17 @@ ggplot_pca(pca2)
 
 # Gráfico de sedimentación
 
-este gráfico nos sirve para ver como va bajando la varianza explicada de cada componente
+Este gráfico nos sirve para ver como va bajando la varianza explicada de cada componente
 
 ```{r,fig.height=3.2, out.width="60%",fig.align="center"}
 plot(pca1,type="l") 
 ```
-Para este gráfico puede usar `plot(pca$sdev^2)` o `plot(pca)`
+Para este gráfico puede usar `plot(pca$sdev^2)` o `plot(pca)` ó también si le dan solo los valores propios hagalo de la siguiente forma:
+
+
+```{r, eval=FALSE}
+plot(1:5,c(2.341, 0.958, 0.656, 0.603, 0.442),type = "l",ylab = "Valor propio") # la lista de valores propios se lo tiene que dar
+```
 
 El criterio usando el gráfico dice que se deben escoger la cantidad de componentes antes de que caiga abruptamente la variabilidad, en este caso solo podríamos escoger uno, ya que en el gráfico anterior después del primer valor la varianza se desploma.
 
@@ -1345,9 +1426,9 @@ Debido a que según el gráfico solo debemos quedarnos con un componente y con e
 Usando todos los componentes.
 
 ```{r}
-A=pca1$rot 
-L=diag(pca1$sdev**2) 
-R1=A%*%L%*%t(A) 
+A=pca1$rot # 1. Extraer la matriz de vectores propios (eigenvectors o loadings)
+L=diag(pca1$sdev**2) # 2. Construir la matriz diagonal de valores propios (eigenvalues o varianzas)
+R1=A%*%L%*%t(A) #3. Aplicar el producto matricial de la descomposición espectral: R1 = A %*% L %*% t(A)
 round(R1,2) 
 ```
 Verificación
@@ -1371,14 +1452,7 @@ round(R2-R,1)
 ```
 
 
-+	Haga lo mismo con tres componentes y decida si vale la pena usar 3 componentes.
 
-```{r}
-A3=pca1$rot[,1:3] 
-L3=diag(lambda1[1:3]) 
-R3=A3%*%L3%*%t(A3) 
-round(R3-R,1) 
-```
 ## Obtención de correlaciones
 
 Obtenemos la correlación entre cada variable original y Z1a.
@@ -1691,7 +1765,7 @@ print(round(D_M, 4))
 
 ### Forma automática
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 #install.packages("biotools")
 library(biotools)
 dM=D2.dist(X,S) #Esto cálcula la distancia de Mahalanobis al Cuadrado 
@@ -1822,7 +1896,9 @@ class(d)
 d2= as.matrix(d) # Pasamos el objeto dist a una matriz
 d2sup = d2 
 # Para evitar los ceros en la diagonal extraemos la matriz trangular superior
-d2sup[lower.tri(d2, diag = TRUE)] <- NA # Se extrae la matriz trangular superior y reemplazan los otros valores con NA
+# Se extrae la matriz trangular superior y reemplazan los otros valores con NA
+d2sup[lower.tri(d2, diag = TRUE)] <- NA 
+
 ```
 
 
@@ -2025,7 +2101,7 @@ datos_largos <- base2 %>%
 ```
 
 
-```{r}
+```{r,fig.height=3.5, out.width="60%",fig.align="center"}
  #datos largos son los datos pivioteados
 ggplot(datos_largos, aes(x = mes, y = temp_c, group = canton, color = canton)) +
   geom_line(linewidth = 0.9, alpha = 0.85) +
@@ -2053,7 +2129,7 @@ cantones_min #Buscar en las páginas de arriba como se obtuvo este resultado
 *A continuación se le presenta un gráfico de la matriz de correlaciones*
 
 
-```{r,warning=FALSE}
+```{r,warning=FALSE,fig.height=3.5, out.width="60%",fig.align="center"}
 corrgram(base3, lower.panel=panel.pts, upper.panel=panel.conf, 
          diag.panel=panel.density,order=T) 
 ```
@@ -2063,7 +2139,8 @@ Basado en el gráfico anterior y con la función `cor()` obtenemos la mayor corr
 ```{r}
 R = cor(base3)
 Rsup = R
-Rsup[lower.tri(R, diag = TRUE)] <- NA # Se extrae la matriz trangular superior y reemplazan los otros valores con NA
+# Se extrae la matriz trangular superior y reemplazan los otros valores con NA
+Rsup[lower.tri(R, diag = TRUE)] <- NA 
 max_r = which(Rsup == max(Rsup, na.rm = TRUE), arr.ind = TRUE)
 ```
 
@@ -2097,7 +2174,7 @@ r2 = cantones_maxr[1,2] #Talamanca
 ```
 
 
-```{r}
+```{r,fig.height=3.5, out.width="60%",fig.align="center"}
 
 # Unir cantones a graficar (sin duplicados)
 cantones_a_graficar <- unique(c(d1,d2,r1,r2))
@@ -2135,7 +2212,7 @@ ggplot(datos_lineas, aes(x = mes, y = temp_c, group = canton, color = canton)) +
   )
 ```
 
-Se puede ver en el anterior gráfico que los cantones de Cartago y Talamanca, tienen el mismo comportamiento, pero no son tan cercanos. Por otro lado, los cantones Santa Cruz y Nicoya son muy cercanos, pero su comportamiento si es más distinto, estos dos tipos de disntancia nos sirven dependiendo del tipo de pregunta que buscamos resolver.
+Se puede ver en el anterior gráfico que los cantones de Cartago y Talamanca, tienen el mismo comportamiento, pero no son tan cercanos. Por otro lado, los cantones Santa Cruz y Nicoya son muy cercanos, pero su comportamiento si es más distinto, estos dos tipos de distancia nos sirven dependiendo del tipo de pregunta que buscamos resolver.
 
 
 A partir de una matriz de correlaciones $R$, se puede obtener una matriz de distancias de la siguiente forma:
@@ -2653,11 +2730,11 @@ scdg(base1,grupo)
 
 ```
 
-**Obtención delos centroides**
+**Obtención de los centroides**
 
 ```{r}
 grupo <- sample(1:3, size = nrow(base1), replace = TRUE)
-centros=matrix(nrow=3,ncol=5)
+centros=matrix(nrow=3,ncol=5) # número de filas son losn grupos y las columnas número de variables
 for(j in 1:5) centros[,j]=tapply(base1[,j],grupo,mean)
 colnames(centros) = colnames(base1)
 rownames(centros) = c(1,2,3)
@@ -2848,6 +2925,7 @@ $$\bar{x}_{\text{peso}} = \frac{1}{3} \sum_{i=1}^{3} x_{i1} = \frac{60 + 65 + 70
 Coordenada de la Altura:
 $$\bar{x}_{\text{altura}} = \frac{1}{3} \sum_{i=1}^{3} x_{i2} = \frac{160 + 165 + 190}{3} = \frac{515}{3} \approx \mathbf{171.67\text{ cm}}$$
 
+### Cálculo medoide
 
 Teniendo claro esto también podemos calcular el mediode, de la siguiente manera:
 
@@ -2872,6 +2950,18 @@ apply(m, 2, \(x) mean(x[x != 0])) # Este código es para no incluir a el cero en
 ```
 
 En este caso el medoide es el punto 2
+
+
+**Otra forma**
+
+```{r, eval=FALSE}
+matriz_distancias <- as.matrix(dist(datos[, c("pesos", "alturas")]))
+indice_medoide <- which.min(rowSums(matriz_distancias))
+medoide <- datos[indice_medoide, ]
+```
+
+
+
 
 
 ```{r,echo=FALSE,fig.height=3.8, out.width="60%",fig.align="center"}
@@ -3476,9 +3566,9 @@ ggplot() +
   theme_void()
 ```
 
-1. **Coordenadas*para una representación gráfica más simple.
-2. **Porcentaje de variación explicada*/ proporción de los valores propios.
-3. **Acomodo*de los componentes principales / las coordenadas en orden de importancia.
+1. **Coordenadas** para una representación gráfica más simple.
+2. **Porcentaje de variación explicada** proporción de los valores propios.
+3. **Acomodo de los componentes principales** / las coordenadas en orden de importancia.
 
 A partir de la matriz de datos $\mathbf{X}$ se obtiene una matriz de distancias $\mathbf{D}$ de dimensión $n \times n$.
 El MMDS parte de $\mathbf{D}$ y trata de encontrar $\mathbf{X}$.
@@ -3600,7 +3690,7 @@ $$
 
 Donde entre más cercano esté a uno, mejor es la representación de los datos en las nuevas coordenadas.
 
-*Nota:Note que la cantidad de valores propios es igual al número de observaciones.
+*Nota:* Note que la cantidad de valores propios es igual al número de observaciones.
 
 
 
@@ -3744,11 +3834,11 @@ eB$vectors[,1:2]
 
 
 
-```{r}
+```{r,fig.width=8, fig.height=4.5, fig.align='center'}
 plot(cmds$points[,1:2])
 ```
 
-```{r}
+```{r,fig.width=8, fig.height=4.5, fig.align='center'}
 plot(eB$vectors[,1:2])
 ```
 
@@ -3884,4 +3974,254 @@ min(colMeans(as.matrix(dist(base1))))
 
 
 
+## Cálculo de medoides aplicado 
+
+
+```{r,echo=FALSE}
+uno <- c(0.000, 0.190, 0.262, 0.310, 0.274, 0.190, 0.274, 0.298, 0.250)
+dos <- c(0.190, 0.000, 0.119, 0.167, 0.131, 0.000, 0.083, 0.155, 0.107)
+tres <- c(0.262, 0.119, 0.000, 0.048, 0.155, 0.119, 0.202, 0.131, 0.179)
+cuatro <- c(0.310, 0.167, 0.048, 0.000, 0.202, 0.167, 0.250, 0.179, 0.226)
+cinco <- c(0.274, 0.131, 0.155, 0.202, 0.000, 0.131, 0.048, 0.024, 0.190)
+seis <- c(0.190, 0.000, 0.119, 0.167, 0.131, 0.000, 0.083, 0.155, 0.107)
+siete <- c(0.274, 0.083, 0.202, 0.250, 0.048, 0.083, 0.000, 0.071, 0.190)
+ocho <- c(0.298, 0.155, 0.131, 0.179, 0.024, 0.155, 0.071, 0.000, 0.214)
+nueve <- c(0.250, 0.107, 0.179, 0.226, 0.190, 0.107, 0.190, 0.214, 0.000)
+d <- cbind(uno, dos, tres, cuatro, cinco, seis, siete, ocho, nueve)
+d <- as.data.frame(d)
+names(d) <- c("1","2","3","4","5","6","7","8","9")
+d <- as.matrix(d)
+```
+
+A continuación, se da matriz de distancias para 9 los individuos que se han agrupado en 2 grupos conformados de la siguiente manera: los primeros 4 individuos en el primer grupo y los últimos 5 en el segundo grupo.
+
+```{r}
+d
+```
+
+**Grupo 1**
+
+RECUERDE QUE EL MEDOIDE ES EL PUNTO MÁS BAJO
+
+Son los primeros 4 individuos 
+
+```{r}
+apply(d[1:4,1:4], 2, \(x) mean(x[x != 0])) # Este código es para no incluir a el cero en el promedio
+```
+
+Medoide: punto 3
+
+**Grupo 1**
+
+Son los 5 individuos restantes 
+
+```{r}
+apply(d[5:9,5:9], 2, \(x) mean(x[x != 0])) # Este código es para no incluir a el cero en el promedio
+```
+Medoide: Punto 7
+
+Luego se saca las distancias de estos grupos con respecto a estos dos medoides, ya que el que esté más cerca será el grupo que se le asigne otra vez
+
+
+```{r}
+cbind(c(3,7),d[c(3,7),-c(3,7)])
+```
+
+Viendo las distancias y según la distancia más cercana de los demás individuos con respecto a los medoides 3 y 7:
+El individuo 1 sigue en el grupo 1
+El individuo 2 cambia al grupo 2
+El individuo 4 sigue en el grupo 1
+El individuo 5 sigue en el grupo 2
+El individuo 6 sigue en el grupo 2
+El individuo 8 sigue en el grupo 2
+El individuo 9 cambia al grupo 1
+
+
+Ahora los grupos son:
+Grupo 1: 1, 3, 4 y 9
+Grupo 2: 2, 5, 6, 7 y 8
+
+
+
+## Código para distancia entre grupos de forma manual a partir de las distancias:
+
+```{r}
+# Índices de los dos grupos originales según el enunciado:
+# Grupo A (primeros 4 individuos): 1, 2, 3, 4
+# Grupo B (últimos 5 individuos):  5, 6, 7, 8, 9
+gA <- 1:4
+gB <- 5:9
+```
+
+
+```{r}
+# Submatriz de distancias entre todos los elementos de A y todos los de B (dimensión 4 x 5)
+d_cruzada <- d[gA, gB]
+```
+
+
+```{r}
+# 1. SALTO MÍNIMO / VECINO MÁS CERCANO (Single Linkage)
+# Definición: La menor distancia entre cualquier punto de A y cualquier punto de B
+# D_single(A, B) = min_{i in A, j in B} d(i, j)
+dist_single <- min(d_cruzada)
+# Resultado: distancia mínima entre ambos clusters
+```
+
+
+```{r}
+# 2. SALTO MÁXIMO / VECINO MÁS LEJANO (Complete Linkage)
+# Definición: La mayor distancia entre cualquier punto de A y cualquier punto de B
+# D_complete(A, B) = max_{i in A, j in B} d(i, j)
+
+dist_complete <- max(d_cruzada)
+# Resultado: distancia máxima entre ambos clusters
+```
+
+
+```{r}
+# 3. SALTO PROMEDIO (Average Linkage / UPGMA)
+# Definición: El promedio aritmético de todas las distancias entre pares cruzados
+# D_average(A, B) = (1 / (|A| * |B|)) * sum_{i in A} sum_{j in B} d(i, j)
+dist_average <- mean(d_cruzada)  # Equivale exactamente a sum(d_cruzada) / (length(gA) * length(gB))
+```
+
+
+```{r}
+# 4. SALTO ENTRE MEDOIDES (Medoid Linkage)
+# Definición: La distancia directa entre el medoide del Grupo A y el medoide del Grupo B
+# Del análisis previo: Medoide de A = punto 3, Medoide de B = punto 7
+med_A <- 3
+med_B <- 7
+dist_medoides <- d[med_A, med_B]
+```
+
+
+```{r}
+# 5. SALTO POR CENTROIDES (Centroid Linkage / UPGMC)
+# Nota teórica: Cuando se dispone de las coordenadas originales X, es ||mean(X_A) - mean(X_B)||^2.
+# A partir únicamente de una matriz de distancias D (usando distancias euclidianas al cuadrado):
+# D_centroid(A, B) = (1/|A|)*sum_{i in A} d^2(i, cB) ... expresado en términos de distancias por pares:
+# D^2(bar{x}_A, bar{x}_B) = (1/|A|*|B|) * sum d^2(i,j) - (1/|A|^2)*sum_{i<j} d^2_A - (1/|B|^2)*sum_{i<j} d^2_B
+
+d2_cruzada <- d[gA, gB]^2
+d2_interna_A <- d[gA, gA]^2
+d2_interna_B <- d[gB, gB]^2
+
+na <- length(gA)
+nb <- length(gB)
+
+# Distancia cuadrática entre centroides derivada desde la matriz D:
+dist2_centroide <- (sum(d2_cruzada) / (na * nb)) - 
+                   (sum(d2_interna_A) / (2 * na^2)) - 
+                   (sum(d2_interna_B) / (2 * nb^2))
+
+dist_centroide <- sqrt(max(0, dist2_centroide))
+```
+
+
+```{r}
+# 6. DISTANCIA POR INCREMENTO DE VARIANZA / CRITERIO DE WARD
+# Definición: Mide el incremento en la suma de cuadrados intra-grupo (Delta WSS) si se unieran ambos grupos
+# Delta WSS = (|A| * |B| / (|A| + |B|)) * ||bar{x}_A - bar{x}_B||^2
+
+delta_ward <- (na * nb / (na + nb)) * (dist_centroide^2)
+```
+
+## Suma de cuadrados de grupo al medoide
+
+Usando los grupos originales del ejemplo de arriba
+
+```{r}
+#grupo 1
+(scdg1 <- sum(d[3,c(1,2,4)]^2))
+```
+
+
+```{r}
+#grupo 2
+(scdg2 <- sum(d[7,c(5,6,8,9)]^2))
+
+```
+
+
+## Distancias para patrones similares (correlación)
+
+```{r}
+R <- cor(t(covid))
+d <- 1-R
+```
+
+```{r}
+which(d==min(d[d!=0]), arr.ind = T)
+```
+
+
+Para hacer lo dendogramas recuerde dar un objeto `as.dist()`
+
+```{r, echo=FALSE}
+datos <- data.frame(
+  Matematicas = c(85, 82, 45),
+  Fisica      = c(90, 88, 50),
+  Quimica     = c(78, 75, 40),
+  Biologia    = c(88, 85, 60),
+  Historia    = c(70, 72, 90),
+  row.names   = c("Estudiante_A", "Estudiante_B", "Estudiante_C")
+)
+```
+
+
+```{r}
+# 2. Seleccionar las dos observaciones parecidas (perfiles con la misma tendencia)
+obs1 <- as.numeric(datos["Estudiante_A", ])
+obs2 <- as.numeric(datos["Estudiante_B", ])
+nombres_vars <- colnames(datos)
+
+# 3. Calcular la métrica de distancia de perfil/tendencia (correlación de Pearson)
+# Una correlación cercana a +1 indica que ambas curvas suben y bajan en paralelo
+# Distancia de tendencia: d = 1 - r (vale 0 si las tendencias son perfectamente paralelas)
+r <- cor(obs1, obs2)
+dist_tendencia <- 1 - r
+```
+
+```{r}
+dist_tendencia
+```
+
+
+```{r}
+# 4. Gráfico lineal en base R para visualizar la trayectoria o perfil
+# Rango común en el eje Y para ambas curvas
+rango_y <- range(c(obs1, obs2))
+
+# Trazar la primera observación
+plot(
+  1:length(obs1), obs1,
+  type = "b", pch = 19, col = "blue", lwd = 2,
+  xaxt = "n", xlab = "Variables / Materias", ylab = "Valor",
+  ylim = c(rango_y[1] - 5, rango_y[2] + 5),
+  main = paste("Distancia de Tendencia (1 - r) =", round(dist_tendencia, 3))
+)
+
+# Agregar las etiquetas de las variables en el eje X
+#axis(side = 1, at = 1:length(obs1), labels = nombres_vars)
+
+# Superponer la segunda observación
+lines(1:length(obs2), obs2, type = "b", pch = 17, col = "red", lwd = 2, lty = 2)
+
+# Cuadrícula para facilitar la lectura visual del paralelismo
+
+#grid()
+
+# Leyenda identificativa
+# legend(
+#   "bottomleft",
+#   legend = c("Estudiante A", "Estudiante B"),
+#   col = c("blue", "red"),
+#   pch = c(19, 17),
+#   lty = c(1, 2),
+#   lwd = 2,
+#   bty = "n"
+# )
+```
 
