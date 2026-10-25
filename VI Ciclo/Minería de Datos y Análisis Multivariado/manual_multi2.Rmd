@@ -686,13 +686,27 @@ table(pred)
 ## Creación de Tabla de clasificación (Tabla de verdad)
 
 
-**Tabla de confusión:**
+```{r tabla_confusion_pdf, echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+library(kableExtra)
 
-| Valor Real \ Valor Predicho | Negativo | Positivo |
-| :--- | :---: | :---: |
-| **Negativo** | $a$ | $b$ |
-| **Positivo** | $c$ | $d$ |
+df_conf <- data.frame(
+  "Valor Real" = c("Negativo", "Positivo"),
+  "Negativo"   = c("$a$", "$c$"),
+  "Positivo"   = c("$b$", "$d$"),
+  check.names  = FALSE
+)
 
+kable(
+  df_conf,
+  format = "latex",
+  booktabs = TRUE,
+  align = c("l", "c", "c"),
+  escape = FALSE
+) %>%
+  add_header_above(c(" " = 1, "Valor Predicho" = 2), bold = TRUE) %>%
+  kable_styling(position = "center", latex_options = "hold_position")
+```
 
 ### Indicadores de desempeño 
 
