@@ -884,7 +884,7 @@ Fvir = sum(tab[1:2,3]) #Falsos Virginica
 ```
 
 
-## Validación cruzada
+## Validación cruzada en r
 
 ```{r, message=FALSE, warning=FALSE}
 library(caret)
