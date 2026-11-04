@@ -975,3 +975,247 @@ legend("topright", legend = c("Error global (e)",
 
 
 Lo que habría que comparar aquí cuál es el equilibrio y ver como cambia con la cantidad de variables que tiene cada modelo. Para así luego tener un cruterior donde se equilibrie todo.
+
+
+
+# K-vecinos más cercanos
+
+A continuación se le realiza el proceso de forma manual en r y se hace una representazción gráfica antes:
+
+### Construcción de la matriz de distancias
+
+Sea la base original con $n = 60$ observaciones y $p$ columnas, donde la columna 1 es la variable respuesta $y$ y las columnas 3 a 6 son categóricas ($c$):
+
+$$
+\text{base2} =
+\begin{bmatrix}
+y_1 & x_{1,2} & c_{1,3} & \cdots & c_{1,6} & x_{1,7} & \cdots & x_{1,p} \\
+y_2 & x_{2,2} & c_{2,3} & \cdots & c_{2,6} & x_{2,7} & \cdots & x_{2,p} \\
+\vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+y_{60} & x_{60,2} & c_{60,3} & \cdots & c_{60,6} & x_{60,7} & \cdots & x_{60,p}
+\end{bmatrix}_{60 \times p}
+$$
+
+**1. Partición en entrenamiento y prueba** (se eliminan las columnas categóricas 3 a 6):
+
+$$
+\text{train} =
+\begin{bmatrix}
+y_1 & x_{1,2} & x_{1,7} & \cdots & x_{1,p} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+y_{50} & x_{50,2} & x_{50,7} & \cdots & x_{50,p}
+\end{bmatrix}_{50 \times (p-4)}
+\qquad
+\text{test} =
+\begin{bmatrix}
+y_{51} & x_{51,2} & x_{51,7} & \cdots & x_{51,p} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+y_{60} & x_{60,2} & x_{60,7} & \cdots & x_{60,p}
+\end{bmatrix}_{10 \times (p-4)}
+$$
+
+**2. Se quita la variable respuesta** (`train[,-1]` y `test[,-1]`), quedando solo las $q = p - 5$ variables numéricas:
+
+$$
+\mathbf{X}_{tr} =
+\begin{bmatrix}
+\mathbf{x}_1^\top \\ \vdots \\ \mathbf{x}_{50}^\top
+\end{bmatrix}_{50 \times q}
+\qquad
+\mathbf{X}_{te} =
+\begin{bmatrix}
+\mathbf{x}_{51}^\top \\ \vdots \\ \mathbf{x}_{60}^\top
+\end{bmatrix}_{10 \times q}
+$$
+
+**3. Se apilan por filas** (`rbind`):
+
+$$
+\mathbf{Z} =
+\begin{bmatrix}
+\mathbf{X}_{tr} \\
+\mathbf{X}_{te}
+\end{bmatrix}
+=
+\begin{bmatrix}
+\mathbf{x}_1^\top \\ \vdots \\ \mathbf{x}_{50}^\top \\ \mathbf{x}_{51}^\top \\ \vdots \\ \mathbf{x}_{60}^\top
+\end{bmatrix}_{60 \times q}
+$$
+
+**4. Matriz de distancias euclídeas** (`dist`, que por defecto usa la distancia euclídea):
+
+$$
+d_{ij} = \lVert \mathbf{x}_i - \mathbf{x}_j \rVert = \sqrt{\sum_{k=1}^{q} \left( x_{ik} - x_{jk} \right)^2}
+$$
+
+$$
+\mathbf{D} =
+\begin{bmatrix}
+0 & d_{1,2} & \cdots & d_{1,50} & d_{1,51} & \cdots & d_{1,60} \\
+d_{2,1} & 0 & \cdots & d_{2,50} & d_{2,51} & \cdots & d_{2,60} \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+d_{50,1} & d_{50,2} & \cdots & 0 & d_{50,51} & \cdots & d_{50,60} \\
+d_{51,1} & d_{51,2} & \cdots & d_{51,50} & 0 & \cdots & d_{51,60} \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+d_{60,1} & d_{60,2} & \cdots & d_{60,50} & d_{60,51} & \cdots & 0
+\end{bmatrix}_{60 \times 60}
+$$
+
+Vista por bloques:
+
+$$
+\mathbf{D} =
+\left[
+\begin{array}{c|c}
+\mathbf{D}_{tr,tr} & \mathbf{D}_{tr,te} \\
+\hline
+\mathbf{D}_{te,tr} & \mathbf{D}_{te,te}
+\end{array}
+\right]
+\qquad
+\begin{aligned}
+\mathbf{D}_{tr,tr} &: 50 \times 50 \\
+\mathbf{D}_{te,tr} &: 10 \times 50
+\end{aligned}
+$$
+
+$\mathbf{D}$ es simétrica ($d_{ij} = d_{ji}$) con diagonal cero. El bloque $\mathbf{D}_{te,tr}$, que corresponde a `d[51:60, 1:50]` ó tamabién puede ser `d[1:50, 51:60]` ,contiene la distancia de cada observación de prueba a cada observación de entrenamiento. Es decir cada bloque de $\mathbf{D}_{te,tr} : 10 \times 50$ es lo que necesitamos.
+
+
+Para clasificar cada observación de prueba solo interesan sus distancias a las observaciones de entrenamiento, es decir, el bloque $\mathbf{D}_{te,tr}$:
+
+$$
+\mathbf{D}_{te,tr} =
+\begin{bmatrix}
+d_{51,1} & d_{51,2} & \cdots & d_{51,50} \\
+d_{52,1} & d_{52,2} & \cdots & d_{52,50} \\
+\vdots & \vdots & \ddots & \vdots \\
+d_{60,1} & d_{60,2} & \cdots & d_{60,50}
+\end{bmatrix}_{10 \times 50}
+$$
+
+Cada fila $i$ contiene las distancias de la observación de prueba $\mathbf{x}_i$ a las 50 observaciones de entrenamiento:
+
+$$
+\mathbf{d}_i = \left( d_{i,1},\ d_{i,2},\ \ldots,\ d_{i,50} \right), \qquad i = 51, \ldots, 60
+$$
+
+**1. Ordenar las distancias de menor a mayor.** Si $d_{i,(1)} \leq d_{i,(2)} \leq \cdots \leq d_{i,(50)}$ son las distancias ordenadas, el conjunto de los $k$ vecinos más cercanos de $\mathbf{x}_i$ es:
+
+$$
+N_k(\mathbf{x}_i) = \left\{ j \in \{1, \ldots, 50\} : d_{i,j} \leq d_{i,(k)} \right\}
+$$
+
+Por ejemplo, con $k = 3$, si para la observación 51 las tres menores distancias fueran
+
+$$
+\mathbf{d}_{51} = \left( 4.2,\ \underbrace{0.8}_{j=2},\ 3.5,\ \ldots,\ \underbrace{1.1}_{j=17},\ \ldots,\ \underbrace{0.9}_{j=40},\ \ldots \right)
+$$
+
+entonces
+
+$$
+N_3(\mathbf{x}_{51}) = \{ 2,\ 40,\ 17 \}
+$$
+
+**2. Asignar la clase por voto mayoritario.** Se toman las respuestas $y_j$ de esos vecinos en `train` y se asigna la clase más frecuente:
+
+$$
+\hat{y}_i = \underset{c}{\arg\max} \sum_{j \in N_k(\mathbf{x}_i)} I\left( y_j = c \right)
+$$
+
+donde $I(\cdot)$ vale 1 si el vecino $j$ pertenece a la clase $c$ y 0 en otro caso. Por ejemplo, si $y_2 = A$, $y_{40} = A$ y $y_{17} = B$:
+
+$$
+\hat{y}_{51} = A \quad \text{(2 votos contra 1)}
+$$
+
+Al repetir esto para $i = 51, \ldots, 60$ se obtiene el vector de predicciones:
+
+$$
+\hat{\mathbf{y}}_{te} = \left( \hat{y}_{51},\ \hat{y}_{52},\ \ldots,\ \hat{y}_{60} \right)^\top
+$$
+*Nota:* Se recomienda usar un k impar para evitar evitas, por ejemplo si $k = 2$ y el resultado del proceso nos da $y_2 = A$, $y_{17} = B$, sería muy díficil saber cuál es la desición correcta.
+
+
+```{r}
+# Se obtiene las dos bases 50 obs para train, 10 para test
+train=base2[1:50,-(3:6)] # si quitan las columnas de variables categóricas
+test=base2[51:60,-(3:6)]
+d = as.matrix(dist(rbind(train[,-1],test[,-1]))) # Se pegan las dos bases de datos obtenidos anteriormente y se les calcula la distancia
+d2 = d[1:50,51:60]
+#Luego se buscan los 3 individios con menor distancia en la primera columna 
+k = 3 # número de vecinos más cercanos
+(ord = apply(d2,2, function(col) order(col)[1:k])) # si en lugar de order colocamos sort obtenemos los valores de esos número de filas
+
+```
+Para ver que categoría de cliente tiene cada uno de esas filas, para así poder clasificarlo lo hacemos de la siguiente manera:
+
+```{r}
+pred = c()
+for (i in 1:10) { #son 10 datos que están en el test
+  tab = table(train$cliente[ord[,i]]) # se hace una tabla para obtener el conteo de cada catgoría
+  pred[i] = names(tab)[which.max(tab)] # se guarda la categoría que se repite más veces
+}
+
+pred # clasificaciones de las 10 observaciones de la base test
+
+```
+
+## Validación cruzada con k vecinos más cercanos 
+
+
+```{r}
+# Función para evaluar los errores
+eval = function(y, pred) {
+  confu = table(y, pred)
+  e = 1 - sum(diag(confu)) / sum(confu)
+  falsos = 1 - diag(confu) / apply(confu, 1, sum)
+  error = c(e, falsos) * 100
+  names(error) = c("e", "FP", "FN")
+  return(list(Matriz = confu, Error = error))
+}
+
+knn_errores = function(xtrain, ytrain, xtest, ytest, k) {
+  n1 = nrow(xtrain)               
+  n2 = nrow(xtest)                
+  
+  
+  # Distancias de todos contra todos y nos quedamos con train vs. validación
+  D  = rbind(xtrain, xtest)
+  d  = as.matrix(dist(D))
+  d1 = d[1:n1, (n1 + 1):(n1 + n2), drop = FALSE]   
+
+  vecinos = apply(d1, 2, function(col) order(col)[1:k])
+  vecinos = matrix(vecinos, nrow = k)              
+
+  
+  pred = c()
+  for (i in 1:n2) {
+    tab = table(ytrain[vecinos[, i]])
+    pred[i] = names(tab)[which.max(tab)]
+  }
+
+  pred = factor(pred, levels = levels(ytrain))     # mismos niveles para la tabla 2x2
+  return(eval(ytest, pred))
+}
+```
+
+
+**Ejemplo de uso de la función**
+
+
+```{r}
+xtrain = train[, names(train) != "cliente"] # Se quita la columna de cliente 
+xtest  = test[, names(test) != "cliente"] # Se quita la columna de cliente 
+
+knn_errores(xtrain, train$cliente, xtest, test$cliente, k = 3)
+```
+
+
+
+
+
+
+
+
