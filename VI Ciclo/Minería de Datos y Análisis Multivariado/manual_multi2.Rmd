@@ -1162,7 +1162,7 @@ pred # clasificaciones de las 10 observaciones de la base test
 
 ```
 
-## Validación cruzada con k vecinos más cercanos 
+## Función de k-vecinos, para diferentes tamaños de k
 
 
 ```{r}
@@ -1211,11 +1211,244 @@ xtest  = test[, names(test) != "cliente"] # Se quita la columna de cliente
 
 knn_errores(xtrain, train$cliente, xtest, test$cliente, k = 3)
 ```
+## Validación cruzada con k-vecinos 
+
+
+### Para un número k-vecinos en específico
+
+```{r}
+cortes = createFolds(base2$cliente, k = 10) # Lista con los índices de prueba de cada fold
+k = 3 # Valor fijo de k
+# Matriz para guardar los errores de cada fold
+ERRORES_knn = matrix(NA, nrow = 10, ncol = 3,
+                     dimnames = list(paste0("Fold", 1:10),
+                                     c("e", "FP", "FN")))
+
+# Se hace un for para hacer lso cortes 
+for (i in 1:10) {
+  test  = base2[cortes[[i]], -(3:6)]  # Se quitan las variables categóricas
+  train = base2[-cortes[[i]], -(3:6)]
+
+  # Matrices de predictores sin la variable respuesta
+  xtrain = train[, names(train) != "cliente"]
+  xtest  = test[, names(test) != "cliente"]
+
+  ERRORES_knn[i, ] = knn_errores(xtrain, train$cliente,
+                                 xtest, test$cliente, k = k)$Error
+}
+
+round(ERRORES_knn, 2)           # Errores por corte
+round(colMeans(ERRORES_knn), 2) # Errores en general
+```
+
+### Para un diferentes números de k-vecinos 
+
+```{r}
+# Validación cruzada con k-NN para una distancia dada, se le puede cambiar el tipo de distancia 
+cv_knn = function(cortes, ks, metodo = "euclidean") {
+
+  # Matriz para acumular los errores de cada k (inicia en 0 para ir sumando)
+  suma = matrix(0, nrow = length(ks), ncol = 3,
+                dimnames = list(paste0("k=", ks), c("e", "FP", "FN")))
+
+  for (i in seq_along(cortes)) {                  # Recorre cada fold
+    test   = base2[cortes[[i]], -(3:6)]           # Fold i como prueba, sin categóricas
+    train  = base2[-cortes[[i]], -(3:6)]          # Resto como entrenamiento
+    xtrain = train[, names(train) != "cliente"]   # Predictores sin la respuesta
+    xtest  = test[, names(test) != "cliente"]
+    n1 = nrow(xtrain)                             # Cantidad de observaciones de entrenamiento
+
+    # Distancias entre todos, y se dejan solo filas = train, columnas = test
+    d1  = as.matrix(dist(rbind(xtrain, xtest), method = metodo))[1:n1, -(1:n1), drop = FALSE]
+    ord = apply(d1, 2, order)                     # Por columna, índices de train del más cercano al más lejano
+
+    for (j in seq_along(ks)) {                    # Recorre cada valor de k
+      vecinos = ord[1:ks[j], , drop = FALSE]      # Los k vecinos más cercanos de cada obs. de prueba
+
+      # Voto mayoritario: clase más frecuente entre los vecinos
+      pred = apply(vecinos, 2, function(v) {
+        tab = table(train$cliente[v])             # Cuenta las clases de los vecinos
+        names(tab)[which.max(tab)]                # Clase con más votos
+      })
+
+      pred = factor(pred, levels = levels(train$cliente))     # Mismos niveles que la respuesta real
+      suma[j, ] = suma[j, ] + eval(test$cliente, pred)$Error  # Acumula e, FP y FN
+    }
+  }
+  return(suma / length(cortes))                   # Promedio de los errores entre folds
+}
+```
+
+**Ejemplo de ejecución**
+
+```{r}
+cortes = createFolds(base2$cliente, k = 10)
+ks = seq(1,15, by = 2)
+valid_cruz = cv_knn(cortes,ks,metodo = "euclidean")
+valid_cruz
+```
+**Validación cruzada: calibración de k-NN**
+
+| Concepto | Descripción | En k-NN |
+|---|---|---|
+| **Calibración** | Ajuste de los parámetros que se pueden cambiar según el método, buscando el que dé menor error en la validación cruzada. | Se calibran $k$ y la distancia. |
+| **$k$** | Número de vecinos más cercanos que votan para asignar la clase de una observación de prueba. | Se prueban varios valores (por ejemplo, $k = 1, 3, 5, \ldots, 15$) y se elige el de menor error. |
+| **Distancia** | Forma de medir qué tan cerca están dos observaciones. | Euclídea: $d_{ij} = \sqrt{\sum_{k} (x_{ik} - x_{jk})^2}$. Manhattan: $d_{ij} = \sum_{k} \lvert x_{ik} - x_{jk} \rvert$. |
+| **Para distancia euclídea** | Una vez fijada la distancia, solo queda calibrar el número de vecinos. | Se calibra únicamente $k$. |
+
+```{r}
+matplot(ks, valid_cruz, type = "b", pch = 19,
+        lty = 1, lwd = 2, col = c("black", "red", "blue"),
+        xlab = "k", ylab = "Error (%)",
+        main = "Errores según diferentes números de k")
+
+legend("topright", legend = c("Error global (e)",
+                         "Falsos positivos (FP)",
+                         "Falsos negativos (FN)"),
+       col = c("black", "red", "blue"), lty = 1, lwd = 2, pch = 19,
+       bty = "n", cex = 0.85)
+```
+
+
+Se puede ver que conforme el número de k-vecinos aumenta, la cantidad de FN aumenta, por lo que se quiere buscar es un equilibrio entre los tres tipos de error y en el gráfico anterior para k=1 es cuándo los tres errores están menor distanciados.
 
 
 
+### Comparación de dos métodos de distancia una cierta cantidad de veces
+
+Esto lo debemos hacer cuándo los resultados no son muy consistentes, hay que iterarlo en distintas ocasiones y luego promediar esos resultados, para observar hacia a donde convergen.
+
+```{r}
+reps = 2
+
+# Matriz con los errores de cada repetición, para la distancia euclidea
+k1_euc = matrix(NA, nrow = reps, ncol = 3,
+                dimnames = list(paste0("Rep", 1:reps), c("e", "FP", "FN")))
+k1_man = k1_euc # Matriz de errores distancia de Manhattan 
+# for para hacer los diferentes iteraciones, en este caso son 2
+for (r in 1:reps) {
+  cortes = createFolds(base2$cliente, k = 10) # Cortes distintos en cada repetición
+  k1_euc[r, ] = cv_knn(cortes, ks = 1, metodo = "euclidean")
+  k1_man[r, ] = cv_knn(cortes, ks = 1, metodo = "manhattan")
+}
+
+# Promedio de las 3 repeticiones para cada método
+comparacion_k1 = rbind(Euclidea  = colMeans(k1_euc),
+                       Manhattan = colMeans(k1_man))
+round(comparacion_k1, 2)
+```
+
+```{r}
+cortes   = createFolds(base2$cliente, k = 10)   # Índices de prueba de cada fold
+umbrales = seq(0.1, 0.9, by = 0.1)              # Puntos de corte a calibrar
+
+# Matriz para acumular los errores de cada umbral (filas = umbrales)
+suma = matrix(0, nrow = length(umbrales), ncol = 3,
+              dimnames = list(umbrales, c("e", "FP", "FN")))
+
+for (i in seq_along(cortes)) {                  # Recorre cada fold
+  test  = base2[cortes[[i]], ]                  # Fold i como prueba
+  train = base2[-cortes[[i]], ]                 # Resto como entrenamiento
+
+  # Modelo ajustado una sola vez por fold
+   mod = glm(cliente ~ ., family = "binomial", data = train)  # Todas las variables como predictoras
+  probabilidades = predict(mod, test, type = "response")  # P(malo) de cada obs. de prueba
+
+  for (j in seq_along(umbrales)) {              # Recorre cada umbral
+    pred = factor(ifelse(probabilidades > umbrales[j], "malo", "bueno"),
+                  levels = c("bueno", "malo"))  # Clasifica según el umbral
+    suma[j, ] = suma[j, ] + eval(test$cliente, pred)$Error  # Acumula e, FP y FN
+  }
+}
+
+prom_errores_log = suma / length(cortes)        # Promedio de los 10 folds
+round(prom_errores_log, 2)
+
+umbrales[which.min(prom_errores_log[, "e"])]    # Umbral con menor error global
+```
 
 
+```{r}
+matplot(umbrales, prom_errores_log, type = "b", pch = 19,
+        lty = 1, lwd = 2, col = c("black", "red", "blue"),
+        ylim = c(0, 100), xaxt = "n",
+        xlab = "Punto de corte", ylab = "Error (%)",
+        main = "Errores según el punto de corte")
+
+axis(1, at = umbrales)                          # Eje X con los umbrales probados
+
+legend("top", legend = c("Error global (e)",
+                         "Falsos positivos (FP)",
+                         "Falsos negativos (FN)"),
+       col = c("black", "red", "blue"), lty = 1, lwd = 2, pch = 19,
+       bty = "n", cex = 0.85)
+```
 
 
+```{r}
+cortes = createFolds(base2$cliente, k = 10)    # Índices de prueba de cada fold
+umbral = 0.5                                   # Punto de corte fijo (o el mejor de la calibración anterior)
+
+vars    = names(base2)[names(base2) != "cliente"]    # Todas las variables predictoras
+modelos = c("Completo", paste("Sin", vars))    # Nombres: modelo completo y uno sin cada variable
+
+# Matriz para acumular los errores de cada modelo
+suma = matrix(0, nrow = length(modelos), ncol = 3,
+              dimnames = list(modelos, c("e", "FP", "FN")))
+
+for (i in seq_along(cortes)) {                 # Recorre cada fold
+  test  = base2[cortes[[i]], ]                 # Fold i como prueba
+  train = base2[-cortes[[i]], ]                # Resto como entrenamiento
+
+  for (j in seq_along(modelos)) {              # Recorre cada modelo
+    if (j == 1) {
+      predictoras = vars                       # Modelo completo
+    } else {
+      predictoras = vars[-(j - 1)]             # Se quita la variable j - 1
+    }
+    formula = reformulate(predictoras, response = "cliente")  # Arma cliente ~ x1 + x2 + ...
+
+    mod  = glm(formula, family = "binomial", data = train)
+    prob = predict(mod, test, type = "response")              # P(malo)
+    pred = factor(ifelse(prob > umbral, "malo", "bueno"),
+                  levels = c("bueno", "malo"))                # Clasifica con el umbral fijo
+    suma[j, ] = suma[j, ] + eval(test$cliente, pred)$Error    # Acumula e, FP y FN
+  }
+}
+
+prom_errores_var = suma / length(cortes)       # Promedio de los 10 folds
+round(prom_errores_var, 2)
+```
+```{r}
+dif_e = prom_errores_var[-1, "e"] - prom_errores_var["Completo", "e"]  # Cambio en el error al quitar cada variable
+round(sort(dif_e, decreasing = TRUE), 2)
+
+barplot(sort(dif_e, decreasing = TRUE), las = 2, cex.names = 0.7,
+        col = ifelse(sort(dif_e, decreasing = TRUE) > 0, "red", "gray"),
+        ylab = "Cambio en el error global (%)",
+        main = "Efecto de eliminar cada variable")
+abline(h = 0, lty = 2)                         # Línea de referencia: sin cambio
+```
+```{r}
+par(mar = c(9, 4, 4, 2))                       # Más margen abajo para los nombres de las variables
+
+matplot(1:nrow(prom_errores_var), prom_errores_var, type = "b", pch = 19,
+        lty = 1, lwd = 2, col = c("black", "red", "blue"),
+        ylim = c(0, 100), xaxt = "n",          # Se quita el eje X automático
+        xlab = "", ylab = "Error (%)",
+        main = "Errores al eliminar cada variable")
+
+axis(1, at = 1:nrow(prom_errores_var),         # Una marca por modelo
+     labels = rownames(prom_errores_var),      # Nombres: Completo, Sin edad, ...
+     las = 2, cex.axis = 0.75)                 # Nombres verticales y más pequeños
+
+abline(h = prom_errores_var["Completo", ],     # Referencia: errores del modelo completo
+       col = c("black", "red", "blue"), lty = 3)
+
+legend("top", legend = c("Error global (e)",
+                         "Falsos positivos (FP)",
+                         "Falsos negativos (FN)"),
+       col = c("black", "red", "blue"), lty = 1, lwd = 2, pch = 19,
+       bty = "n", cex = 0.85, horiz = TRUE)    # Leyenda en una sola fila
+```
 
