@@ -1,0 +1,94 @@
+---
+title: "Untitled"
+author: "Anderson Martínez"
+date: "2026-11-07"
+output: html_document
+---
+
+```{r}
+load("base_home_credit.RData")
+```
+
+# Diccionario de datos — Base limpia HMDA Nuevo México 2025
+
+**Objeto:** `hmda`, guardado en `hmda_nm_2025_limpia.RData`. Se carga con `load("hmda_nm_2025_limpia.RData")`.
+**Población:** solicitudes de hipoteca de Nuevo México (2025) que recibieron una decisión de crédito, con información financiera completa. Se excluyen las instituciones exentas, las hipotecas inversas, los préstamos con fin comercial, las líneas de crédito abiertas y las viviendas de más de 4 unidades.
+**Fuente:** HMDA Data Browser (FFIEC/CFPB), registros individuales (LAR).
+**Tamaño:** alrededor de 41 600 filas (confirmar con `nrow(hmda)`) y 25 variables: 1 respuesta, 20 predictoras y 4 identificadores.
+
+## Variable respuesta
+
+| Variable | Original | Tipo | Descripción | Categorías |
+|---|---|---|---|---|
+| `resultado` | action_taken | Factor (3) | Resultado de la solicitud | `Originado` (préstamo otorgado), `Aprobado_no_aceptado` (el banco aprobó pero el cliente no tomó el préstamo), `Denegado` |
+
+## Predictoras: características del préstamo
+
+| Variable | Original | Tipo | Descripción | Categorías / unidades |
+|---|---|---|---|---|
+| `tipo_prestamo` | loan_type | Factor (4) | Programa de garantía del préstamo | `Convencional` (referencia), `FHA` (Administración Federal de Vivienda), `VA` (Asuntos de Veteranos), `USDA_RHS` (Depto. de Agricultura / Servicio de Vivienda Rural) |
+| `proposito` | loan_purpose | Factor (5) | Para qué se pide el préstamo | `Compra` (referencia), `Mejoras`, `Refinanciamiento`, `Refinanciamiento_efectivo` (refinanciamiento con retiro de efectivo), `Otro` |
+| `gravamen` | lien_status | Factor (2) | Prioridad de la garantía sobre la propiedad | `Primer_gravamen` (referencia), `Gravamen_subordinado` (segunda hipoteca) |
+| `monto_prestamo` | loan_amount | Numérica | Monto solicitado | USD. Viene redondeado al punto medio de tramos de 10 000 (por ejemplo, 205 000) |
+| `plazo_meses` | loan_term | Numérica | Plazo del préstamo | Meses (≥ 12; los valores menores se trataron como inválidos) |
+| `solo_intereses` | interest_only_payment | Factor (2) | Si el préstamo tiene un periodo de pago solo de intereses | `No`, `Si` (~1 %) |
+
+## Predictoras: propiedad
+
+| Variable | Original | Tipo | Descripción | Categorías / unidades |
+|---|---|---|---|---|
+| `valor_propiedad` | property_value | Numérica | Valor de la propiedad usado en la decisión | USD, redondeado al punto medio de tramos de 10 000 |
+| `tipo_vivienda` | construction_method + manufactured_home_secured_property_type | Factor (3) | Tipo de vivienda y de garantía | `Construida_en_sitio` (referencia), `Manufacturada_con_terreno` (casa manufacturada más el terreno), `Manufacturada_solo_estructura` (solo la casa, sin terreno) |
+| `ocupacion` | occupancy_type | Factor (3) | Uso de la propiedad | `Residencia_principal` (referencia), `Segunda_residencia`, `Inversion` |
+| `unidades_vivienda` | total_units | Numérica | Número de unidades de la vivienda | 1 a 4 |
+
+## Predictoras: solicitante
+
+| Variable | Original | Tipo | Descripción | Categorías / unidades |
+|---|---|---|---|---|
+| `ingreso_miles` | income | Numérica | Ingreso bruto anual usado en la decisión | **Miles** de USD (75 = 75 000). Los valores ≤ 0 se trataron como inválidos |
+| `deuda_ingreso` | debt_to_income_ratio | Ordinal (7) | Razón deuda/ingreso (DTI), en % | `<20` < `20-30` < `30-36` < `36-42` < `42-50` < `50-60` < `>60`. El original mezclaba tramos y valores exactos de 36 a 49, que se agruparon |
+| `edad` | applicant_age | Ordinal (7) | Edad del solicitante principal | `<25` < `25-34` < `35-44` < `45-54` < `55-64` < `65-74` < `>74` |
+| `tiene_coaplicante` | co.applicant_sex (derivada) | Factor (2) | Si la solicitud tiene un segundo solicitante | `No`, `Si` |
+| `tiene_puntaje` | applicant_credit_score_type (derivada) | Factor (2) | Si se usó un puntaje crediticio en la decisión | `No`, `Si`. Se redujo a binaria porque el tipo de modelo de puntaje identificaba a la institución |
+| `etnia` | derived_ethnicity | Factor (4) | Etnia del o los solicitantes | `Hispano`, `No_hispano`, `Conjunta` (solicitantes de distinta etnia), `No_disponible` |
+| `raza` | derived_race | Factor (7) | Raza del o los solicitantes | `Blanca`, `Indigena_americana`, `Asiatica`, `Afroamericana`, `Conjunta`, `Otra` (dos o más razas minoritarias, o Hawái/Pacífico), `No_disponible` |
+| `sexo` | derived_sex | Factor (4) | Sexo del o los solicitantes | `Hombre`, `Mujer`, `Conjunto` (solicitantes de distinto sexo), `No_disponible` |
+
+> **Nota sobre `etnia`, `raza` y `sexo`:** está pendiente decidir si entran como predictoras. En EE. UU., la ley de igualdad de oportunidades de crédito (ECOA) prohíbe usarlas en las decisiones de crédito. Sí son útiles para un análisis descriptivo de posibles disparidades.
+
+## Predictoras: proceso de la solicitud
+
+| Variable | Original | Tipo | Descripción | Categorías |
+|---|---|---|---|---|
+| `forma_solicitud` | submission_of_application | Factor (2) | Si la solicitud llegó directamente a la institución o por un intermediario | `Directa`, `No_directa` |
+| `sistema_evaluacion` | aus.1 | Factor (5) | Sistema automatizado de evaluación usado | `DU_Fannie` (Desktop Underwriter), `LP_Freddie` (Loan Product Advisor), `TOTAL_FHA` (TOTAL Scorecard), `Otro` (GUS, sistema interno u otro), `No_aplica` |
+
+> **Precaución con `sistema_evaluacion`:** `No_aplica` aparece en el 24 % de los originados y en el 58 % de los denegados. Parte de esa diferencia puede deberse al proceso (solicitudes denegadas antes de pasar por el sistema automatizado), no al solicitante. Conviene comparar los modelos con y sin esta variable.
+
+## Identificadores (no son predictoras)
+
+| Variable | Original | Tipo | Descripción |
+|---|---|---|---|
+| `institucion` | lei | Texto | Identificador de la institución financiera (Legal Entity Identifier). Tiene un efecto fuerte en la tasa de denegación; está pendiente decidir su tratamiento |
+| `area_metropolitana` | derived_msa.md | Texto | Código del área metropolitana (99999 = fuera de un área metropolitana) |
+| `condado` | county_code | Texto | Código FIPS del condado |
+| `tracto_censal` | census_tract | Texto | Código del tracto censal (puede tener NA: propiedad sin ubicar) |
+
+## Variables eliminadas del archivo original y por qué
+
+- **Fuga de información** (solo existen cuando hay préstamo o rechazo): interest_rate, rate_spread, total_loan_costs, total_points_and_fees, origination_charges, discount_points, lender_credits, hoepa_status, purchaser_type, denial_reason.1 a 4, preapproval (las preaprobaciones denegadas se excluyeron al filtrar) e initially_payable_to_institution ("No_aplica" con 0 % en Originado).
+- **Muchos faltantes:** loan_to_value_ratio (su información se conserva en monto y valor), bloque del tracto censal, prepayment_penalty_term, intro_rate_period, multifamily_affordable_units.
+- **Constantes o casi constantes:** activity_year, state_code, reverse_mortgage, business_or_commercial_purpose, open.end_line_of_credit, negative_amortization, other_nonamortizing_features, balloon_payment, conforming_loan_limit.
+- **Redundantes:** columnas detalladas de raza, etnia y sexo, co.applicant_*, derived_loan_product_type, derived_dwelling_category, construction_method y manufactured_home_* (fusionadas en `tipo_vivienda`).
+
+
+
+```{r}
+summary(base)
+```
+
+```{r}
+table(base$resultado)
+```
+

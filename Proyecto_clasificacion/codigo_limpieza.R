@@ -1,0 +1,309 @@
+# =============================================================
+# Proyecto de multivariado — HMDA Nuevo México 2025
+# Paso 3: LIMPIEZA DEFINITIVA (independiente de los scripts 01 y 02)
+#
+# Qué hace:  filtra la población, elimina variables con fuga o
+#            inútiles, convierte tipos, marca valores inválidos como NA,
+#            recodifica categóricas y guarda la base limpia.
+# Qué NO hace (a propósito): imputar faltantes, transformar con log,
+#            estandarizar ni balancear clases. Todo eso se hace DESPUÉS
+#            de partir en train/test; si se hace aquí, la información
+#            del conjunto de prueba se filtra al entrenamiento.
+# =============================================================
+library(dplyr)
+setwd("~/GitHub/Apuntes-Modelos-lineales-Avanzados/Proyecto_clasificacion")
+# ---------------- Parámetros (documentar en el informe) ----------------
+ruta_entrada <- "base_state_NM.csv"          # ajustar
+ruta_salida  <- "base_limpia"   # se generan .rds y .csv
+LTV_MIN   <- 1      # LTV (%) por debajo de esto se considera error
+LTV_MAX   <- 200    # LTV (%) por encima de esto se considera error
+PLAZO_MIN <- 12     # plazo (meses) por debajo de esto se considera error
+
+crudo <- read.csv(ruta_entrada, colClasses = "character",
+                  na.strings = c("", "NA"))
+
+# =============================================================
+# 1. Población de estudio
+# =============================================================
+pasos <- list(
+  "Base original"                  = rep(TRUE, nrow(crudo)),
+  "Clases 1-3 (con decisión)"      = crudo$action_taken %in% c("1", "2", "3"),
+  "Sin instituciones exentas"      = !(crudo$reverse_mortgage %in% "1111") &
+    !(crudo$debt_to_income_ratio %in% "Exempt"),
+  "Sin hipoteca inversa"           = !(crudo$reverse_mortgage %in% "1"),
+  "Sin fin comercial"              = !(crudo$business_or_commercial_purpose %in% "1"),
+  "Sin líneas de crédito abiertas" = !(crudo$open.end_line_of_credit %in% "1"),
+  "Vivienda de 1 a 4 unidades"     = crudo$total_units %in% c("1", "2", "3", "4"),
+  "Propósito conocido"             = !(crudo$loan_purpose %in% "5")
+)
+acum  <- Reduce(`&`, pasos, accumulate = TRUE)
+flujo <- data.frame(paso = names(pasos), n = sapply(acum, sum))
+flujo$excluidas <- c(NA, -diff(flujo$n))
+print(flujo)
+
+datos <- crudo[acum[[length(acum)]], ]
+
+# =============================================================
+# 2. Eliminación de variables
+# =============================================================
+# Coaplicante: se resume en una sola variable antes de borrar el detalle
+# (co.applicant_sex = 5 significa "sin coaplicante")
+datos$tiene_coaplicante <- factor(ifelse(datos$co.applicant_sex == "5", "No", "Si"))
+
+fuga <- c("interest_rate", "rate_spread", "total_loan_costs",
+          "total_points_and_fees", "origination_charges", "discount_points",
+          "lender_credits", "hoepa_status", "purchaser_type",
+          paste0("denial_reason.", 1:4))
+
+constantes_por_filtro <- c("activity_year", "state_code", "reverse_mortgage",
+                           "business_or_commercial_purpose",
+                           "open.end_line_of_credit")
+
+muchos_faltantes <- c("prepayment_penalty_term", "intro_rate_period",
+                      "multifamily_affordable_units", paste0("aus.", 2:5))
+
+redundantes <- c(
+  paste0("applicant_ethnicity.", 1:5), paste0("applicant_race.", 1:5),
+  "applicant_ethnicity_observed", "applicant_race_observed",
+  "applicant_sex_observed", "applicant_sex",       # se usan las derived_*
+  "applicant_age_above_62",                        # redundante con la edad
+  "derived_loan_product_type",                     # = loan_type + lien_status
+  "derived_dwelling_category",                     # = construction_method + total_units
+  grep("^co\\.applicant", names(datos), value = TRUE)  # resumido en tiene_coaplicante
+)
+
+# Verificación: las "constantes" realmente lo son tras filtrar
+sapply(datos[constantes_por_filtro], function(x) length(unique(x)))
+
+a_borrar <- intersect(c(fuga, constantes_por_filtro, muchos_faltantes, redundantes),
+                      names(datos))
+datos <- datos[, setdiff(names(datos), a_borrar)]
+cat("Variables eliminadas:", length(a_borrar), "| quedan:", ncol(datos), "\n")
+
+# =============================================================
+# 3. Tipos numéricos
+# =============================================================
+vars_num <- c("loan_amount", "income", "property_value", "loan_to_value_ratio",
+              "loan_term", "total_units", "tract_population",
+              "tract_minority_population_percent",
+              "ffiec_msa_md_median_family_income",
+              "tract_to_msa_income_percentage", "tract_owner_occupied_units",
+              "tract_one_to_four_family_homes",
+              "tract_median_age_of_housing_units")
+datos <- datos %>% mutate(across(all_of(vars_num), ~ suppressWarnings(as.numeric(.x))))
+# lei, derived_msa.md, county_code y census_tract quedan como texto (identificadores)
+
+# =============================================================
+# 4. Valores inválidos -> NA (no se eliminan filas)
+# =============================================================
+invalidos <- with(datos, c(
+  ingreso_no_positivo = sum(income <= 0, na.rm = TRUE),
+  ltv_fuera_de_rango  = sum(loan_to_value_ratio < LTV_MIN |
+                              loan_to_value_ratio > LTV_MAX, na.rm = TRUE),
+  plazo_muy_corto     = sum(loan_term < PLAZO_MIN, na.rm = TRUE),
+  tract_ingreso_cero  = sum(tract_to_msa_income_percentage == 0, na.rm = TRUE),
+  tract_poblacion_0   = sum(tract_population == 0, na.rm = TRUE)
+))
+print(invalidos)
+
+datos <- datos %>% mutate(
+  income = ifelse(income <= 0, NA, income),
+  loan_to_value_ratio = ifelse(loan_to_value_ratio < LTV_MIN |
+                                 loan_to_value_ratio > LTV_MAX, NA, loan_to_value_ratio),
+  loan_term = ifelse(loan_term < PLAZO_MIN, NA, loan_term),
+  tract_to_msa_income_percentage = ifelse(tract_to_msa_income_percentage == 0,
+                                          NA, tract_to_msa_income_percentage),
+  tract_population = ifelse(tract_population == 0, NA, tract_population)
+)
+
+# Valores extremos pero posibles: NO se tocan aquí, solo se reportan
+# (se decide en el análisis: log, winsorizar o modelos robustos)
+with(datos, c(
+  ingreso_mayor_5M     = sum(income > 5000, na.rm = TRUE),   # income en miles
+  monto_mayor_2x_valor = sum(loan_amount > 2 * property_value, na.rm = TRUE)
+))
+
+# =============================================================
+# 5. Recodificación de categóricas
+# =============================================================
+etiquetar <- function(x, mapa) {
+  y <- unname(mapa[x])
+  y[is.na(y) & !is.na(x)] <- x[is.na(y) & !is.na(x)]   # códigos no mapeados se conservan
+  factor(y)
+}
+
+datos <- datos %>% mutate(
+  action_taken = factor(action_taken, levels = c("1", "2", "3"),
+                        labels = c("Originado", "Aprobado_no_aceptado", "Denegado")),
+  loan_type = etiquetar(loan_type, c("1" = "Convencional", "2" = "FHA",
+                                     "3" = "VA", "4" = "USDA_RHS")),
+  loan_purpose = etiquetar(loan_purpose, c("1" = "Compra", "2" = "Mejoras",
+                                           "31" = "Refinanciamiento",
+                                           "32" = "Refinanciamiento_efectivo",
+                                           "4" = "Otro")),
+  lien_status = etiquetar(lien_status, c("1" = "Primer_gravamen",
+                                         "2" = "Gravamen_subordinado")),
+  occupancy_type = etiquetar(occupancy_type, c("1" = "Residencia_principal",
+                                               "2" = "Segunda_residencia",
+                                               "3" = "Inversion")),
+  construction_method = etiquetar(construction_method, c("1" = "Construida_en_sitio",
+                                                         "2" = "Manufacturada")),
+  preapproval = etiquetar(preapproval, c("1" = "Solicitada", "2" = "No_solicitada")),
+  submission_of_application = etiquetar(submission_of_application,
+                                        c("1" = "Directa", "2" = "No_directa",
+                                          "3" = "No_aplica")),
+  initially_payable_to_institution = etiquetar(initially_payable_to_institution,
+                                               c("1" = "Si", "2" = "No",
+                                                 "3" = "No_aplica")),
+  aus.1 = etiquetar(aus.1, c("1" = "DU_Fannie", "2" = "LP_Freddie",
+                             "3" = "TOTAL_FHA", "4" = "GUS_USDA",
+                             "5" = "Otro", "6" = "No_aplica",
+                             "7" = "Sistema_interno")),
+  across(c(conforming_loan_limit, applicant_credit_score_type,
+           manufactured_home_secured_property_type,
+           manufactured_home_land_property_interest,
+           negative_amortization, interest_only_payment, balloon_payment,
+           other_nonamortizing_features,
+           derived_race, derived_ethnicity, derived_sex), factor)
+)
+
+# DTI: mezcla tramos y valores puntuales (36 a 49) -> ordinal de 7 niveles
+dti_txt <- datos$debt_to_income_ratio
+dti_num <- suppressWarnings(as.numeric(dti_txt))
+datos$debt_to_income_ratio <- factor(
+  case_when(
+    dti_txt == "<20%"     ~ "<20",
+    dti_txt == "20%-<30%" ~ "20-30",
+    dti_txt == "30%-<36%" ~ "30-36",
+    !is.na(dti_num) & dti_num < 42 ~ "36-42",
+    !is.na(dti_num) & dti_num < 50 ~ "42-50",
+    dti_txt == "50%-60%"  ~ "50-60",
+    dti_txt == ">60%"     ~ ">60",
+    TRUE ~ NA_character_),
+  levels = c("<20", "20-30", "30-36", "36-42", "42-50", "50-60", ">60"),
+  ordered = TRUE)
+table(original = dti_txt, nuevo = datos$debt_to_income_ratio, useNA = "ifany")  # verificación
+
+# Edad: ordinal, 8888 = no disponible
+datos$applicant_age <- factor(na_if(datos$applicant_age, "8888"),
+                              levels = c("<25", "25-34", "35-44", "45-54",
+                                         "55-64", "65-74", ">74"),
+                              ordered = TRUE)
+
+# =============================================================
+# 5b. Ajustes tras la primera corrida
+# =============================================================
+# Casi constantes (> 99 % en una categoría): sin variabilidad útil y
+# problemáticas para LDA/QDA (matrices de covarianza singulares por clase)
+datos <- datos %>% select(-negative_amortization, -other_nonamortizing_features,
+                          -balloon_payment, -conforming_loan_limit)
+
+# Tipo de modelo de puntaje: 13 códigos que no miden riesgo, solo qué
+# fórmula se usó. Se agrupa en: un modelo / varios / otro / no aplica
+datos$applicant_credit_score_type <- factor(case_when(
+  datos$applicant_credit_score_type == "9" ~ "No_aplica",
+  datos$applicant_credit_score_type == "7" ~ "Varios_modelos",
+  datos$applicant_credit_score_type == "8" ~ "Otro",
+  !is.na(datos$applicant_credit_score_type) ~ "Un_modelo",
+  TRUE ~ NA_character_))
+table(datos$applicant_credit_score_type, datos$action_taken, useNA = "ifany")
+
+# Vivienda manufacturada: los códigos 3 y 5 significan "no aplica"
+# (vivienda construida en sitio); se deja explícito
+datos <- datos %>% mutate(
+  manufactured_home_secured_property_type = etiquetar(
+    as.character(manufactured_home_secured_property_type),
+    c("1" = "Propiedad_y_terreno", "2" = "Solo_propiedad", "3" = "No_aplica")),
+  manufactured_home_land_property_interest = etiquetar(
+    as.character(manufactured_home_land_property_interest),
+    c("1" = "Terreno_propio", "2" = "Arrendado", "3" = "Pagado",
+      "4" = "Indirecto", "5" = "No_aplica")))
+
+# Niveles de referencia con sentido (para regresión multinomial)
+datos <- datos %>% mutate(
+  lien_status    = relevel(lien_status, ref = "Primer_gravamen"),
+  occupancy_type = relevel(occupancy_type, ref = "Residencia_principal"),
+  loan_type      = relevel(loan_type, ref = "Convencional"),
+  loan_purpose   = relevel(loan_purpose, ref = "Compra"))
+
+# Diagnóstico del faltante de LTV: ¿se puede recuperar con monto / valor?
+datos$ltv_calc <- 100 * datos$loan_amount / datos$property_value
+datos %>%
+  filter(lien_status == "Primer_gravamen", !is.na(loan_to_value_ratio),
+         !is.na(ltv_calc)) %>%
+  summarise(correlacion = cor(ltv_calc, loan_to_value_ratio),
+            mediana_dif = median(ltv_calc - loan_to_value_ratio),
+            pct_dif_menor_5 = mean(abs(ltv_calc - loan_to_value_ratio) < 5) * 100)
+# ¿Cuántos LTV faltantes tienen monto y valor disponibles?
+with(datos, table(falta_ltv = is.na(loan_to_value_ratio),
+                  hay_valor = !is.na(property_value), action_taken))
+datos$ltv_calc <- NULL   # solo diagnóstico
+
+# =============================================================
+# 5c. Decisiones finales sobre faltantes y variables de proceso
+# =============================================================
+# - LTV: ~15 % de faltantes (34,5 % en denegados); su información se conserva
+#   en loan_amount y property_value.
+# - Bloque del tracto censal: falta en bloque cuando la propiedad no está
+#   ubicada (8,9 % en denegados vs 0,2 % en originados) y describe el
+#   vecindario, no al solicitante. Además tiene ceros que son faltantes ocultos.
+# - Tipo de puntaje: más del 80 % de "Otro" viene de una sola institución -> se
+#   reduce a "tiene o no tiene puntaje".
+datos <- datos %>%
+  select(-loan_to_value_ratio, -starts_with("tract_"),
+         -ffiec_msa_md_median_family_income) %>%
+  mutate(
+    tiene_puntaje = factor(ifelse(applicant_credit_score_type == "No_aplica",
+                                  "No", "Si")),
+    interest_only_payment = etiquetar(as.character(interest_only_payment),
+                                      c("1" = "Si", "2" = "No"))
+  ) %>%
+  select(-applicant_credit_score_type)
+
+# =============================================================
+# 5d. Casos completos (decisión del grupo: no imputar)
+#     Población redefinida: "solicitudes con información completa".
+#     Limitación a reportar: se pierde más en Denegado y Aprobado_no_aceptado.
+# =============================================================
+ids  <- c("lei", "derived_msa.md", "county_code", "census_tract")
+pred <- setdiff(names(datos), ids)
+
+perdida <- data.frame(
+  antes   = as.vector(table(datos$action_taken)),
+  despues = as.vector(table(datos$action_taken[complete.cases(datos[, pred])])),
+  row.names = levels(datos$action_taken))
+perdida$pct_perdido <- round(100 * (1 - perdida$despues / perdida$antes), 1)
+print(perdida)   # referencia: ~7 % / ~15 % / ~16 %
+
+datos <- datos[complete.cases(datos[, pred]), ]
+datos <- droplevels(datos)   # quita niveles que quedaron vacíos
+
+# =============================================================
+# 6. Controles finales
+# =============================================================
+# Duplicados exactos: se REPORTAN pero NO se eliminan. HMDA no tiene ID de
+# solicitud y los montos vienen redondeados, así que dos solicitudes reales
+# distintas del mismo tracto pueden verse idénticas.
+cat("Duplicados exactos:", sum(duplicated(datos)), "\n")
+
+# Variables casi constantes (una categoría > 99 %): candidatas a eliminar en el análisis
+casi_constantes <- sapply(datos, function(x)
+  if (is.factor(x)) max(prop.table(table(x))) else NA)
+round(sort(casi_constantes[casi_constantes > 0.99], decreasing = TRUE), 4)
+
+# Faltantes por clase en la base limpia
+pct_na <- sapply(datos, function(x) tapply(is.na(x), datos$action_taken, mean) * 100)
+pct_na <- round(t(pct_na), 1)
+pct_na[rowSums(pct_na) > 0, , drop = FALSE]
+
+# Distribución final de la respuesta
+table(datos$action_taken)
+round(prop.table(table(datos$action_taken)) * 100, 2)
+
+str(datos)
+
+# =============================================================
+# 7. Guardar
+# =============================================================
+saveRDS(datos, paste0(ruta_salida, ".rds"))   # conserva factores y orden: usar este
+write.csv(datos, paste0(ruta_salida, ".csv"), row.names = FALSE)
