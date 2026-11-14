@@ -1,0 +1,2681 @@
+---
+title: "Manual para el curso Mineria de Datos y Análisis Multivariado (XS-0126)"
+subtitle: "Segundo examen"
+author: |
+  | **Autor:** Anderson Martínez <br>
+  | **Colaboradores:** Sebastián Calvo, Justin Zhu, Fabián Almirall
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  word_document:
+    toc: true
+    toc_depth: '3'
+editor_options:
+  chunk_output_type: console
+---
+
+\newpage
+
+# Introducción a la clasificación
+
+Clasificación consiste en asignar una observación con q variables en uno de varios grupos preestablecidos.
+El objetivo básico es construir una regla que tome la información de las q variables para resumirla en un indicador con el cual se pueda clasificar la observación de manera correcta en uno de los grupos.
+La regla se conoce como función discriminante.
+Varios métodos desarrollados para abordar el problema de clasificación:
+
++ Análisis discriminante.
+
++ Regresión logística (binomial/multinomial).
+
++ K-vecinos más cercanos.
+
++ Máquinas vectoriales de soporte.
+
++ Métodos basados en árboles.
+
+
+## Modelo de clasificación
+
+El esquema general de un modelo de clasificación es el siguiente:
+
+1. Se parte de una **tabla de aprendizaje** (observaciones con la clase conocida, por ejemplo: reembolso, estado civil, ingresos anuales $\rightarrow$ fraude sí/no).
+2. Un **algoritmo de aprendizaje** genera el **modelo** a partir de esa tabla.
+3. El modelo se **aplica** a una **tabla de testing** (observaciones con clase conocida que no participaron en el ajuste) para **evaluar** qué tan bien clasifica.
+4. Finalmente, el modelo se aplica a **nuevos individuos** cuya clase se desconoce.
+
+Las tres etapas de este proceso se detallan a continuación.
+
+
+## Aprendizaje o entrenamiento
+
+Se parte de un conjunto de observaciones cuya pertenencia a uno de los $k$ grupos es conocida.  Este conjunto se llama muestra de aprendizaje.
+
+En cada grupo se tienen $n_j$ observaciones medidas en $q$ variables.
+
+Con este conjunto de $n$ observaciones $(n=\sum n_j)$ se construye la función discriminante o regla de clasificación.
+
+
+## Validación
+
+Se utiliza otro conjunto de datos para los cuales también se conoce su pertenencia a cada uno de los $k$ grupos. Este conjunto se llama muestra de validación.
+
+Se aplica la función discriminante a ese conjunto de datos y se evalúa qué tan bien fueron clasificados.
+
+La ventaja de hacer esto es que estos individuos no participaron en la construcción de la regla.
+
+Sin embargo, si hay pocos datos se puede usar como muestra de validación la misma muestra de entrenamiento.
+
+Existen métodos secuenciales de validación.
+
+
+## Predicción
+
+Una vez que la regla ha sido validada se puede aplicar a nuevos datos para los cuales no se conoce su pertenencia a uno de los $k$ grupos.
+
+Se confía en que la regla hará una buena clasificación.
+
+
+\newpage
+
+# Regresión logística multinomial
+
+## Repaso: regresión logística binomial
+
+Anteriormente en el curso de modelos avanzados vimos que la regresión logística era:
+
+$$log\left(\frac{\pi_x}{1-\pi_x} \right ) = \beta_0+\beta_1X_1+ ...+\beta_nX_n$$
+
+donde teníamos el siguiente caso:
+
+$$
+Y < \begin{matrix} 0 \\ 1 \end{matrix} \implies
+\begin{aligned}
+  \pi_x &= P(Y = 1 \mid X)
+\end{aligned}
+$$
+
+## Definición del modelo multinomial
+
+Por lo tante la regresión logística multinomial  es
+
+Es una extensión del modelo de regresión logístico cuando la respuesta condicional es categórica pero hay más de dos categorías.
+
+Entra dentro de los modelos lineales generalizados.
+
+Puede incluir tanto variables métricas como categóricas en la parte sistemática, es decir, en las variables independientes.
+
+Las variables métricas no deben seguir ninguna distribución particular. (LAS X'S NO SON NORMALES)
+
+Matemáticamente se veería de la siguiente manera:
+
+$$
+Y \left\langle
+\begin{array}{ccl}
+  a & \implies & \pi_{a}(x) = P(Y = a \mid X) \\
+  b & \implies & \pi_{b}(x) = P(Y = b \mid X) \\
+  c & \implies & \pi_{c}(x) = P(Y = c \mid X) \\
+  d & \implies & \pi_{d}(x) = P(Y = d \mid X)
+\end{array}
+\right.
+$$
+
+
+### Supuesto: independencia de alternativas irrelevantes (IIA)
+
+Se basa en el supuesto de independencia de alternativas irrelevantes (IIA, siglas en inglés), lo que no siempre es deseable.
+
+Las probabilidades de preferir una clase sobre otra no dependen de la presencia o ausencia de otras alternativas "irrelevantes".
+
+Por ejemplo, las probabilidades relativas de ir al trabajo en automóvil o autobús no cambian si se agrega una bicicleta como posibilidad adicional.
+
+Los individuos a menudo violan esta suposición al tomar decisiones.
+
+Si las opciones incluyen un automóvil y un autobús azul y se introduce la opción de un autobús rojo, una persona puede ser indiferente entre un autobús rojo y un autobús azul. Aquí, la opción del autobús rojo no es irrelevante, porque un autobús rojo es un sustituto perfecto del autobús azul.
+
+
+### Modelo
+
+El modelo se utiliza para calcular la probabilidad de que el i-ésimo individuo pertenerza al j-ésimo grupo, tomando como referencia el grupo 1 (puede tomarse cualquier otro grupo).
+
+Se deriva un conjunto de $k-1$ ecuaciones.
+
+Cada ecuación tiene un vector de coeficientes $\beta^{(j)}$.
+
+$$log\left(\frac{\pi_j}{\pi_1} \right ) = \beta_0^{(j)}+\beta_1^{(j)}X_1+ ...+\beta_q^{(j)}X_q$$
+
+En notación matricial, para el individuo $i$ y el grupo $j = 2, \ldots, k$:
+
+$$\log\left(\frac{\pi_{ij}}{\pi_{i1}}\right) = \beta_0^{(j)} + \beta_1^{(j)}x_{i1} + \cdots + \beta_q^{(j)}x_{iq} = \mathbf{x}_i^T \boldsymbol{\beta}^{(j)}$$
+
+donde $\mathbf{x}_i^T = (1, x_{i1}, \ldots, x_{iq})$ es la $i$-ésima fila de la matriz de estructura.
+
+
+### Cálculo de probabilidades
+
+A partir de las $k-1$ ecuaciones se deriva el cálculo de las probabilidades de pertenencia al grupo $j$-ésimo:
+
+$$\hat{\pi}_{ij} = \frac{\exp\left(\mathbf{x}_i^T \boldsymbol{\beta}^{(j)}\right)}{1 + \sum_{h=2}^{k} \exp\left(\mathbf{x}_i^T \boldsymbol{\beta}^{(h)}\right)}, \qquad j = 2, \ldots, k$$
+
+Dado que la suma de todas las probabilidades es 1, el cálculo de la probabilidad de pertenencia al grupo de referencia se hace por diferencia:
+
+$$\hat{\pi}_{i1} = \frac{1}{1 + \sum_{h=2}^{k} \exp\left(\mathbf{x}_i^T \boldsymbol{\beta}^{(h)}\right)}$$
+
+
+### Estimación de los coeficientes
+
+La solución se encuentra típicamente usando: 1) un procedimiento iterativo como mínimos cuadrados reponderados iterativamente (IRLS), 2) algoritmos de optimización basados en gradientes como L-BFGS, 3) coordenadas especializadas de algoritmos de descenso.
+
+
+### Limitaciones
+
++ Al igual que la regresión logística binomial, los coeficientes alcanzan errores estándar excesivamente altos cuando se tienen categorías clasificadas en una única opción de respuesta.
+
++ Esto también da problemas de convergencia.
+
++ Cuando se tienen predictores nominales, es importante verificar que se tienen suficientes datos en cada combinación de categorías entre el predictor y la respuesta.
+
++ Las variables métricas deben ser escaladas aproximadamente para que estén en el rango 0 a 1 para evitar que el ajuste sea muy lento o que no converja del todo.
+
+
+## Ejemplo aplicado en clase: medio de transporte
+
+Para este ejemplo nuestra variable respuesta será de que depende el medio de transporte según la cantidad de kilométros.
+
+Hay tres respuestas:
+
+1: Transporte Público
+
+2: Moto o automóvil
+
+3: Bicicleta o caminando
+
+
+| Y | D |
+| :-: | :-: |
+| 1 | 4 |
+| 1 | 12 |
+| 1 | 21 |
+| 2 | 11 |
+| 2 | 12 |
+| 2 | 1 |
+| 2 | 2 |
+| 2 | 5 |
+| 2 | 9 |
+
+Lo que trata el modelo es crear un modelo para predecir nuevas unidades de forma certera, un ejemplo de aplicación de esto puede ser en fraude o en casas de apuestas.
+
+Note que en el modelo se pone la primera categoría de referencia en este caso es $\pi_1$.
+
+Siguiendo con el mismo ejemplo como tenemos 3 categorías tenemos dos ecuaciones del modelo
+
+$$log\left(\frac{\pi_2}{\pi_1} \right ) = \beta_0^{(2)}+\beta_1^{(2)}D$$
+
+$$log\left(\frac{\pi_3}{\pi_1} \right ) = \beta_0^{(3)}+\beta_1^{(3)}D$$
+
+La regla general de cuántos coeficientes tiene que calcular el modelo es $(k-1)\cdot p$, donde $k$ es el número de categorías y $p$ el número de coeficientes por ecuación.
+
+
+### Riesgo relativo y despeje de las probabilidades
+
+De estas ecuacione podemos obtener el riesgo relativo de la siguiente manera:
+
+$$\frac{\pi_2}{\pi_1}$$
+
+Teniendo en cuenta el ejemplo anterior y la fórmula del riesgo relativo, tenemos lo siguiente:
+
+$$
+\frac{\pi_2}{\pi_1} = e^{\beta_0^{(2)}+\beta_1^{(2)}D} = A \qquad\qquad \frac{\pi_3}{\pi_1} = e^{\beta_0^{(3)}+\beta_1^{(3)}D} = B
+$$
+
+Para simplificar el proceso asuma que los RR son  A y B
+
+Despejamos $\pi_1$ en las dos ecuaciones
+
+$$\pi_1 = \frac{\pi_2}{A} \qquad\qquad \pi_1 = \frac{\pi_3}{B} $$
+
+Igualamos las dos ecuaciones de $\pi_1$
+
+$$\frac{\pi_2}{A} =   \frac{\pi_3}{B} $$
+
+De esta ecuación despejamos $\pi_2$
+
+$$\pi_2=   \frac{A\pi_3}{B} $$
+
+Sabemos que:
+
+$$\pi_1+\pi_2+\pi_3 = 1$$
+
+Reemplazamos $\pi_2$ y nos lleva al siguiente resultado
+
+$$\pi_1+ \frac{A\pi_3}{B}+\pi_3 = 1 $$
+
+Despejando los tres $\pi$ llegamos al siguiente resultado:
+
+$$\pi_3 = \frac{B}{1+A+B}\qquad\qquad \pi_2= \frac{A}{1+A+B}\qquad\qquad \pi_1 =  \frac{1}{1+A+B} \text{ ó }1-\left(\frac{B}{1+A+B}+\frac{A}{1+A+B}\right)$$
+
+
+### ¿Qué situaciones en la muestra nos podría generar problemas?
+
+Si tenemos el siguiente caso donde un grupo tiene 0 unidades de estudio es un gran problema ya que nos genera problemas al momento de hacer el modelo, por lo menos para solucionar el problema deber haber 1 unidad. En ocasiones no se realizan estas tablas de contingencia y se generan problemas cuando se hace el modelo.
+
+| | Y = 1 | Y = 2 | Y = 3 |
+| :--- | :---: | :---: | :---: |
+| **H** | 30 | 60 | 0 |
+| **M** | 30 | 10 | 20 |
+
+
+Otro ejemplo es el siguiente
+
+Si alguna de las categorías de respuesta nos da como un 1% o hasta 5% y las otras son muy grandes nos puede dar problemas ya que no está del todo balanceado para generar el modelo. Esto se nota mucho cuando son por ejemplo 1000 datos y una categoría solo tiene un 1% corresponderá a 10 unidades mientras que las otras tienen 400 lo cuál sería muy desbalanceado.
+
+| | Y = 1 | Y = 2 | Y = 3 |
+| :--- | :---: | :---: | :---: |
+| **H** | 30 | 60 | 1 |
+| **M** | 30 | 10 | 20 |
+| **Total** | 60 | 70| 21 |
+| **(%) total** | 40% | 46% | 14%|
+
+
+## Ejemplo en R con los datos Iris
+
+### Partición en muestra de entrenamiento y validación
+
+```{r, warning=FALSE}
+  load("iris.Rdata")
+  RNGkind(sample.kind = "Rounding") #Esto es para estandarizar la semilla según la versión de R
+  set.seed(10)
+  n=nrow(base)
+  m     = sample(1:n,100)
+  basea = base[m,] # Selecciona los números de la muestra creada en m
+  basev = base[-m,] # Elimina los número seleccionados en m
+
+```
+
+```{r}
+table(basea$especie)
+```
+
+Si se diera el caso de que se quiere la misma cantidad de unidades por especie existen dos formas para realizar este tipo de muestreo:
+
+
+#### Forma manual de muestreo balanceado
+
+```{r}
+basese = base[base$especie == "setosa",]
+n=nrow(basese)
+  mse     = sample(1:n,33)
+  basease = basese[mse,]
+  basevse = basese[-mse,]
+```
+
+```{r}
+basevir = base[base$especie == "virginica",]
+n=nrow(basevir)
+  mvir    = sample(1:n,33)
+  baseavir = basevir[mvir,]
+  basevvir = basevir[-mvir,]
+```
+
+```{r}
+basever = base[base$especie == "versicolor",]
+n=nrow(basever)
+  mver     = sample(1:n,33)
+  baseaver = basever[mver,]
+  basevver = basever[-mver,]
+```
+
+```{r}
+base_comple= rbind(basease,baseavir,baseaver)
+base_rest =  rbind(basevse,basevvir,basevver)
+```
+
+```{r}
+table(base_comple$especie) #muestra por especie
+table(base_rest$especie) # Resto de cada una de las especies
+```
+
+#### Forma automática de muestreo balanceado
+
+```{r, message=FALSE}
+library(dplyr)
+muestra = base %>%
+  group_by(especie) %>%
+  slice_sample(n = 33, replace = FALSE) %>%
+  ungroup()
+```
+
+```{r}
+table(muestra$especie)
+```
+
+
+### Análisis descriptivo: ¿se separan los grupos?
+
+```{r}
+sp=unclass(basea$especie)
+pairs(basea[,-5],col=sp,pch=18)
+```
+
+Cuándo hay separaciones perfectas por ejemplo con la variable `ancho.pet` el modelo puede identificar perfectamente las clases, lo que causas que lso coeficientes de regresión logística dirverjan hacia el infinito y no se pueden obtener estimaciones estables.
+
+Esto también lo podemos verificar por medio de un `boxplot()`, para que se observe bien el gráfico se tiene que colocar de forma que `boxplot(X~Y, data = base)`
+
+```{r}
+boxplot(ancho.pet~especie, data = base)
+```
+
+En este caso se traslapan un poco por lo que el modelo podría funcionar. Sin embargo, si están separados totalmente es lo que no puede generar problemas con la convergencia de los coeficientes.
+
+
+### Ajuste del modelo multinomial con `multinom()`
+
+```{r}
+library(nnet)
+mod1=multinom(especie~.,basea)
+
+```
+
+```{r}
+mod1$convergence
+```
+
+En este caso podemos ver que el modelo si convergió
+
+
+#### Caso de separación perfecta
+
+*A continuación observe el siguiente caso*
+
+```{r}
+x = c(25,30,32,31,42,45,60,70)
+y = c(1,1,1,1,2,2,2,2)
+y = factor(y)
+```
+
+```{r}
+boxplot(x~y)
+```
+
+```{r}
+modx=multinom(y~x)
+```
+```{r}
+modx$convergence
+```
+
+En este casi el modelo si convergió pero observe los errores estándar
+
+```{r}
+summary(modx)
+```
+
+Observe que el error estándar es 87.64 lo cuál es extremandamente grande.Por lo que la estimación del coeficiente no es para nada confiable. Por lo que se afecta la credibilidad de la estimación.
+
+
+### Predicción de probabilidades de forma manual
+
+Observe el individuo número 32 de la base de validación
+
+```{r}
+basev[32,]
+```
+
+Observe la posición de los coeficientes
+
+```{r}
+summary(mod1)
+```
+
+```{r}
+x=cbind(1,basev[32,1:4])
+beta1=summary(mod1)$coefficients[1,] # Versicolor
+beta2=summary(mod1)$coefficients[2,] #virginica
+
+PL1=sum(x*beta1)
+PL2=sum(x*beta2)
+
+```
+
+Probabilidad de pertenecer al grupo de Versicolor
+
+```{r}
+den=1+exp(PL1)+exp(PL2)
+round(exp(PL1)/den,3)
+
+```
+
+Probabilidad de pertecer al grupo de Virginica
+
+```{r}
+round(exp(PL2)/den,3)
+```
+
+Probabiliad de setosa
+
+```{r}
+round(1/den,3)
+```
+o la otra forma
+
+```{r}
+round(1-(exp(PL1)/den+exp(PL2)/den),3)
+```
+
+
+### Predicción de probabilidades de forma automática
+
+```{r}
+probs=predict(mod1,basev,type="probs")
+round(probs[32,],3)
+
+```
+
+**Tabla de confusión**
+
+```{r}
+sp2=predict(mod1,basev)
+  table(basev$especie,sp2)
+```
+
+
+\newpage
+
+# Análisis discriminante
+
+Dos enfoques para obtener una regla discriminante:
+
++ **Fisher:** El objetivo es maximizar el cociente entre la variabilidad intergrupal e intragrupal.
+
++ **Bayesiano:** Se asigna la unidad al grupo que maximice la probabilidad a posteriori.
+
+
+## Análisis discriminante lineal: enfoque de Fisher
+
+De forma similar al ANDEVA se definen dos matrices, $B$ representa la variabilidad entre grupos y $W$ la variabilidad dentro de grupos.
+
+$B$ (variabilidad intergrupal) es una medida de distancia que se define a partir del vector de medias dentro de cada grupo (centroide grupal) con respecto a la media global:
+
+$$B = \sum_{j=1}^{k} n_j (\bar{x}_j - \bar{x})(\bar{x}_j - \bar{x})^T$$
+
+$W$ (variabilidad intragrupal) es una ponderación de las matrices de covariancia de cada grupo (equivalente a la suma de cuadrados residual):
+
+$$W = \sum_{j=1}^{k} (n_j - 1) S_j$$
+
+
+### Definición de la función discriminante
+
+El objetivo es encontrar una regla que maximice la diferencia entre la variabilidad intergrupal e intragrupal.
+
+Se quieren grupos homogéneos adentro (bajar $W$) y diferentes entre sí (subir $B$).
+
+Para esto se usa el cociente:
+
+$$L = \frac{a^T B a}{a^T W a}$$
+
+Se busca encontrar el vector $a$ que maximice $L$.
+
+Se pueden encontrar varios vectores $a$ mediante la descomposición espectral de la matriz $W^{-1}B$. Estos vectores son los vectores propios de esta matriz.
+
+
+### Aplicación de la función discriminante
+
+Una observación $q$-dimensional $x$ se clasifica en el grupo $j$-ésimo si la siguiente expresión alcanza su mínimo cuando se calcula con respecto a ese grupo:
+
+$$\left( a^T (x - \bar{x}_j) \right)^2$$
+
+
+## Enfoque Bayesiano
+
+Siguiendo el teorema de Bayes se puede calcular la probabilidad a posteriori de pertenencia al $i$-ésimo grupo:
+
+$$\pi(i \mid x) = \frac{p(i)\, f(x \mid \mu_i, \Sigma_i)}{\sum_{j=1}^{k} p(j)\, f(x \mid \mu_j, \Sigma_j)}$$
+
+Donde $p(i)$ es la probabilidad a priori de pertenencia al grupo $i$-ésimo y $f(\cdot)$ es la función de verosimilitud, la cual se asume normal multivariada.
+
+Si no se tiene información a priori se toma $p(j) = 1/k$ y se simplifica la expresión:
+
+$$\pi(i \mid x) = \frac{f(x \mid \mu_i, \Sigma_i)}{\sum_{j=1}^{k} f(x \mid \mu_j, \Sigma_j)}$$
+
+
+### Función de verosimilitud
+
+La función de verosimilitud normal multivariada está dada por:
+
+$$f(x \mid \mu_i, \Sigma_i) = (2\pi)^{-d/2} \lvert \Sigma_i \rvert^{-1/2} \exp\left\{ -\frac{1}{2}(x - \mu_i)^T \Sigma_i^{-1} (x - \mu_i) \right\}$$
+
+La log-verosimilitud estaría dada por:
+
+$$L(x \mid \mu_i, \Sigma_i) = c - \frac{1}{2} \log \lvert \Sigma_i \rvert - \frac{1}{2}(x - \mu_i)^T \Sigma_i^{-1} (x - \mu_i)$$
+
+En la práctica no se conocen las $\mu_j$ y las $\Sigma_j$, por lo que se usan estimaciones.
+
+Para el caso de las medias se usan los vectores de medias muestrales por grupo.
+
+Para las variancias se puede asumir matrices de variancias iguales y se usa la media ponderada $S_p = W/(n-k)$.
+
+La función de verosimilitud estaría dada por:
+
+$$L(x \mid \bar{x}_i, S_p) = c - \frac{1}{2} \log \lvert S_p \rvert - \frac{1}{2}(x - \bar{x}_i)^T S_p^{-1} (x - \bar{x}_i)$$
+
+
+### Función discriminante lineal
+
+El logaritmo de la probabilidad a posteriori se puede calcular como:
+
+$$\log(\pi(i \mid x)) = \log(p(i)) + L(x \mid \bar{x}_i, S_p) - \log(Den)$$
+
+Todo aquello que no depende de $i$ se puede ir a la constante. En particular, el denominador es constante pues es el mismo para todas las $j$'s. Entonces:
+
+$$\log(\pi(i \mid x)) = \log(p(i)) + \bar{x}_i^T S_p^{-1}\left(x - \frac{1}{2}\bar{x}_i\right) + c$$
+
+La función discriminante se define como:
+
+$$L_i(x) = \log(p(i)) + \bar{x}_i^T S_p^{-1}\left(x - \frac{1}{2}\bar{x}_i\right)$$
+
+Asumiendo probabilidades a priori iguales, se reduce a:
+
+$$L_i(x) = \bar{x}_i^T S_p^{-1}\left(x - \frac{1}{2}\bar{x}_i\right)$$
+
+
+### Función discriminante cuadrática
+
+Si no se puede asumir variancias iguales, se mantienen en la función de verosimilitud separadas como $S_i$:
+
+$$L(x \mid \bar{x}_i, S_i) = c - \frac{1}{2} \log \lvert S_i \rvert - \frac{1}{2}(x - \bar{x}_i)^T S_i^{-1} (x - \bar{x}_i)$$
+
+La función discriminante tendría una expresión cuadrática:
+
+$$L_i(x) = \log(p(i)) - \frac{1}{2} \log \lvert S_i \rvert - \frac{1}{2}(x - \bar{x}_i)^T S_i^{-1} (x - \bar{x}_i)$$
+
+Asumiendo probabilidades a priori iguales, se reduce a:
+
+$$L_i(x) = - \frac{1}{2} \log \lvert S_i \rvert - \frac{1}{2}(x - \bar{x}_i)^T S_i^{-1} (x - \bar{x}_i)$$
+
+
+### Uso de la función discriminante
+
+Una vez que se han generado las $k$ funciones discriminantes, se calcula para cada $x$ el valor en cada una de las funciones.
+
+La regla consiste en asignar $x$ al grupo cuya $L_j(x)$ es mayor.
+
+
+## Lambda ($\Lambda$) de Wilks
+
+Expresa la proporción de la variancia total no explicada por las diferencias entre los grupos:
+
+$$\Lambda = \frac{\lvert S_p \rvert}{\lvert T \rvert}$$
+
+donde $T$ es la matriz de covariancia total, calculada sobre todos los casos como si pertenecieran a un único grupo.
+
+Cuando los grupos se encuentran superpuestos en el espacio multidimensional, el numerador y el denominador serán muy parecidos y su cociente será cercano a 1; a medida que los grupos se vayan separando más, la variabilidad inter-grupos irá aumentando y la variabilidad intra-grupos se irá haciendo comparativamente menor respecto a la variabilidad total.
+
+
+### Selección de variables hacia adelante
+
+Se inicia con la variable que más separa los grupos (el $\Lambda$ de Wilks más bajo).
+
+La siguiente variable incluida es aquella que minimiza el $\Lambda$ de Wilks del modelo siempre que la probabilidad al comparar el modelo con y sin esa variable muestre significancia estadística.
+
+
+\newpage
+
+# Evaluación y validación de modelos de clasificación
+
+## Matriz de confusión
+
+Contiene información acerca de las predicciones realizadas por un método de clasificación, comparando para el conjunto de elementos de la base de prueba, la predicción dada versus la clase a la que estos realmente pertenecen.
+
+```{r tabla_confusion_pdf, echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+library(kableExtra)
+
+df_conf <- data.frame(
+  "Valor Real" = c("Negativo", "Positivo"),
+  "Negativo"   = c("$a$", "$c$"),
+  "Positivo"   = c("$b$", "$d$"),
+  check.names  = FALSE
+)
+
+kable(
+  df_conf,
+  format = "latex",
+  booktabs = TRUE,
+  align = c("l", "c", "c"),
+  escape = FALSE
+) %>%
+  add_header_above(c(" " = 1, "Valor Predicho" = 2), bold = TRUE) %>%
+  kable_styling(position = "center", latex_options = "hold_position")
+```
+
+
+## Indicadores de desempeño
+
+Error ($e$): es la proporción del número total de predicciones que son incorrectas respecto al total.
+  *Nota: este indicador es a veces engañoso y debe ser siempre analizado en relación al tamaño de las clases.*
+
+$$
+e = \frac{b + c}{a + b + c + d}
+$$
+
+Falsos Positivos ($FP$): es la proporción de casos negativos que fueron clasificados incorrectamente como positivos.
+
+$$
+FP = \frac{b}{a + b}
+$$
+
+Falsos Negativos ($FN$):es la proporción de casos positivos que fueron clasificados incorrectamente como negativos.
+
+$$
+FN = \frac{c}{c + d}
+$$
+
+Precisión ($P$): es la proporción del número total de predicciones que son correctas respecto al total.
+  *Nota: este indicador es a veces engañoso y debe ser siempre analizado en relación al tamaño de las clases.*
+
+$$
+P = \frac{a + d}{a + b + c + d}
+$$
+
+Precisión Positiva ($PP$): es la proporción de los casos positivos que fueron predichos correctamente.
+
+$$
+PP = \frac{d}{c + d}
+$$
+
+Precisión Negativa ($PN$): es la proporción de los casos negativos que fueron predichos correctamente.
+
+$$
+PN = \frac{a}{a + b}
+$$
+
+Acertividad Positiva ($AP$): indica la proporción de buena predicción para los positivos.
+
+$$
+AP = \frac{d}{b + d}
+$$
+
+Acertividad Negativa ($AN$):indica la proporción de buena predicción para los negativos.
+
+$$
+AN = \frac{a}{a + c}
+$$
+
+También hay estas equivalencias: $FP = 1-PN$ y $PP = 1-FN$
+
+
+### Ejemplo de cálculo de los indicadores
+
+Calcular los indicadores de desempeño a partir de la siguiente tabla de confusión de un modelo de fraude:
+
+| Valor Real \ Valor Predicho | No | Sí |
+| :--- | :---: | :---: |
+| **No** | 800 | 100 |
+| **Sí** | 40 | 60 |
+
+$$e = \frac{(b+c)}{(a+b+c+d)} = \frac{(100+40)}{(800+100+40+60)} = 14{,}0\%$$
+
+$$FP = \frac{b}{(a+b)} = \frac{100}{(800+100)} = 11{,}1\%$$
+
+$$FN = \frac{c}{(c+d)} = \frac{40}{(40+60)} = 40{,}0\%$$
+
+$$P = \frac{(a+d)}{(a+b+c+d)} = \frac{(800+60)}{(800+100+40+60)} = 86{,}0\%$$
+
+$$PP = \frac{d}{(c+d)} = \frac{60}{(40+60)} = 60{,}0\%$$
+
+$$PN = \frac{a}{(a+b)} = \frac{800}{(800+100)} = 88{,}9\%$$
+
+$$AP = \frac{d}{(b+d)} = \frac{60}{(100+60)} = 37{,}5\%$$
+
+$$AN = \frac{a}{(a+c)} = \frac{800}{(800+40)} = 95{,}0\%$$
+
+
+## Curva ROC
+
+Una curva ROC (curva de característica operativa del receptor) es un gráfico que muestra el rendimiento de un modelo de clasificación en todos los umbrales de clasificación.
+
+La curva permite ver la precisión positiva (eje $y$) contra los falsos positivos (eje $x$), en diferentes umbrales. Hay que ir aumentando el umbral y se espera tener más falsos positivos y más precisión positiva. Este indicador se calcula haciendo múltiples matrices de confusión.
+
+
+### Ejemplo: curva ROC a partir de un árbol de decisión
+
+Se tiene un árbol de decisión con dos clases (bueno y malo), que tiene 9 nodos terminales y que se ordenan de mayor a menor según la probabilidad de malo.
+
+| Nodo | Buenos | Malos | Total | p(bueno) | p(malo) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Nodo 9 | 73 | 177 | 250 | 0.29 | 0.71 |
+| Nodo 1 | 41 | 67 | 108 | 0.38 | 0.62 |
+| Nodo 3 | 45 | 63 | 108 | 0.42 | 0.58 |
+| Nodo 8 | 81 | 99 | 180 | 0.45 | 0.55 |
+| Nodo 2 | 139 | 75 | 214 | 0.65 | 0.35 |
+| Nodo 4 | 171 | 81 | 252 | 0.68 | 0.32 |
+| Nodo 7 | 811 | 257 | 1068 | 0.76 | 0.24 |
+| Nodo 6 | 153 | 27 | 180 | 0.85 | 0.15 |
+| Nodo 5 | 1077 | 133 | 1210 | 0.89 | 0.11 |
+| **Total** | **2591** | **979** | **3570** | **0.73** | **0.27** |
+
+**Cálculos por umbral.** Se hace una matriz de confusión para cada umbral y se calculan $FP$ y $PP$.
+
+*Umbral = 0.29* (solo el nodo 9 se predice como malo):
+
+| Valor Real \ Predicho | Bueno | Malo |
+| :--- | :---: | :---: |
+| **Bueno** | 2518 | 73 |
+| **Malo** | 802 | 177 |
+
+$$FP = \frac{b}{(a+b)} = \frac{73}{(73+2518)} = 2{,}8\% \qquad\qquad PP = \frac{d}{(c+d)} = \frac{177}{(177+802)} = 18{,}1\%$$
+
+*Umbral = 0.38* (nodos 9 y 1 se predicen como malos):
+
+| Valor Real \ Predicho | Bueno | Malo |
+| :--- | :---: | :---: |
+| **Bueno** | 2477 | 114 |
+| **Malo** | 735 | 244 |
+
+$$FP = \frac{b}{(a+b)} = \frac{114}{(114+2477)} = 4{,}4\% \qquad\qquad PP = \frac{d}{(c+d)} = \frac{244}{(244+735)} = 24{,}9\%$$
+
+**Resumen de todos los umbrales:**
+
+| p(Bueno) | Bueno | Malo | Total | % Bueno | % Malo | % Acu Bueno | % Acu Malo | % FP | % PP |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| 0.29 | 73 | 177 | 250 | 2.8 | 18.1 | 2.8 | 18.1 | 2.8 | 18.1 |
+| 0.38 | 41 | 67 | 108 | 1.6 | 6.8 | 4.4 | 24.9 | 4.4 | 24.9 |
+| 0.41 | 45 | 63 | 108 | 1.7 | 6.4 | 6.1 | 31.3 | 6.1 | 31.3 |
+| 0.45 | 81 | 99 | 180 | 3.1 | 10.1 | 9.2 | 41.4 | 9.2 | 41.4 |
+| 0.65 | 139 | 75 | 214 | 5.4 | 7.7 | 14.6 | 49.1 | 14.6 | 49.1 |
+| 0.68 | 171 | 81 | 252 | 6.6 | 8.3 | 21.2 | 57.4 | 21.2 | 57.4 |
+| 0.76 | 811 | 257 | 1068 | 31.3 | 26.3 | 52.5 | 83.7 | 52.5 | 83.7 |
+| 0.85 | 153 | 27 | 180 | 5.9 | 2.8 | 58.4 | 86.5 | 58.4 | 86.5 |
+| 0.89 | 1077 | 133 | 1210 | 41.6 | 13.6 | 100.0 | 100.0 | 100.0 | 100.0 |
+| **0.72** | **2591** | **979** | **3570** | **100.0** | **100.0** | | | | |
+
+Al graficar % FP (eje $x$) contra % PP (eje $y$) se obtiene la curva ROC; en este ejemplo el área bajo la curva es $AUC = 0.74$. La diagonal se conoce como *línea no discriminante* (equivalente a clasificar al azar).
+
+
+## Área bajo la curva (AUC)
+
+El área bajo la curva ROC (AUC, siglas en inglés) proporciona una medición agregada del rendimiento en todos los umbrales de clasificación posibles.
+
+Una forma de interpretar el AUC es como la probabilidad de que el modelo clasifique un ejemplo positivo aleatorio más alto que un ejemplo negativo aleatorio.
+
+El AUC oscila entre 0 y 1. Un modelo cuyas predicciones son un 100% incorrectas tendría un AUC de 0; otro cuyas predicciones son un 100% correctas tiene un AUC de 1.0, y si el AUC es 0.5 es lo mismo que tomar la decisión con una moneda al aire.
+
+Un AUC de 0.8, por ejemplo, significa que en 80% de las veces, un caso seleccionado aleatoriamente del grupo positivo, tiene un chance para ser clasificado como positivo, mayor que un caso seleccionado de los negativos.
+
+En la práctica se busca tener un indicador entre 0.6 y 0.9, ya que más bajo de 0.6 significa que el modelo no es predictivo, o sea, pobre. En la práctica es muy difícil tener valores mayores a 0.9, aunque sería lo ideal, pero puede generar sospechas de que algo no esta bien (sobreajuste).
+
+
+### Curva ROC y AUC para regresión logística
+
+En regresión logística se suele utilizar como punto de corte para clasificar a los individuos una probabilidad de 0.5.
+
+Si se varía ese punto de corte para considerar otros escenarios, estos se pueden considerar como umbrales y con ellos se puede calcular la precisión positiva y los falsos positivos y así obtener una curva ROC.
+
+Las probabilidades estimadas para cada individuo se pueden utilizar como umbrales.
+
+
+### Ejemplo ROC para datos de cráneos
+
+Se tienen datos de 32 cráneos recogidos en el Tibet los cuales han sido clasificados en 2 tipos raciales.
+
+Se ajusta un modelo de regresión logística donde el interés está en el segundo tipo racial.
+
+De la misma forma que en el caso del árbol de decisión, se obtiene una matriz de confusión para cada umbral y se calculan $FP$ y $PP$.
+
+Probabilidades estimadas, que se usan como umbrales:
+
+| id | p(tipo2) | id | p(tipo2) | id | p(tipo2) |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 4 | 0.00003 | 9 | 0.22057 | 26 | 0.70476 |
+| 10 | 0.00007 | 25 | 0.26988 | 22 | 0.89116 |
+| 2 | 0.00022 | 29 | 0.2895 | 32 | 0.91526 |
+| 3 | 0.00096 | 1 | 0.35229 | 18 | 0.94244 |
+| 15 | 0.00115 | 23 | 0.43052 | 21 | 0.98531 |
+| 17 | 0.00226 | 8 | 0.44173 | 28 | 0.99897 |
+| 11 | 0.02725 | 19 | 0.54245 | 30 | 0.99906 |
+| 7 | 0.07775 | 20 | 0.60131 | 24 | 0.99966 |
+| 6 | 0.08985 | 14 | 0.60904 | 31 | 0.99992 |
+| 16 | 0.10252 | 13 | 0.64532 | 27 | 0.99999 |
+| 12 | 0.15706 | 5 | 0.70175 | | |
+
+*Umbral p = 0.0003:*
+
+| Real \ Pred | tipo1 | tipo2 |
+| :--- | :---: | :---: |
+| **tipo1** | 1 | 16 |
+| **tipo2** | 0 | 15 |
+
+$$FP = \frac{b}{a+b} = \frac{16}{16+1} = 0.941176 \qquad\qquad PP = \frac{d}{c+d} = \frac{15}{0+15} = 1$$
+
+*Umbral p = 0.35229:*
+
+| Real \ Pred | tipo1 | tipo2 |
+| :--- | :---: | :---: |
+| **tipo1** | 13 | 4 |
+| **tipo2** | 2 | 13 |
+
+$$FP = \frac{b}{a+b} = \frac{4}{13+4} = 0.23529 \qquad\qquad PP = \frac{d}{c+d} = \frac{13}{2+13} = 0.86667$$
+
+Se grafican los $FP$ y $PP$ de todos los umbrales para obtener la curva, que tiene un área de 0.922.
+
+
+## Estadístico de Kolmogorov-Smirnov (KS)
+
+El KS es la máxima diferencia entre las distribuciones acumuladas relativas de las clases, ordenadas de menor a mayor según la probabilidad predicha por el modelo de clasificación.
+
+Es una medida del grado de separación entre las distribuciones positivas y negativas.
+
+Es 100 si los puntajes dividen la población en dos grupos separados, donde uno contiene todos los positivos y el otro todos los negativos.
+
+Si el modelo no puede diferenciar entre positivos y negativos, es como si el modelo seleccionara los casos aleatoriamente de la población, en tal caso el KS sería 0.
+
+Entre más alto sea el valor de KS, el modelo es mejor para separar los casos positivos de los negativos. Sin embargo, si un modelo arroja un KS menor a 20, el modelo debería ser cuestionado como útil y si un KS mayor a 70 es demasiado bueno para ser cierto.
+
+
+### Cálculo de KS
+
+Con el mismo árbol de 9 nodos del ejemplo de la curva ROC, el KS es la diferencia máxima entre el % acumulado de malos (B) y el % acumulado de buenos (A):
+
+| p(Bueno) | Bueno | Malo | Total | % Bueno | % Malo | A: % Acu Bueno | B: % Acu Malo | Diferencia (B - A) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| 0.29 | 73 | 177 | 250 | 2.8 | 18.1 | 2.8 | 18.1 | 15 |
+| 0.38 | 41 | 67 | 108 | 1.6 | 6.8 | 4.4 | 24.9 | 20 |
+| 0.41 | 45 | 63 | 108 | 1.7 | 6.4 | 6.1 | 31.3 | 25 |
+| 0.45 | 81 | 99 | 180 | 3.1 | 10.1 | 9.2 | 41.4 | 32 |
+| 0.65 | 139 | 75 | 214 | 5.4 | 7.7 | 14.6 | 49.1 | 35 |
+| 0.68 | 171 | 81 | 252 | 6.6 | 8.3 | 21.2 | 57.4 | **36** |
+| 0.76 | 811 | 257 | 1068 | 31.3 | 26.3 | 52.5 | 83.7 | 31 |
+| 0.85 | 153 | 27 | 180 | 5.9 | 2.8 | 58.4 | 86.5 | 28 |
+| 0.89 | 1077 | 133 | 1210 | 41.6 | 13.6 | 100.0 | 100.0 | 0 |
+
+En este ejemplo $KS = 36$, alcanzado en el umbral $p(\text{Bueno}) = 0.68$.
+
+
+## Métodos de validación
+
+Los métodos de validación lo que buscan es evaluar el rendimiento de un modelo de clasificación, evitando el sobreajuste.
+
+Hay sobreajuste cuando vemos que se desempeña bien con los datos de entrenamiento, pero su precisión es notablemente más baja con los datos de validación; esto se debe a que el modelo ha memorizado los datos que ha visto y no pudo generalizar las reglas para predecir los datos que no ha visto.
+
+Entre más complejo sea el modelo, mayor va a ser la tendencia a sobreajustar a los datos, ya que va a contar con mayor flexibilidad para realizar las predicciones y puede ser que los patrones que encuentre estén relacionados con el ruido (pequeños errores aleatorios) en los datos y no con la verdadera señal o relación subyacente.
+
+Algunos métodos de validación son:
+
++ Entrenamiento/prueba.
+
++ Validación cruzada.
+
++ Bootstrap.
+
+
+### Entrenamiento / prueba
+
+Se divide la base de manera aleatoria en dos partes, el conjunto de entrenamiento y el conjunto de validación.
+
+El modelo es ajustado usando el conjunto de entrenamiento, y este mismo modelo se usa para predecir las nuevas observaciones del conjunto de validación, obteniendo así los indicadores de desempeño.
+
+Interesa responder: ¿qué pasa con los indicadores de desempeño si se repite 10 veces la validación de entrenamiento/prueba? Se puede ver en qué rango fluctúan estos indicadores y cuánto es su promedio.
+
+
+### Validación cruzada
+
+Se inicia mediante el fraccionamiento de un conjunto de datos en $k$ partes (generalmente entre 5 y 10) llamadas pliegues.
+
+Se itera entre los datos de entrenamiento y validación $k$ veces de esta forma: un pliegue se elige como base de validación mientras que los restantes $k-1$ forma la base de entrenamiento.
+
+Cada iteración produce un modelo para el cual se calculan los indicadores de desempeño.
+
+
+#### Ejemplo ilustrativo del proceso
+
+Suponga que tiene una base de datos de $n = 526$
+
+*A continuación se le detallan los pasos de este proceso*
+
+```{r, fig.width=9.5, fig.height=5.2, fig.align='center', message=FALSE, warning=FALSE, echo=FALSE}
+library(ggplot2)
+library(dplyr)
+
+# 1. Parámetros de la base de datos
+n_obs <- 526
+k_folds <- 10
+
+# Fijar semilla para reproducibilidad en la asignación aleatoria
+set.seed(42)
+
+# 2. Asignación balanceada de las 526 observaciones a los 10 pliegues
+df_folds <- data.frame(id = 1:n_obs) %>%
+  mutate(
+    # Asignación aleatoria balanceada a los 10 pliegues
+    pliegue = sample(rep(1:k_folds, length.out = n_obs))
+  ) %>%
+  group_by(pliegue) %>%
+  mutate(
+    # Crear coordenadas para una cuadrícula tipo mosaico dentro de cada pliegue
+    indice_en_pliegue = row_number(),
+    col = (indice_en_pliegue - 1) %% 6 + 1,
+    row = (indice_en_pliegue - 1) %/% 6 + 1,
+    # Definir el rol: Pliegue 1 = Entrenamiento; Pliegues 2:10 = Test
+    rol = ifelse(pliegue == 1,"Prueba (Test)" , "Entrenamiento (Train)"),
+    etiqueta_pliegue = paste0("Pliegue ", pliegue, "\n(n = ", n(), ")")
+  ) %>%
+  ungroup() %>%
+  mutate(
+    etiqueta_pliegue = factor(etiqueta_pliegue, levels = unique(etiqueta_pliegue[order(pliegue)]))
+  )
+
+# 3. Construcción del gráfico de mosaico con ggplot2
+ggplot(df_folds, aes(x = col, y = -row, fill = rol)) +
+  geom_tile(color = "white", linewidth = 0.6, width = 0.9, height = 0.9) +
+  facet_wrap(~ etiqueta_pliegue, nrow = 2) +
+  scale_fill_manual(
+    values = c(
+      "Entrenamiento (Train)" = "#e74c3c",  # Rojo/Coral destacado
+      "Prueba (Test)"          = "#3498db"   # Azul para prueba
+    )
+  ) +
+  labs(
+    title = "Mosaico de Partición en 10 Pliegues (N = 526)",
+    subtitle = "1 pliegue seleccionado para Entrenamiento (~10%) y 9 pliegues para Prueba (~90%)",
+    caption = "Distribución: 6 pliegues de 53 observaciones y 4 pliegues de 52 observaciones",
+    fill = "Subconjunto:"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    strip.text = element_text(face = "bold", size = 9.5),
+    strip.background = element_rect(fill = "#f1f5f9", color = NA),
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", color = "#1e293b", size = 13),
+    plot.subtitle = element_text(color = "#64748b", size = 10.5),
+    plot.caption = element_text(face = "italic", color = "#94a3b8")
+  )
+```
+
+
+1. Ajustar un modelo de 9 pliegues (fit)
+
+2. Uso el modelo para estimar valores de la base de datos del test.
+
+3. Comparar el valor estimado con el  valor observado, esto es una medida de ajuste $y-\hat{y}$, pero como en este caso la respuesta es categoríca el resultado se debe observar como la siguiente tabla:
+
+| Observado \ Estimado | 1 | 2 | 3 | Total Observado |
+| :---: | :---: | :---: | :---: | :---: |
+| **1** | 15 | 45 | 35 | 95 |
+| **2** | 75 | 10 | 90 | 175 |
+| **3** | 50 | 19 | 18 | 87 |
+| **Total Estimado** | 140 | 74 | 143 | 357 |
+
+
+Para un total Total de casos evaluados: $n = 357$
+
+Clasificaciones correctas (diagonal principal): $15 + 10 + 18 = 43$. Lo ideal es que este número sea más alto porque para este caso la tasa de exactiud fue de $\text{Accuracy} = \frac{43}{357} \approx 12{,}04\%$
+
+
+## Calibración
+
+Para cada método de clasificación se establecen reglas duras que son parámetros que se eligen de forma arbitraria, mientras que hay otros parámetros que se deben calibrar detenidamente. Al final del manual se presenta un resumen de las reglas duras y los parámetros a calibrar de cada método.
+
+
+\newpage
+
+# Aplicación: clasificación de clientes de crédito con regresión logística
+
+## Carga y exploración de los datos
+
+```{r}
+load("Credit.Rdata")
+base2$sobreendeudado = factor(base2$sobreendeudado)
+```
+
+```{r}
+table(base2$cliente,base2$sobreendeudado)
+```
+
+El `0` representa que no está sobre endudado y el `1` que si lo está, en la tabla anterior se puede ver como hay más clientes malos que están sobreendeudados
+
+
+### ¿Cómo obtener el porcentaje de categorías en tablas de contingencia?
+
+**Ejemplo 1 ¿que porcentaje de los NO sobreenduedados son buenos?**
+
+```{r}
+prop.table(table(base2$cliente,base2$sobreendeudado),2)*100 # el 2 significa que lo saca por filas es decir de la categoría sobreendeudado
+```
+
+Vea que en esete caso el 74% de los no sobreenduados son buenos clientes y el 26 de los no sobreendeudados son malos clientes.*Note que las sumas de las columnas dan 100*
+
+
+**Ejemplo 1 ¿que porcentaje de los buenos clientes son sobreendeudados?**
+
+```{r}
+prop.table(table(base2$cliente,base2$sobreendeudado),1)*100
+```
+
+Casi que el 4% de los clientes buenos están sobrendeudados. *Note que la suma de las filas da 100%*
+
+Si pasara el caso de que tenemos que el 45% de los sobreenduedados son buenos clientes y el 48% de los NO sobreendudados son buenos clientes , los porcentajes son tan similares que el modelo no podrá clasificar, para que el modelo funcione siempre tiene que existir un tipo de discriminación.
+
+Se hace el mismo ejericio, pero con otras variables
+
+```{r}
+prop.table(table(base2$cliente,base2$estado_civil),2)*100
+```
+El porcentaje de clientes buenos que son casados es de 75%
+
+```{r}
+prop.table(table(base2$cliente,base2$vivienda),2)*100
+```
+
+El porcentaje más alto de buenos clientes lo tienen los clientes que poseen casa propia con un 81% los clientes que tienen casa propia que son buenos.
+
+*Nota importante:* Si en una categoría hay muuy pocas observaciones puede ser peligroso porque al momento de partir la base de datos pueden exisitir partes de las base que no tengan eninguna observación en esa categoría, debido a que como es aleatorio y la cantidad de obervaciones es poca.
+
+
+### Variables numéricas: boxplots por tipo de cliente
+
+Las variables que son continuas como `antig_laboral`, `ahorro`, lo representando por medio de un boxplot
+
+```{r}
+boxplot(antig_laboral~cliente, data = base2 )
+```
+
+Normalmente una persona con 0 años de antigüedad laboral uno diría que tiende a ser mal cliente, pero por esta razón es que la regresión multinomial toma en cuenta distintos facotres, como por ejemplo si está casado y tiene casa propia.
+
+```{r}
+boxplot(ahorro~cliente, data = base2 )
+```
+
+**Para esta situación cuando haya traslape es un indicador que el análisis va por buen camino, lo que no estaría bien es que las dos cajas tuverian el mismo tamaño**
+
+
+#### Matriz de boxplots para analizar cuál variable numérica es mejor
+
+```{r}
+# Configurar la ventana gráfica (ej. 4 filas x 4 columnas)
+par(mfrow = c(4, 4), mar = c(4, 4, 2, 1))
+
+vars_num <- c("edad", "antig_laboral", "ingreso", "gasto", "deuda",
+              "ahorro", "patrimonio", "porc_deuda", "porc_ahorro",
+              "porc_gasto", "plazo", "monto", "garantia", "monto_financiado")
+
+for (var in vars_num) {
+  boxplot(base2[[var]] ~ base2$cliente,
+          main = var,
+          xlab = "Cliente",
+          ylab = var,
+          col = c("steelblue", "red"))
+}
+
+# Restaurar parámetros gráficos por defecto
+par(mfrow = c(1, 1))
+```
+
+
+#### Tablas de contingencia para identificar variables categóricas correctas
+
+```{r}
+# Variables categóricas a iterar
+vars_cat <- c("vivienda", "estado_civil", "trabajo", "sobreendeudado")
+
+for (var in vars_cat) {
+  cat("\n--- Proporciones de Cliente vs", toupper(var), "---\n")
+
+  # Tabla cruzada dinámica manteniendo 'cliente' en las filas y margin = 1
+  tabla_pct <- prop.table(table(base2$cliente, base2[[var]]), 2) * 100
+
+  # Se imprime redondeando a 2 decimales para mayor claridad
+  print(round(tabla_pct, 2))
+}
+```
+
+
+## Ajuste del modelo de regresión logística binomial
+
+```{r}
+modx = glm(cliente ~ ., family = binomial, data = base2)
+```
+
+```{r}
+contrasts(base2$cliente)
+```
+
+Observe que en este caso bueno está codificado con un 0 y malo con un 1. Por lo que el modelo calcula la probabilidad de que sea malo y la probabilidad de que sea bueno la podemos obtener mediante el complemento.
+
+```{r}
+pred=predict(modx,base2, type = "response") #sino se coloca el response nos da la parte lineal del modelo
+pred= ifelse(pred >= 0.2,1,0) # otra forma para colocarlo en un valor en específico de clasificación
+pred= factor(pred)
+levels(pred) = c("Buenos", "Malos")
+```
+
+```{r}
+table(pred)
+```
+
+
+## Tabla de clasificación (matriz de confusión) del modelo
+
+### Matriz de Confusión: Detección de Tipo de Cliente
+
+| Real \ Predicho | Predicho: Mal cliente ($\hat{Y} = 1$) | Predicho: Buen cliente ($\hat{Y} = 0$) |
+| :--- | :---: | :---: |
+| **Real: Mal cliente ($Y = 1$)** | **Verdadero Positivo (VP)** | **Falso Negativo (FN)** |
+| **Real: Buen cliente ($Y = 0$)** | **Falso Positivo (FP)** | **Verdadero Negativo (VN)** |
+
+
+Se comparan los valores predichos con los observados
+
+```{r}
+table(base2$cliente,pred)# colocar primero los observados y luego los predichos
+```
+
+Con base a esos resultados llegamos a la siguiente tabla
+
+| Real \ Predicho | Predicho: Bueno ($\hat{Y} = 0$) | Predicho: Malo ($\hat{Y} = 1$) | Total Real |
+| :--- | :---: | :---: | :---: |
+| **Bueno ($Y = 0$)** | **1867** *(VN)* | **1329** *(FP)* | **3196** |
+| **Malo ($Y = 1$)** | **182** *(FN)* | **1067** *(VP)* | **1249** |
+| **Total Predicho** | **2049** | **2396** | **4445** |
+
+
+**Calculamos el porcentaje de cada categoría de predicción**
+
+```{r}
+prop.table(table(base2$cliente,pred),1)
+```
+
+| Real \ Predicho | Predicho: Bueno ($\hat{Y} = 0$) | Predicho: Malo ($\hat{Y} = 1$) | Total Real |
+| :--- | :---: | :---: | :---: |
+| **Bueno ($Y = 0$)** | **42,00%** *(VN)* | **29,90%** *(FP)* | **71,90%** |
+| **Malo ($Y = 1$)** | **4,10%** *(FN)* | **24,00%** *(VP)* | **28,10%** |
+| **Total Predicho** | **46,10%** | **53,90%** | **100,00%** |
+
+
+El porcentaje más peligroso corresponde al 4,10% de Falsos Negativos (clientes catalogados erróneamente como buenos siendo en realidad malos, que representan un 14,57% de toda la morosidad real). En riesgo financiero y colocación crediticia, este error implica desembolsar capital líquido a sujetos que terminarán en impago (default), lo cual genera pérdidas patrimoniales directas e irrecuperables sobre el balance de la institución. En contraste, el 29,90% de falsos positivos solo representa un costo de oportunidad (intereses no percibidos por rechazar a un cliente solvente), haciendo que el falso negativo sea, por asimetría de costos, la falla crítica más severa para la solvencia de la cartera.
+
+
+## Función `eval()` para crear indicadores de desempeño
+
+Esta función se utilizará en el resto del manual (K-vecinos, árboles y ensambles), por lo que se define una sola vez aquí.
+
+```{r}
+eval = function(y, pred) {
+  confu = table(y, pred)
+  e = 1 - sum(diag(confu)) / sum(confu)
+  falsos = 1 - diag(confu) / apply(confu, 1, sum)
+  error = c(e, falsos) * 100
+  names(error) = c("e", "FP", "FN")
+  return(list(Matriz = confu, Error = error))
+}
+```
+
+
+### Ejemplo de uso con el modelo de crédito
+
+```{r}
+mod = glm(cliente~edad+antig_laboral+vivienda, family = "binomial", data = base2) #Primero se debe tener un modelo
+pred = factor(predict(mod, type = "response") > 0.5)
+levels(pred) = c("bueno", "malo") # en este caso 0 es bueno y 1 es malo
+(tab1 = table(base2$cliente,pred))
+```
+Luego se puede sacar el porcentaje de Falsos Postivos y Falsos Negativos con `prop.table()` en las filas
+
+```{r}
+(pt1 = prop.table(tab1,1))
+```
+
+El error también lo podemos obtener de la siguiente manera:
+
+```{r}
+(pt2 = prop.table(tab1))
+```
+```{r}
+FP = pt1[1,2]
+FN = pt1[2,1]
+e = pt2[1,2] +pt2[2,1]
+c(e,FP,FN)*100
+```
+
+```{r}
+(e1 = eval(base2$cliente, pred))
+```
+
+Observe que lso resultados dan igual con la función y el método manual.
+
+
+### Ejemplo de uso con los datos Iris (tres categorías)
+
+```{r}
+load("iris.Rdata")
+```
+
+```{r}
+library(nnet)
+mod1= multinom(especie~., data = base)
+pred = predict(mod1)
+y = base$especie
+tab = table(y,pred)
+```
+
+```{r}
+tab
+```
+
+En este caso los que están clasificados como setosa son los de la primera columna, en este caso no fue ninguna. Para la especie Versicolor los clasificados incorrectamente se ve en la segunda columna, en donde para esta situación hay 1 que es en realidad virginica. Por último, para la especie Virginica se clasificó uno mal como versicolor que es el mismo que mencionamos antes.
+
+```{r}
+FS = sum(tab[2:3,1]) # Falsos setosa
+Fver = sum(tab[c(1,3),2]) # Falsos Versicolor
+Fvir = sum(tab[1:2,3]) #Falsos Virginica
+```
+
+
+## Validación cruzada en R
+
+### Creación de los pliegues con `createFolds()`
+
+```{r, message=FALSE, warning=FALSE}
+library(caret)
+part = createFolds(1:nrow(base2), k = 10) # desde 1 hasta n filas, partido en 10 partes distintas
+class(part) #vea que es de objeto lista
+```
+
+```{r}
+summary(part)
+```
+
+```{r}
+test = base2[part[[1]],] #obtiene las filas de la primera paritición
+train = base2[-part[[1]],]
+```
+
+```{r}
+c(nrow(test), nrow(train))
+```
+
+### Ajuste y evaluación en una partición
+
+**Hacemos el modelo**
+
+```{r}
+mod = glm(cliente~edad+antig_laboral+vivienda, family = "binomial", data = train) #Primero se debe tener un modelo
+pred = factor(predict(mod,test,type = "response") > 0.5)
+levels(pred) = c("bueno", "malo") # en este caso 0 es bueno y 1 es malo
+```
+
+```{r}
+(e2 = eval(test$cliente, pred))
+```
+
+
+### Validación cruzada con las diferentes particiones y diferentes umbrales
+
+```{r}
+umbrales = seq(0.1, 0.9, by = 0.1) # Se definen los umbrales desde 0.1 hasta 0.9
+ # Hacemos un array debido a que las dimensiones de una matriz no permiten guardar diferentes informaciones
+ERRORES = array(NA, dim = c(10, 3, length(umbrales)),
+                dimnames = list(paste0("Fold", 1:10),
+                                c("e", "FP", "FN"),
+                                umbrales))
+# Se crea el bucle para probar las diferentes particiones
+for (i in 1:10) {
+  test  = base2[part[[i]], ]
+  train = base2[-part[[i]], ]
+
+  mod = glm(cliente ~ edad + antig_laboral + vivienda,
+            family = "binomial", data = train)
+  probabilidades = predict(mod, test, type = "response")
+# Se crea ek bucel para los diferentes umbrales
+  for (j in seq_along(umbrales)) {
+    pred = factor(ifelse(probabilidades > umbrales[j], "malo", "bueno"),
+                  levels = c("bueno", "malo"))
+    ERRORES[i, , j] = eval(test$cliente, pred)$Error
+  }
+}
+
+prom_errores = apply(ERRORES, c(2, 3), mean)   # matriz 3 x 9
+round(prom_errores, 2)
+```
+
+```{r}
+matplot(umbrales, t(prom_errores), type = "b", pch = 19,
+        lty = 1, lwd = 2, col = c("black", "red", "blue"),
+        xlab = "Umbral", ylab = "Error (%)",
+        main = "Errores según el umbral (validación cruzada 10 folds)")
+
+legend("topright", legend = c("Error global (e)",
+                         "Falsos positivos (FP)",
+                         "Falsos negativos (FN)"),
+       col = c("black", "red", "blue"), lty = 1, lwd = 2, pch = 19,
+       bty = "n", cex = 0.85)
+
+```
+
+Lo que habría que comparar aquí cuál es el equilibrio y ver como cambia con la cantidad de variables que tiene cada modelo. Para así luego tener un cruterior donde se equilibrie todo.
+
+
+## Calibración del punto de corte con el modelo completo
+
+```{r}
+cortes   = createFolds(base2$cliente, k = 10)   # Índices de prueba de cada fold
+umbrales = seq(0.1, 0.9, by = 0.1)              # Puntos de corte a calibrar
+
+# Matriz para acumular los errores de cada umbral (filas = umbrales)
+suma = matrix(0, nrow = length(umbrales), ncol = 3,
+              dimnames = list(umbrales, c("e", "FP", "FN")))
+
+for (i in seq_along(cortes)) {                  # Recorre cada fold
+  test  = base2[cortes[[i]], ]                  # Fold i como prueba
+  train = base2[-cortes[[i]], ]                 # Resto como entrenamiento
+
+  # Modelo ajustado una sola vez por fold
+   mod = glm(cliente ~ ., family = "binomial", data = train)  # Todas las variables como predictoras
+  probabilidades = predict(mod, test, type = "response")  # P(malo) de cada obs. de prueba
+
+  for (j in seq_along(umbrales)) {              # Recorre cada umbral
+    pred = factor(ifelse(probabilidades > umbrales[j], "malo", "bueno"),
+                  levels = c("bueno", "malo"))  # Clasifica según el umbral
+    suma[j, ] = suma[j, ] + eval(test$cliente, pred)$Error  # Acumula e, FP y FN
+  }
+}
+
+prom_errores_log = suma / length(cortes)        # Promedio de los 10 folds
+round(prom_errores_log, 2)
+
+umbrales[which.min(prom_errores_log[, "e"])]    # Umbral con menor error global
+```
+
+```{r}
+matplot(umbrales, prom_errores_log, type = "b", pch = 19,
+        lty = 1, lwd = 2, col = c("black", "red", "blue"),
+        ylim = c(0, 100), xaxt = "n",
+        xlab = "Punto de corte", ylab = "Error (%)",
+        main = "Errores según el punto de corte")
+
+axis(1, at = umbrales)                          # Eje X con los umbrales probados
+
+legend("top", legend = c("Error global (e)",
+                         "Falsos positivos (FP)",
+                         "Falsos negativos (FN)"),
+       col = c("black", "red", "blue"), lty = 1, lwd = 2, pch = 19,
+       bty = "n", cex = 0.85)
+```
+
+
+## Selección de variables: efecto de eliminar cada predictora
+
+```{r}
+cortes = createFolds(base2$cliente, k = 10)    # Índices de prueba de cada fold
+umbral = 0.5                                   # Punto de corte fijo (o el mejor de la calibración anterior)
+
+vars    = names(base2)[names(base2) != "cliente"]    # Todas las variables predictoras
+modelos = c("Completo", paste("Sin", vars))    # Nombres: modelo completo y uno sin cada variable
+
+# Matriz para acumular los errores de cada modelo
+suma = matrix(0, nrow = length(modelos), ncol = 3,
+              dimnames = list(modelos, c("e", "FP", "FN")))
+
+for (i in seq_along(cortes)) {                 # Recorre cada fold
+  test  = base2[cortes[[i]], ]                 # Fold i como prueba
+  train = base2[-cortes[[i]], ]                # Resto como entrenamiento
+
+  for (j in seq_along(modelos)) {              # Recorre cada modelo
+    if (j == 1) {
+      predictoras = vars                       # Modelo completo
+    } else {
+      predictoras = vars[-(j - 1)]             # Se quita la variable j - 1
+    }
+    formula = reformulate(predictoras, response = "cliente")  # Arma cliente ~ x1 + x2 + ...
+
+    mod  = glm(formula, family = "binomial", data = train)
+    prob = predict(mod, test, type = "response")              # P(malo)
+    pred = factor(ifelse(prob > umbral, "malo", "bueno"),
+                  levels = c("bueno", "malo"))                # Clasifica con el umbral fijo
+    suma[j, ] = suma[j, ] + eval(test$cliente, pred)$Error    # Acumula e, FP y FN
+  }
+}
+
+prom_errores_var = suma / length(cortes)       # Promedio de los 10 folds
+round(prom_errores_var, 2)
+```
+```{r}
+dif_e = prom_errores_var[-1, "e"] - prom_errores_var["Completo", "e"]  # Cambio en el error al quitar cada variable
+
+barplot(sort(dif_e, decreasing = TRUE), las = 2, cex.names = 0.7,
+        col = ifelse(sort(dif_e, decreasing = TRUE) > 0, "red", "gray"),
+        ylab = "Cambio en el error global (%)",
+        main = "Efecto de eliminar cada variable")
+abline(h = 0, lty = 2)                         # Línea de referencia: sin cambio
+```
+```{r}
+par(mar = c(9, 4, 4, 2))                       # Más margen abajo para los nombres de las variables
+
+matplot(1:nrow(prom_errores_var), prom_errores_var, type = "b", pch = 19,
+        lty = 1, lwd = 2, col = c("black", "red", "blue"),
+        ylim = c(0, 100), xaxt = "n",          # Se quita el eje X automático
+        xlab = "", ylab = "Error (%)",
+        main = "Errores al eliminar cada variable")
+
+axis(1, at = 1:nrow(prom_errores_var),         # Una marca por modelo
+     labels = rownames(prom_errores_var),      # Nombres: Completo, Sin edad, ...
+     las = 2, cex.axis = 0.75)                 # Nombres verticales y más pequeños
+
+abline(h = prom_errores_var["Completo", ],     # Referencia: errores del modelo completo
+       col = c("black", "red", "blue"), lty = 3)
+
+legend("top", legend = c("Error global (e)",
+                         "Falsos positivos (FP)",
+                         "Falsos negativos (FN)"),
+       col = c("black", "red", "blue"), lty = 1, lwd = 2, pch = 19,
+       bty = "n", cex = 0.85, horiz = TRUE)    # Leyenda en una sola fila
+```
+
+
+\newpage
+
+# K-vecinos más cercanos (K-NN)
+
+## Teoría
+
+El algoritmo clasifica cada dato nuevo en el grupo que tenga la mayor cantidad de vecinos más cerca que el otro grupo.
+
+Para esto, se calcula la distancia del elemento nuevo a cada uno de los existentes, y se ordenan dichas distancias de menor a mayor para ir seleccionando el grupo al que se va a asignar.
+
+Este grupo será el que tenga una mayor frecuencia entre los vecinos con las $K$ menores distancias.
+
+Gráficamente: dada una nueva observación (?) entre puntos de la clase A y la clase B, se calcula su distancia a todos los datos de entrenamiento, se buscan los $k$ vecinos más cercanos (por ejemplo $k = 3$) y se elige la clase con mayor frecuencia entre ellos.
+
+
+### Consideraciones
+
+En contraste con otros algoritmos de aprendizaje supervisado, K-NN no genera un modelo fruto del aprendizaje con datos de entrenamiento, sino que el aprendizaje sucede en el mismo momento en el que se predice una nueva observación.
+
+Se recomienda siempre estandarizar las variables.
+
+Para generar un modelo de clasificación con K-NN hay que elegir dos parámetros importantes: la medida de distancia y el número $K$.
+
+
+### Medidas de distancia
+
+Comúnmente se utiliza la distancia euclídea, pero se pueden utilizar otras como:
+
++ Manhattan
++ Minkowski
++ Coseno
++ Jaccard
++ Hamming
+
+
+### Elección del número de vecinos (K)
+
++ Si $K$ es muy pequeño el modelo será muy sensible a valores extremos o a datos corruptos.
+
++ Si $K$ es muy grande, el modelo tiende a asignar siempre a la clase más grande.
+
++ El número de vecinos más cercanos ($K$) se puede calcular usando validación cruzada.
+
++ Una buena regla para escoger $K$ es que debe ser menor que $\sqrt{N}$ donde $N$ es el número total de individuos en la tabla de entrenamiento.
+
++ Para garantizar un desempate, el valor de $K$ debe ser impar.
+
+
+### Ejemplo K-NN (de las diapositivas)
+
+Según los datos mostrados a continuación y utilizando la distancia euclídea. ¿Qué valor de "K" elige para el nuevo registro sabiendo que pertenece a la clase "B"?
+
+*Datos de entrenamiento:*
+
+| id | x1 | x2 | x3 | clase |
+| :---: | :---: | :---: | :---: | :---: |
+| 1 | -0.72 | -0.27 | -0.69 | B |
+| 2 | -1.63 | -0.95 | -1.88 | B |
+| 3 | -1.04 | -0.95 | -0.83 | A |
+| 4 | 1.29 | 2.83 | -0.35 | A |
+| 5 | -0.15 | 0.13 | -0.53 | A |
+
+*Nuevo registro:*
+
+| id | x1 | x2 | x3 | clase |
+| :---: | :---: | :---: | :---: | :---: |
+| 6 | -1.31 | -0.85 | -1.12 | B |
+
+**Paso 1:** calcular las distancias de todos los datos de entrenamiento contra el nuevo registro.
+
+$$d(I_1, I_6) = 0.93 \quad d(I_2, I_6) = 0.83 \quad d(I_3, I_6) = 0.41 \quad d(I_4, I_6) = 4.57 \quad d(I_5, I_6) = 1.63$$
+
+**Paso 2:** ordenar las distancias de menor a mayor: $I_3\ (0.41),\ I_2\ (0.83),\ I_1\ (0.93),\ I_5\ (1.63),\ I_4\ (4.57)$.
+
+**Paso 3:** elegir "K".
+
++ Con $K=1$: el vecino más cercano sería id=3, pero la clase que se asignaría es "A", la cual sería incorrecta.
+
++ Con $K=2$: los vecinos más cercanos serían id=3 y id=2, pero habría un empate y la forma de asignar la clase podría ser aleatoria. Por lo que se podría tomar tanto una decisión correcta como incorrecta dependiendo del azar.
+
++ Con $K=3$: los vecinos más cercanos serían id=3, id=2 y id=1, la clase con más frecuencia es "B". En este caso se estaría tomando una decisión correcta.
+
++ Con $K=4$: los vecinos más cercanos serían id=3, id=2, id=1 y id=5, pero habría un empate y la forma de asignar la clase podría ser aleatoria.
+
++ Con $K=5$: los vecinos más cercanos serían id=3, id=2, id=1, id=5 y id=4, la clase con más frecuencia es "A", pero por ser la clase predominante. En este caso se estaría tomando una decisión incorrecta.
+
+Se debería escoger $K=3$.
+
+
+## Construcción manual del método en R
+
+A continuación se le realiza el proceso de forma manual en r y se hace una representazción gráfica antes:
+
+### Construcción de la matriz de distancias
+
+Sea la base original con $n = 60$ observaciones y $p$ columnas, donde la columna 1 es la variable respuesta $y$ y las columnas 3 a 6 son categóricas ($c$):
+
+$$
+\text{base2} =
+\begin{bmatrix}
+y_1 & x_{1,2} & c_{1,3} & \cdots & c_{1,6} & x_{1,7} & \cdots & x_{1,p} \\
+y_2 & x_{2,2} & c_{2,3} & \cdots & c_{2,6} & x_{2,7} & \cdots & x_{2,p} \\
+\vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+y_{60} & x_{60,2} & c_{60,3} & \cdots & c_{60,6} & x_{60,7} & \cdots & x_{60,p}
+\end{bmatrix}_{60 \times p}
+$$
+
+**1. Partición en entrenamiento y prueba** (se eliminan las columnas categóricas 3 a 6):
+
+$$
+\text{train} =
+\begin{bmatrix}
+y_1 & x_{1,2} & x_{1,7} & \cdots & x_{1,p} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+y_{50} & x_{50,2} & x_{50,7} & \cdots & x_{50,p}
+\end{bmatrix}_{50 \times (p-4)}
+\qquad
+\text{test} =
+\begin{bmatrix}
+y_{51} & x_{51,2} & x_{51,7} & \cdots & x_{51,p} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+y_{60} & x_{60,2} & x_{60,7} & \cdots & x_{60,p}
+\end{bmatrix}_{10 \times (p-4)}
+$$
+
+**2. Se quita la variable respuesta** (`train[,-1]` y `test[,-1]`), quedando solo las $q = p - 5$ variables numéricas:
+
+$$
+\mathbf{X}_{tr} =
+\begin{bmatrix}
+\mathbf{x}_1^\top \\ \vdots \\ \mathbf{x}_{50}^\top
+\end{bmatrix}_{50 \times q}
+\qquad
+\mathbf{X}_{te} =
+\begin{bmatrix}
+\mathbf{x}_{51}^\top \\ \vdots \\ \mathbf{x}_{60}^\top
+\end{bmatrix}_{10 \times q}
+$$
+
+**3. Se apilan por filas** (`rbind`):
+
+$$
+\mathbf{Z} =
+\begin{bmatrix}
+\mathbf{X}_{tr} \\
+\mathbf{X}_{te}
+\end{bmatrix}
+=
+\begin{bmatrix}
+\mathbf{x}_1^\top \\ \vdots \\ \mathbf{x}_{50}^\top \\ \mathbf{x}_{51}^\top \\ \vdots \\ \mathbf{x}_{60}^\top
+\end{bmatrix}_{60 \times q}
+$$
+
+**4. Matriz de distancias euclídeas** (`dist`, que por defecto usa la distancia euclídea):
+
+$$
+d_{ij} = \lVert \mathbf{x}_i - \mathbf{x}_j \rVert = \sqrt{\sum_{k=1}^{q} \left( x_{ik} - x_{jk} \right)^2}
+$$
+
+$$
+\mathbf{D} =
+\begin{bmatrix}
+0 & d_{1,2} & \cdots & d_{1,50} & d_{1,51} & \cdots & d_{1,60} \\
+d_{2,1} & 0 & \cdots & d_{2,50} & d_{2,51} & \cdots & d_{2,60} \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+d_{50,1} & d_{50,2} & \cdots & 0 & d_{50,51} & \cdots & d_{50,60} \\
+d_{51,1} & d_{51,2} & \cdots & d_{51,50} & 0 & \cdots & d_{51,60} \\
+\vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
+d_{60,1} & d_{60,2} & \cdots & d_{60,50} & d_{60,51} & \cdots & 0
+\end{bmatrix}_{60 \times 60}
+$$
+
+Vista por bloques:
+
+$$
+\mathbf{D} =
+\left[
+\begin{array}{c|c}
+\mathbf{D}_{tr,tr} & \mathbf{D}_{tr,te} \\
+\hline
+\mathbf{D}_{te,tr} & \mathbf{D}_{te,te}
+\end{array}
+\right]
+\qquad
+\begin{aligned}
+\mathbf{D}_{tr,tr} &: 50 \times 50 \\
+\mathbf{D}_{te,tr} &: 10 \times 50
+\end{aligned}
+$$
+
+$\mathbf{D}$ es simétrica ($d_{ij} = d_{ji}$) con diagonal cero. El bloque $\mathbf{D}_{te,tr}$, que corresponde a `d[51:60, 1:50]` ó tamabién puede ser `d[1:50, 51:60]` ,contiene la distancia de cada observación de prueba a cada observación de entrenamiento. Es decir cada bloque de $\mathbf{D}_{te,tr} : 10 \times 50$ es lo que necesitamos.
+
+
+Para clasificar cada observación de prueba solo interesan sus distancias a las observaciones de entrenamiento, es decir, el bloque $\mathbf{D}_{te,tr}$:
+
+$$
+\mathbf{D}_{te,tr} =
+\begin{bmatrix}
+d_{51,1} & d_{51,2} & \cdots & d_{51,50} \\
+d_{52,1} & d_{52,2} & \cdots & d_{52,50} \\
+\vdots & \vdots & \ddots & \vdots \\
+d_{60,1} & d_{60,2} & \cdots & d_{60,50}
+\end{bmatrix}_{10 \times 50}
+$$
+
+Cada fila $i$ contiene las distancias de la observación de prueba $\mathbf{x}_i$ a las 50 observaciones de entrenamiento:
+
+$$
+\mathbf{d}_i = \left( d_{i,1},\ d_{i,2},\ \ldots,\ d_{i,50} \right), \qquad i = 51, \ldots, 60
+$$
+
+### Clasificación por voto mayoritario
+
+**1. Ordenar las distancias de menor a mayor.** Si $d_{i,(1)} \leq d_{i,(2)} \leq \cdots \leq d_{i,(50)}$ son las distancias ordenadas, el conjunto de los $k$ vecinos más cercanos de $\mathbf{x}_i$ es:
+
+$$
+N_k(\mathbf{x}_i) = \left\{ j \in \{1, \ldots, 50\} : d_{i,j} \leq d_{i,(k)} \right\}
+$$
+
+Por ejemplo, con $k = 3$, si para la observación 51 las tres menores distancias fueran
+
+$$
+\mathbf{d}_{51} = \left( 4.2,\ \underbrace{0.8}_{j=2},\ 3.5,\ \ldots,\ \underbrace{1.1}_{j=17},\ \ldots,\ \underbrace{0.9}_{j=40},\ \ldots \right)
+$$
+
+entonces
+
+$$
+N_3(\mathbf{x}_{51}) = \{ 2,\ 40,\ 17 \}
+$$
+
+**2. Asignar la clase por voto mayoritario.** Se toman las respuestas $y_j$ de esos vecinos en `train` y se asigna la clase más frecuente:
+
+$$
+\hat{y}_i = \underset{c}{\arg\max} \sum_{j \in N_k(\mathbf{x}_i)} I\left( y_j = c \right)
+$$
+
+donde $I(\cdot)$ vale 1 si el vecino $j$ pertenece a la clase $c$ y 0 en otro caso. Por ejemplo, si $y_2 = A$, $y_{40} = A$ y $y_{17} = B$:
+
+$$
+\hat{y}_{51} = A \quad \text{(2 votos contra 1)}
+$$
+
+Al repetir esto para $i = 51, \ldots, 60$ se obtiene el vector de predicciones:
+
+$$
+\hat{\mathbf{y}}_{te} = \left( \hat{y}_{51},\ \hat{y}_{52},\ \ldots,\ \hat{y}_{60} \right)^\top
+$$
+*Nota:* Se recomienda usar un k impar para evitar evitas, por ejemplo si $k = 2$ y el resultado del proceso nos da $y_2 = A$, $y_{17} = B$, sería muy díficil saber cuál es la desición correcta.
+
+
+### Código en R
+
+```{r}
+# Se obtiene las dos bases 50 obs para train, 10 para test
+train=base2[1:50,-(3:6)] # si quitan las columnas de variables categóricas
+test=base2[51:60,-(3:6)]
+d = as.matrix(dist(rbind(train[,-1],test[,-1]))) # Se pegan las dos bases de datos obtenidos anteriormente y se les calcula la distancia
+d2 = d[1:50,51:60]
+#Luego se buscan los 3 individios con menor distancia en la primera columna
+k = 3 # número de vecinos más cercanos
+(ord = apply(d2,2, function(col) order(col)[1:k])) # si en lugar de order colocamos sort obtenemos los valores de esos número de filas
+
+```
+Para ver que categoría de cliente tiene cada uno de esas filas, para así poder clasificarlo lo hacemos de la siguiente manera:
+
+```{r}
+pred = c()
+for (i in 1:10) { #son 10 datos que están en el test
+  tab = table(train$cliente[ord[,i]]) # se hace una tabla para obtener el conteo de cada catgoría
+  pred[i] = names(tab)[which.max(tab)] # se guarda la categoría que se repite más veces
+}
+
+pred # clasificaciones de las 10 observaciones de la base test
+
+```
+
+
+## Función de k-vecinos para diferentes tamaños de k
+
+```{r}
+knn_errores = function(xtrain, ytrain, xtest, ytest, k) {
+  n1 = nrow(xtrain)
+  n2 = nrow(xtest)
+
+
+  # Distancias de todos contra todos y nos quedamos con train vs. validación
+  D  = rbind(xtrain, xtest)
+  d  = as.matrix(dist(D))
+  d1 = d[1:n1, (n1 + 1):(n1 + n2), drop = FALSE]
+
+  vecinos = apply(d1, 2, function(col) order(col)[1:k])
+  vecinos = matrix(vecinos, nrow = k)
+
+
+  pred = c()
+  for (i in 1:n2) {
+    tab = table(ytrain[vecinos[, i]])
+    pred[i] = names(tab)[which.max(tab)]
+  }
+
+  pred = factor(pred, levels = levels(ytrain))     # mismos niveles para la tabla 2x2
+  return(eval(ytest, pred))
+}
+```
+
+**Ejemplo de uso de la función**
+
+```{r}
+xtrain = train[, names(train) != "cliente"] # Se quita la columna de cliente
+xtest  = test[, names(test) != "cliente"] # Se quita la columna de cliente
+
+knn_errores(xtrain, train$cliente, xtest, test$cliente, k = 3)
+```
+
+
+## Validación cruzada con k-vecinos
+
+### Para un número de k-vecinos en específico
+
+```{r}
+cortes = createFolds(base2$cliente, k = 10) # Lista con los índices de prueba de cada fold
+k = 3 # Valor fijo de k
+# Matriz para guardar los errores de cada fold
+ERRORES_knn = matrix(NA, nrow = 10, ncol = 3,
+                     dimnames = list(paste0("Fold", 1:10),
+                                     c("e", "FP", "FN")))
+
+# Se hace un for para hacer lso cortes
+for (i in 1:10) {
+  test  = base2[cortes[[i]], -(3:6)]  # Se quitan las variables categóricas
+  train = base2[-cortes[[i]], -(3:6)]
+
+  # Matrices de predictores sin la variable respuesta
+  xtrain = train[, names(train) != "cliente"]
+  xtest  = test[, names(test) != "cliente"]
+
+  ERRORES_knn[i, ] = knn_errores(xtrain, train$cliente,
+                                 xtest, test$cliente, k = k)$Error
+}
+
+round(ERRORES_knn, 2)           # Errores por corte
+round(colMeans(ERRORES_knn), 2) # Errores en general
+```
+
+### Para diferentes números de k-vecinos
+
+```{r}
+# Validación cruzada con k-NN para una distancia dada, se le puede cambiar el tipo de distancia
+cv_knn = function(cortes, ks, metodo = "euclidean") {
+
+  # Matriz para acumular los errores de cada k (inicia en 0 para ir sumando)
+  suma = matrix(0, nrow = length(ks), ncol = 3,
+                dimnames = list(paste0("k=", ks), c("e", "FP", "FN")))
+
+  for (i in seq_along(cortes)) {                  # Recorre cada fold
+    test   = base2[cortes[[i]], -(3:6)]           # Fold i como prueba, sin categóricas
+    train  = base2[-cortes[[i]], -(3:6)]          # Resto como entrenamiento
+    xtrain = train[, names(train) != "cliente"]   # Predictores sin la respuesta
+    xtest  = test[, names(test) != "cliente"]
+    n1 = nrow(xtrain)                             # Cantidad de observaciones de entrenamiento
+
+    # Distancias entre todos, y se dejan solo filas = train, columnas = test
+    d1  = as.matrix(dist(rbind(xtrain, xtest), method = metodo))[1:n1, -(1:n1), drop = FALSE]
+    ord = apply(d1, 2, order)                     # Por columna, índices de train del más cercano al más lejano
+
+    for (j in seq_along(ks)) {                    # Recorre cada valor de k
+      vecinos = ord[1:ks[j], , drop = FALSE]      # Los k vecinos más cercanos de cada obs. de prueba
+
+      # Voto mayoritario: clase más frecuente entre los vecinos
+      pred = apply(vecinos, 2, function(v) {
+        tab = table(train$cliente[v])             # Cuenta las clases de los vecinos
+        names(tab)[which.max(tab)]                # Clase con más votos
+      })
+
+      pred = factor(pred, levels = levels(train$cliente))     # Mismos niveles que la respuesta real
+      suma[j, ] = suma[j, ] + eval(test$cliente, pred)$Error  # Acumula e, FP y FN
+    }
+  }
+  return(suma / length(cortes))                   # Promedio de los errores entre folds
+}
+```
+
+**Ejemplo de ejecución**
+
+```{r}
+cortes = createFolds(base2$cliente, k = 10)
+ks = seq(1,15, by = 2)
+valid_cruz = cv_knn(cortes,ks,metodo = "euclidean")
+valid_cruz
+```
+
+**Validación cruzada: calibración de k-NN**
+
+| Concepto | Descripción | En k-NN |
+|---|---|---|
+| **Calibración** | Ajuste de los parámetros que se pueden cambiar según el método, buscando el que dé menor error en la validación cruzada. | Se calibran $k$ y la distancia. |
+| **$k$** | Número de vecinos más cercanos que votan para asignar la clase de una observación de prueba. | Se prueban varios valores (por ejemplo, $k = 1, 3, 5, \ldots, 15$) y se elige el de menor error. |
+| **Distancia** | Forma de medir qué tan cerca están dos observaciones. | Euclídea: $d_{ij} = \sqrt{\sum_{k} (x_{ik} - x_{jk})^2}$. Manhattan: $d_{ij} = \sum_{k} \lvert x_{ik} - x_{jk} \rvert$. |
+| **Para distancia euclídea** | Una vez fijada la distancia, solo queda calibrar el número de vecinos. | Se calibra únicamente $k$. |
+
+```{r}
+matplot(ks, valid_cruz, type = "b", pch = 19,
+        lty = 1, lwd = 2, col = c("black", "red", "blue"),
+        xlab = "k", ylab = "Error (%)",
+        main = "Errores según diferentes números de k")
+
+legend("topright", legend = c("Error global (e)",
+                         "Falsos positivos (FP)",
+                         "Falsos negativos (FN)"),
+       col = c("black", "red", "blue"), lty = 1, lwd = 2, pch = 19,
+       bty = "n", cex = 0.85)
+```
+
+Se puede ver que conforme el número de k-vecinos aumenta, la cantidad de FN aumenta, por lo que se quiere buscar es un equilibrio entre los tres tipos de error y en el gráfico anterior para k=1 es cuándo los tres errores están menor distanciados.
+
+
+### Comparación de dos métodos de distancia una cierta cantidad de veces
+
+Esto lo debemos hacer cuándo los resultados no son muy consistentes, hay que iterarlo en distintas ocasiones y luego promediar esos resultados, para observar hacia a donde convergen.
+
+```{r}
+reps = 2
+
+# Matriz con los errores de cada repetición, para la distancia euclidea
+k1_euc = matrix(NA, nrow = reps, ncol = 3,
+                dimnames = list(paste0("Rep", 1:reps), c("e", "FP", "FN")))
+k1_man = k1_euc # Matriz de errores distancia de Manhattan
+# for para hacer los diferentes iteraciones, en este caso son 2
+for (r in 1:reps) {
+  cortes = createFolds(base2$cliente, k = 10) # Cortes distintos en cada repetición
+  k1_euc[r, ] = cv_knn(cortes, ks = 1, metodo = "euclidean")
+  k1_man[r, ] = cv_knn(cortes, ks = 1, metodo = "manhattan")
+}
+
+# Promedio de las 3 repeticiones para cada método
+comparacion_k1 = rbind(Euclidea  = colMeans(k1_euc),
+                       Manhattan = colMeans(k1_man))
+round(comparacion_k1, 2)
+```
+
+
+\newpage
+
+# Árboles de decisión
+
+## Teoría
+
+Los árboles de decisión sirven para representar y categorizar una serie de condiciones que ocurren de forma sucesiva (reglas), para la resolución de un problema.
+
+Ellos proveen una visión gráfica de la toma de decisión necesaria, especifican las variables que son evaluadas, qué acciones deben ser tomadas y el orden en el cual se efectuará la toma de decisión.
+
+Cada vez que se ejecuta un árbol de decisión, se seguirá solo un camino, dependiendo del valor de la variable evaluada.
+
+Un árbol es una función $f: D \rightarrow C$ que lleva los datos de entrenamiento (variables numéricas y categóricas) a una clase. Las reglas (nodos donde se evalúa una condición, por ejemplo `estado_civil = casado`, `ingreso >= 650`, `edad >= 23`) se llaman **nodos internos**, y el resto se denominan **nodos terminales u hojas**.
+
+
+### Algoritmo de Hunt
+
+Hay una gran variedad de algoritmos para generar árboles de decisión, pero muchos se basan en el Algoritmo de Hunt.
+
+Sea $S_t$ el conjunto de elementos de entrenamiento asociados en el nodo $t$ y $\{y_1, y_2, \ldots, y_c\}$ el conjunto de etiquetas de la clase.
+
++ **Paso 1:** si todos los elementos de $S_t$ pertenecen a la misma clase $y_i$, se declara al nodo $t$ como nodo hoja y se le etiqueta con $y_i$.
+
++ **Paso 2:** si $S_t$ contiene elementos de más de una etiqueta de clase, se selecciona una variable (atributo) con el que particionar el conjunto de elementos $S_t$ en subconjuntos más pequeños.
+
+Recursivamente se aplica el procedimiento a cada subconjunto.
+
+
+### Consideraciones para aplicar el algoritmo
+
+Para aplicar el algoritmo de Hunt bajo un enfoque de optimización hay que considerar lo siguiente:
+
+1. ¿Cómo se dividen las variables?
+2. ¿Qué criterios utilizar para seleccionar la mejor división?
+3. ¿Qué variables (atributos) utilizar y en qué orden?
+4. ¿Cuándo dejar de dividir?
+
+
+#### 1. ¿Cómo se dividen las variables?
+
+Se utiliza el método CART (Árboles de Clasificación y Regresión), el cual hace divisiones binarias tanto para predictores numéricos como para los categóricos.
+
++ **Variables nominales:** no hay un orden preestablecido (por ejemplo, Color: {Azul, Rojo} vs {Café}).
++ **Variables ordinales:** la partición respeta el orden (por ejemplo, Temperatura: {Baja, Media} vs {Alta}).
++ **Variables numéricas:** en la mayoría de las veces, se divide en el punto medio (por ejemplo, Ingreso < 500: Sí / No).
+
+
+#### 2. ¿Qué criterios utilizar para seleccionar la mejor división?
+
+Se puede utilizar los criterios de impureza:
+
++ Índice de Gini
++ Entropía
++ Error de Clasificación
+
+Se define $p(j \mid t)$ como la probabilidad de pertenecer a la clase $j$ estando en el nodo $t$ (de forma simplificada se representa como $p_j$).
+
+Índice de Gini:
+
+$$G(t) = 1 - \sum_{j=1}^{c} p_j^2$$
+
+Entropía:
+
+$$E(t) = -\sum_{j=1}^{c} p_j \log_2(p_j), \qquad \text{se asume que } \log_2 0 = 0$$
+
+Error de clasificación:
+
+$$EC(t) = 1 - \max(p_j)$$
+
+
+#### 3. ¿Qué variables (atributos) utilizar y en qué orden?
+
+Se elige la variable que después de realizar la partición binaria agregue la mayor información ganada al nodo padre correspondiente.
+
+Esto se hace recursivamente para cada nodo padre.
+
+
+#### 4. ¿Cuándo dejar de dividir? (reglas de parada)
+
+Se definen reglas de parada, aunque la configuración de estas reglas se realiza por medio de la experiencia del analista y/o mediante algún método de validación que permita calibrarlas. Algunas reglas son:
+
++ El número mínimo de observaciones para que un nodo se pueda dividir. En CART este parámetro se llama minsplit y el valor por defecto es 20.
+
++ El número mínimo de observaciones que debe tener un nodo para ser considerado como terminal. En CART este parámetro se llama minbucket y el valor por defecto es minsplit/3.
+
++ La profundidad máxima del árbol (con el nodo raíz contabilizado como 0). En CART este parámetro se llama maxdepth y el valor por defecto es 30.
+
+La información mínima ganada a partir de algún criterio de impureza para que un nodo se pueda dividir. En CART se utiliza el parámetro de complejidad (cp). El cp se utiliza para definir la mejora mínima para poder seguir realizando divisiones en el árbol. Por ejemplo, en un árbol el error de clasificación es de 0.5 y después de dividir es de 0.1, entonces la división es útil. Pero si después de la división el error es de 0.48, entonces la división no aporta. Es similar a un R2ajustado en que si una variable no tiene un mejora significativa en el ajuste del modelo, entonces no tiene sentido agregarla. El cp penaliza la cantidad de divisiones y el valor por defecto es de 0.01.
+
+
+### Ejemplo de aplicación de los criterios de impureza
+
+Se tiene información del nivel de nitrógeno de 18 lagos (bajo, medio, alto) y de la clasificación de la calidad del agua (buena, mala). El nodo padre se divide por la variable Nitrógeno en tres nodos hijos: $N_1$: alto, $N_2$: medio, $N_3$: bajo.
+
+| | $N_1$: alto | $N_2$: medio | $N_3$: bajo |
+| :--- | :---: | :---: | :---: |
+| buena | 0 | 5 | 3 |
+| mala | 4 | 3 | 3 |
+| **total** | **4** | **8** | **6** |
+
+Se calcula $p(j \mid t)$, con $j$: 1 = Buena y 2 = Mala; $t$: 1 = $N_1$, 2 = $N_2$ y 3 = $N_3$.
+
+Para $N_1$: $p(j=1 \mid t=1) = \frac{0}{4} = 0$, $\quad p(j=2 \mid t=1) = \frac{4}{4} = 1$
+
+Para $N_2$: $p(j=1 \mid t=2) = \frac{5}{8} = 0.625$, $\quad p(j=2 \mid t=2) = \frac{3}{8} = 0.375$
+
+Para $N_3$: $p(j=1 \mid t=3) = \frac{3}{6} = 0.5$, $\quad p(j=2 \mid t=3) = \frac{3}{6} = 0.5$
+
+| $p(j \mid t)$ | $N_1$: alto | $N_2$: medio | $N_3$: bajo |
+| :--- | :---: | :---: | :---: |
+| buena | 0.000 | 0.625 | 0.500 |
+| mala | 1.000 | 0.375 | 0.500 |
+
+**Índice de Gini:**
+
+$$G(t=1) = 1 - (0^2 + 1^2) = 0$$
+$$G(t=2) = 1 - (0.625^2 + 0.375^2) = 0.469$$
+$$G(t=3) = 1 - (0.5^2 + 0.5^2) = 0.5$$
+
+**Entropía:**
+
+$$E(t=1) = -(0 \cdot \log_2 0 + 1 \cdot \log_2 1) = 0$$
+$$E(t=2) = -(0.625 \cdot \log_2 0.625 + 0.375 \cdot \log_2 0.375) = 0.954$$
+$$E(t=3) = -(0.5 \cdot \log_2 0.5 + 0.5 \cdot \log_2 0.5) = 1$$
+
+**Error de clasificación:**
+
+$$EC(t=1) = 1 - \max(0, 1) = 0$$
+$$EC(t=2) = 1 - \max(0.625, 0.375) = 0.375$$
+$$EC(t=3) = 1 - \max(0.5, 0.5) = 0.5$$
+
+**Comparación de los criterios (incluyendo el nodo padre):**
+
+| | $N_1$: alto | $N_2$: medio | $N_3$: bajo | Nodo Padre |
+| :--- | :---: | :---: | :---: | :---: |
+| Índice de Gini | 0.000 | 0.469 | 0.500 | 0.494 |
+| Entropía | 0.000 | 0.954 | 1.000 | 0.991 |
+| Error de clasificación | 0.000 | 0.375 | 0.500 | 0.444 |
+| **n** | **4** | **8** | **6** | **18** |
+
+Al comparar teóricamente los criterios en todo el rango posible de las $p(j)$ (suponiendo que solo se tienen dos clases) los tres alcanzan su máximo en $p = 0.5$ (máxima impureza) y valen 0 cuando $p = 0$ ó $p = 1$ (nodo puro); la entropía alcanza 1, mientras que Gini y el error de clasificación alcanzan 0.5.
+
+**Impureza total de la división.** Para seleccionar la mejor división hay que proceder a calcular el valor total de la variable, que es un promedio ponderado de cada nodo:
+
+$$Gini_{split} = \sum_{t=1}^{k} \frac{n_t}{n} G(t) \qquad E_{split} = \sum_{t=1}^{k} \frac{n_t}{n} E(t) \qquad EC_{split} = \sum_{t=1}^{k} \frac{n_t}{n} EC(t)$$
+
+Criterio de impureza total para la variable dada la división:
+
+$$G_{split} = \frac{4}{18} \cdot 0 + \frac{8}{18} \cdot 0.469 + \frac{6}{18} \cdot 0.5 = 0.375$$
+$$E_{split} = \frac{4}{18} \cdot 0 + \frac{8}{18} \cdot 0.954 + \frac{6}{18} \cdot 1 = 0.757$$
+$$EC_{split} = \frac{4}{18} \cdot 0 + \frac{8}{18} \cdot 0.375 + \frac{6}{18} \cdot 0.5 = 0.333$$
+
+**Información ganada (IG).** Pero se busca maximizar la información ganada (IG), por ende se deja la división que genere la mayor información. El cálculo de la IG depende del criterio que se esté utilizando y se define como:
+
++ Índice de Gini: $IG_{split} = G_{padre} - G_{split}$
++ Entropía: $IG_{split} = E_{padre} - E_{split}$
++ Error de clasificación: $IG_{split} = EC_{padre} - EC_{split}$
+
+En el ejemplo la información ganada es:
+
++ Índice de Gini: $IG_{split} = 0.494 - 0.375 = 0.119$
++ Entropía: $IG_{split} = 0.991 - 0.757 = 0.234$
++ Error de clasificación: $IG_{split} = 0.444 - 0.333 = 0.111$
+
+**Ejercicio.** En la primera consideración para la aplicación del algoritmo se indicó que solo se iba a realizar divisiones binarias. Por lo tanto el ejemplo que hemos analizado hay que realizar una agrupación de categorías. Usando solo el criterio del índice de Gini, ¿cuál es la mejor agrupación del nivel de nitrógeno?
+
+A. alto y {medio, bajo}
+
+B. {alto, medio} y bajo
+
+
+### Ejemplo de árbol de decisión con 3 categorías
+
+Se desea clasificar a pacientes ortopédicos ya sea en normales, con hernia de disco o con espondilolistesis.
+
+Para ello se utilizan seis atributos biomecánicos derivados de la forma y orientación de la pelvis y la columna lumbar:
+
++ Incidencia pélvica (incid_pelv)
++ Inclinación pélvica (inclin_pelv)
++ Ángulo de lordosis lumbar (angulo_lord)
++ Angulo sacro (angulo_sacro)
++ Radio pélvico (radio_pelv)
++ Grado de espondilolistesis (grado_espondi)
+
+El orden de las categorías de acuerdo a como aparecen las proporciones en el árbol es: Hernia, Normal y Espondilolistesis.
+
+
+## Árboles de decisión en R
+
+Para estos métodos son necesarias las siguientes librerías:
+
+```{r, message=FALSE, warning=FALSE}
+library(rpart)
+library(rattle)
+library(DT)
+library(adabag)
+library(randomForest)
+```
+
+
+### Partición de los datos y ajuste del modelo
+
+1. Primero se divide la base de datos en 10 particiones
+
+```{r}
+library(caret)
+part = createFolds(1:nrow(base2), k = 10)
+```
+
+2. Dividimos la base de datos en 90% de entrenamiento y 10% trest
+
+```{r}
+test = base2[part[[1]],] #obtiene las filas de la primera paritición
+train = base2[-part[[1]],]
+```
+
+3. Estimamos el modelo con los datos de entrenamiento
+
+```{r}
+mod1 = rpart(cliente ~ ., method="class", data=train)
+```
+
+
+### Gráfico del árbol
+
+```{r}
+# Puede usar x11(), para visualizar de mejor el árbol
+#x11()
+fancyRpartPlot(mod1 , palettes=c("Greens", "Reds"))
+
+```
+
+Este método para las variables númericas realiza una partición en un cierto valor para dividrir y de esa manera realiza la categorízación. El caso de las variables ordinales y categóricas este método realiza un filtrado para ir haciendo los distintos caminos.
+
+
+### Interpretación de los nodos
+
+A continuación se le brinda un ejemplo:
+
+Para poder obtener la misma proporción que está en el nodo, obtengalo de la siguiente manera:
+
+```{r}
+prop.table(table(train$cliente))
+```
+Si yo quiero dirigirme hacia la derecha de la figura la condición lógica, debe ser planteda al revés de modo que si vemos la primero condición es si la antigüedad laboral es mayor o igual a 2.5, por eso en el siguiente código la condición se plante al revés.
+
+```{r}
+prop.table(table(train$antig_laboral < 2.5))
+```
+
+```{r}
+hist.default(train$antig_laboral)
+```
+
+Podemos ver que los valores de actividad laboral se concentra en valores muy bajos, es por eso que el método eligió una categorización de 2.5.
+
+Si quieres seguir bajando en el diagrama, poder hacer los siguiente:
+
+```{r}
+train2 <- train %>%
+  filter(antig_laboral < 2.5,
+         trabajo %in% c("asalariado"), # cuándo la condición anterior debe pertenecer a estas categorías
+         monto_financiado < 0.7)   # usar el corte exacto del modelo
+
+prop.table(table(train2$cliente)) # confimación del porcentaje
+```
+
+```{r}
+table(train2$cliente) # distribución del grupo filtado
+```
+
+En este caso el nodo correspondía a un nodo de buenos, por lo que en este caso hay un total de 33 falsos negativos. En este caso como se centra en los positivos solo puede existir Falsos Negativos.
+
+
+### Evaluación del árbol con `eval()`
+
+4. Usando la función `eval()` que creamos anteriormente, observamos los diferentes errores de nuestra estimación:
+
+```{r}
+pred=predict(mod1,newdata=test,type="class")
+eval(test$cliente,pred)
+```
+
+
+## Validación cruzada para el método de árboles
+
+Para cada una de las particiones que hicimos con la función `createFolds()`, evaluamos sus errores y se promedian a lo último
+
+```{r}
+ERRORES <- matrix(NA, nrow = 10, ncol = 3,
+                  dimnames = list(paste0("Fold", 1:10), c("e", "FP", "FN")))
+
+for (i in 1:10) {
+  test_i  <- base2[part[[i]], ]
+  train_i <- base2[-part[[i]], ]
+
+  mod  <- rpart(cliente ~ ., method = "class", data = train_i)
+  pred <- predict(mod, test_i, type = "class")
+
+  res <- eval(test_i$cliente, pred)
+  ERRORES[i, ] <- c(res$Error, res$FP, res$FN)
+}
+
+ERRORES
+colMeans(ERRORES)
+```
+
+
+### Repetición de la validación cruzada
+
+El proceso anterior tiene un detalle, que la función `createFolds()` hace las particiones de manera aleatoria, de modo que para que los resultados sean consistentes se necesita realizar el proceso ciertas cantidad de veces para poder asegurar que el resultado converge hacia una dirección.
+
+```{r, eval=FALSE}
+library(rpart)
+library(caret)
+
+R <- 2 # número de repeticiones
+K <- 10   # número de folds
+
+ERRORES_REP <- matrix(NA, nrow = R, ncol = 3,
+                      dimnames = list(paste0("Rep", 1:R), c("e", "FP", "FN")))
+
+for (r in 1:R) {
+  part <- createFolds(base2$cliente, k = K)   # folds nuevos en cada repetición
+
+  ERRORES <- matrix(NA, nrow = K, ncol = 3,
+                    dimnames = list(paste0("Fold", 1:K), c("e", "FP", "FN")))
+
+  for (i in 1:K) {
+    test_i  <- base2[part[[i]], ]
+    train_i <- base2[-part[[i]], ]
+
+    mod  <- rpart(cliente ~ ., method = "class", data = train_i)
+    pred <- predict(mod, test_i, type = "class")
+
+    res <- eval(test_i$cliente, pred)
+    ERRORES[i, ] <- c(res$Error, res$FP, res$FN)
+  }
+
+  ERRORES_REP[r, ] <- colMeans(ERRORES)   # promedio de los K folds en esta repetición
+}
+
+ERRORES_REP
+colMeans(ERRORES_REP)        # error promedio final
+```
+
+
+## Calibración de los árboles
+
+### Consejo de cómo calibrar
+
+Se definen reglas de parada, aunque la configuración de estas reglas se realiza por medio de la experiencia del analista y/o mediante algún método de validación que permita calibrarlas. Algunas reglas son:
+
++ El número mínimo de observaciones para que un nodo se pueda dividir. En CART este parámetro se llama minsplit y el valor por defecto es 20.
+
++ El número mínimo de observaciones que debe tener un nodo para ser considerado como terminal. En CART este parámetro se llama minbucket y el valor por defecto es minsplit/3.
+
++ La profundidad máxima del árbol (con el nodo raíz contabilizado como 0). En CART este parámetro se llama maxdepth y el valor por defecto es 30.
+
+
+La información mínima ganada a partir de algún criterio de impureza para que un nodo se pueda dividir. En CART se utiliza el parámetro de complejidad (cp). El cp se utiliza para definir la mejora mínima para poder seguir realizando divisiones en el árbol. Por ejemplo, en un árbol el error de clasificación es de 0.5 y después de dividir es de 0.1, entonces la división es útil. Pero si después de la división el error es de 0.48, entonces la división no aporta. Es similar a un R2ajustado en que si una variable no tiene un mejora significativa en el ajuste del modelo, entonces no tiene sentido agregarla. El cp penaliza la cantidad de divisiones y el valor por defecto es de 0.01.
+
+```{r}
+cp = 0.001
+```
+
+
+### Validación cruzada K-fold para un maxdepth dado
+
+```{r}
+# Validación cruzada K-fold para un maxdepth dado
+cv_rpart <- function(datos, part, maxdepth, cp = 0) {
+  K <- length(part)
+  ERRORES <- matrix(NA, nrow = K, ncol = 3,
+                    dimnames = list(paste0("Fold", 1:K), c("e", "FP", "FN")))
+
+  for (i in 1:K) {
+    test_i  <- datos[part[[i]], ]
+    train_i <- datos[-part[[i]], ]
+
+    mod <- rpart(cliente ~ ., method = "class", data = train_i,
+                 maxdepth = maxdepth, cp = cp)
+    pred <- predict(mod, test_i, type = "class")
+
+    res <- eval(test_i$cliente, pred)
+    ERRORES[i, ] <- res$Error
+  }
+  colMeans(ERRORES)
+}
+
+
+part <- createFolds(base2$cliente, k = 10)
+
+profundidades <- 5:30
+RESULTADOS <- t(sapply(profundidades, function(d) cv_rpart(base2, part, d)))
+rownames(RESULTADOS) <- paste0("maxdepth=", profundidades)
+
+RESULTADOS
+profundidades[which.min(RESULTADOS[, "e"])]   # maxdepth con menor error
+
+matplot(profundidades, RESULTADOS, type = "l", pch = 16, lty = 1,
+        col = c("black", "red", "blue"),
+        xlab = "maxdepth", ylab = "Error (%)",
+        main = "Errores de validación cruzada según maxdepth")
+legend("topright", legend = c("e", "FP", "FN"),
+       col = c("black", "red", "blue"), pch = 16, lty = 1, bty = "n")
+```
+
+
+\newpage
+
+# Métodos de ensamble
+
+## Teoría
+
+El Ensamble de Modelos es una técnica de Minería de Datos, que en los últimos tiempos ha tomado gran relevancia, ya que su objetivo es aumentar la eficiencia en las predicciones, tomando como base modelos ajustados previamente.
+
+
+### Equilibrio entre sesgo y varianza
+
+Al igual que todo modelo estadístico, los métodos de clasificación sufren el problema del equilibrio entre sesgo y varianza.
+
+El término sesgo hace referencia a cuánto se alejan en promedio las predicciones de un modelo respecto a los valores reales, es decir, qué tan bien se aproxima el modelo a la relación real entre las variables.
+
+La varianza hace referencia a cuánto varía el modelo dependiendo de la muestra empleada en el entrenamiento.
+
+¿Cómo se controlan el sesgo y varianza en los modelos de clasificación?
+
+Por lo general, un modelo de clasificación poco complejo no representará bien la relación entre las variables, por lo que tendrá un alto sesgo, pero poca varianza.
+
+Los modelos complejos se ajustan mucho a los datos de entrenamiento, por lo que tienen muy poco sesgo pero mucha varianza.
+
+Los métodos de ensamble abarcan un conjunto de métodos que combinan múltiples modelos predictivos para lograr un equilibro entre sesgo y varianza.
+
+Los métodos más populares para combinar las predicciones de diferentes modelos son:
+
++ Agregación de bootstrap (bagging).
++ Bosques aleatorios (random forest).
++ Método de potencialización (boosting).
++ Método de apilación (stacking).
+
+
+### Bagging
+
+Se generan $m$ muestras tipo bootstrap de tamaño $n$.
+
+Los modelos se ajustan con las $m$ muestras.
+
+Por mayoría de votos se tiene el resultado final, es decir, el ajuste de este modelo consiste en la construcción de diferentes modelos.
+
+**Algoritmo general para bagging:**
+
+1. $m$ es el número de muestras de bootstrap.
+2. for ($j$ in $1{:}m$):
+    a) Crear una muestra bootstrap de tamaño $n$, que denotaremos como $D_j$.
+    b) Entrenar un clasificador $C_j$ en la muestra $D_j$.
+3. $C^*(x) = \underset{y}{\arg\max} \sum_{m} \delta\left(C_j(x) = y\right)$,
+
+donde $\delta(\cdot) = 1$ si el argumento es verdad y 0 en otro caso.
+
+
+### Bosques aleatorios (random forests)
+
+Es un método que usa la agregación de bootstrap (bagging) para combinar diferentes árboles, donde cada árbol es construido con observaciones y variables aleatorias en cada nodo.
+
+**Algoritmo general para bosques aleatorios:**
+
+1. $m$ es el número de muestras bootstrap.
+2. $p$ es el número de variables aleatorias a elegir, $p < P$.
+3. for ($j$ in $1{:}m$):
+    a) Crear una muestra bootstrap de tamaño $n$, $D_j$.
+    b) Entrenar un clasificador de árbol $C_j$ en la muestra $D_j$. Donde para cada nodo:
+        i. Las variables predictoras $p$ son seleccionadas al azar entre las $P$ variables.
+        ii. La variable predictora que proporciona la mejor división, según la función objetivo se utiliza para hacer una división binaria en ese nodo.
+4. $C^*(x) = \underset{y}{\arg\max} \sum_{m} \delta\left(C_j(x) = y\right)$,
+
+donde $\delta(\cdot) = 1$ si el argumento es verdad y 0 en otro caso.
+
+
+### Método de potencialización (boosting)
+
+Es similar a la agregación de bootstrap (bagging) pero se diferencia en que los modelos son construidos secuencialmente. Cada modelo se construye para aprender de los errores de mala clasificación de los anteriores modelos construidos.
+
+La idea es aplicar un modelo de clasificación con los datos de entrenamiento, luego aumentar el peso (potenciar) a los individuos mal clasificados para que en la siguiente aplicación del modelo de clasificación se enfoque más en estos individuos mal clasificados, mejorando su clasificación.
+
+**Algoritmo general para boosting:**
+
+1. Se inicializan los pesos de las observaciones: $w_i = \frac{1}{n}, \quad i = 1, 2, \ldots, n$.
+2. Se elige el parámetro de contracción $\lambda$, donde $0 < \lambda < 1$.
+3. $m$ es el número de iteraciones.
+4. for ($j$ in $1{:}m$):
+    a) Ajustar un clasificador $G_j(x)$ a los datos de entrenamiento usando los pesos $w_i$.
+    b) Calcular:
+    $$e_j = \frac{\sum_{i=1}^{n} w_i\, \eta\left(y_i \neq G_j(x_i)\right)}{\sum_{i=1}^{n} w_i}, \qquad \eta(\cdot) = 1 \text{ si el argumento es verdad y 0 en otro caso}$$
+    c) Calcular:
+    $$\alpha_j = \lambda \cdot \ln\left(\frac{1 - e_j}{e_j}\right)$$
+    d) Recalcular los pesos $w_i$:
+    $$w_i = w_i \cdot \exp\left(\alpha_j \cdot \delta\left(y_i \neq G_j(x_i)\right)\right), \quad i = 1, 2, \ldots, n, \qquad \delta(\cdot) = 1 \text{ si el argumento es verdad y } -1 \text{ en otro caso}$$
+    e) Ajustar los pesos $w_i$:
+    $$w_i = \frac{w_i}{\sum_{j=1}^{n} w_j}, \quad i = 1, 2, \ldots, n$$
+5. $G(x) = \text{signo}\left(\sum_{j=1}^{m} \alpha_j G_j(x)\right)$
+
+
+#### Ejemplo de boosting
+
+Calcule los pesos $w_i$ y $\alpha$ tomando $m = 3$ y $\lambda = 0.5$ usando como algoritmo de clasificación un árbol de decisión. Se tienen 10 observaciones en el plano $(x_1, x_2)$: las observaciones 1, 2, 3, 6 y 8 son de la clase "+" y las observaciones 4, 5, 7, 9 y 10 son de la clase "$-$".
+
+Los pesos $w_i$ iniciales para cada observación son $w_i = \frac{1}{n} = \frac{1}{10} = 0.10$.
+
+**Iteración $j = 1$.** Al realizar la primera iteración se obtuvo la decisión $G_1(x_i)$ (un corte vertical en $x_1$). Las observaciones 3, 6 y 8 están mal clasificadas.
+
+Se calcula $e_1$ (con $\eta = 1$ para las observaciones 3, 6 y 8, y 0 para el resto):
+
+$$e_1 = \frac{0.1 \cdot 0 + 0.1 \cdot 0 + 0.1 \cdot 1 + \cdots + 0.1 \cdot 0}{0.1 + \cdots + 0.1} = \frac{0.3}{1} = 0.3$$
+
+Luego calculamos $\alpha_1$:
+
+$$\alpha_1 = \lambda \cdot \ln\left(\frac{1 - e_1}{e_1}\right) = 0.5 \cdot \ln\left(\frac{1 - 0.3}{0.3}\right) = 0.5 \cdot \ln\left(\frac{0.7}{0.3}\right) = 0.42$$
+
+Se recalculan los pesos $w_i$ (sin ajustar), con $\delta = 1$ para las observaciones 3, 6 y 8, y $\delta = -1$ para el resto. Para la primera observación: $w_1 = 0.1 \cdot \exp(0.42 \cdot -1) = 0.065$.
+
+| id | $w_i$ sin ajustar | $w_i$ ajustado | id | $w_i$ sin ajustar | $w_i$ ajustado |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 1 | 0.065 | 0.071 | 6 | 0.153 | 0.167 |
+| 2 | 0.065 | 0.071 | 7 | 0.065 | 0.071 |
+| 3 | 0.153 | 0.167 | 8 | 0.153 | 0.167 |
+| 4 | 0.065 | 0.071 | 9 | 0.065 | 0.071 |
+| 5 | 0.065 | 0.071 | 10 | 0.065 | 0.071 |
+
+Los pesos ajustados se obtienen dividiendo entre la suma de los pesos sin ajustar. Para la primera observación: $w_1 = \frac{0.065}{0.917} = 0.071$.
+
+**Iteración $j = 2$.** Al realizar la segunda iteración se obtuvo la decisión $G_2(x_i)$. Las observaciones 4, 5 y 7 están mal clasificadas.
+
+$$e_2 = \frac{0.071 \cdot 0 + \cdots + 0.071 \cdot 0}{0.071 + \cdots + 0.071} = \frac{0.214}{1} = 0.214$$
+
+$$\alpha_2 = 0.5 \cdot \ln\left(\frac{1 - 0.214}{0.214}\right) = 0.5 \cdot \ln\left(\frac{0.786}{0.214}\right) = 0.65$$
+
+Se recalculan los pesos ($\delta = 1$ para 4, 5 y 7; $-1$ para el resto). Para la primera observación: $w_1 = 0.071 \cdot \exp(0.65 \cdot -1) = 0.034$, y ajustado $w_1 = \frac{0.034}{0.752} = 0.045$.
+
+| id | $w_i$ sin ajustar | $w_i$ ajustado | id | $w_i$ sin ajustar | $w_i$ ajustado |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 1 | 0.034 | 0.045 | 6 | 0.080 | 0.106 |
+| 2 | 0.034 | 0.045 | 7 | 0.125 | 0.167 |
+| 3 | 0.080 | 0.106 | 8 | 0.080 | 0.106 |
+| 4 | 0.125 | 0.167 | 9 | 0.034 | 0.045 |
+| 5 | 0.125 | 0.167 | 10 | 0.034 | 0.045 |
+
+**Iteración $j = 3$.** Al realizar la tercera iteración se obtuvo la decisión $G_3(x_i)$. Las observaciones 1, 2 y 9 están mal clasificadas.
+
+$$e_3 = \frac{0.045 \cdot 1 + \cdots + 0.045 \cdot 0}{0.045 + \cdots + 0.045} = \frac{0.136}{1} = 0.136$$
+
+$$\alpha_3 = 0.5 \cdot \ln\left(\frac{1 - 0.136}{0.136}\right) = 0.5 \cdot \ln\left(\frac{0.864}{0.136}\right) = 0.92$$
+
+**Clasificador final.** Unimos la información de las 3 iteraciones:
+
+$$G(x) = \text{signo}\left(\sum_{m=1}^{3} \alpha_m G_m(x)\right) = \text{signo}\left(\alpha_1 G_1(x) + \alpha_2 G_2(x) + \alpha_3 G_3(x)\right) = \text{signo}\left(0.42 \cdot G_1(x) + 0.65 \cdot G_2(x) + 0.92 \cdot G_3(x)\right)$$
+
+
+## Bagging en R
+
+### Partición de los datos
+
+```{r}
+library(caret)
+part = createFolds(1:nrow(base2), k = 10)
+```
+
+```{r}
+test = base2[part[[1]],] #obtiene las filas de la primera paritición
+train = base2[-part[[1]],]
+```
+
+
+### Bagging con árboles de decisión
+
+```{r}
+ntest = nrow(test)
+ntrain = nrow(train)
+narbol = 5
+res = matrix(nrow = ntest, ncol = narbol)
+for (i in 1:narbol) {
+  boot = sample(1:ntrain, replace = TRUE)
+  train_b <- train[boot, ]
+  mod <- rpart(cliente ~ ., data = train_b, method = "class")
+  res[, i] <- as.character(predict(mod, newdata = test, type = "class"))
+
+}
+
+
+pred_voto <- apply(res, 1, function(fila) names(which.max(table(fila))))
+res
+
+eval(test$cliente, pred_voto)
+```
+
+
+### Bagging con regresión logística
+
+Hacer bagging con regresión logística
+
+```{r}
+ntest  <- nrow(test)
+ntrain <- nrow(train)
+nmod   <- 100
+prob   <- matrix(NA, nrow = ntest, ncol = nmod)
+
+for (i in 1:nmod) {
+  boot    <- sample(1:ntrain, replace = TRUE)
+  train_b <- train[boot, ]
+  mod <- glm(cliente ~ ., data = train_b, family = binomial)
+  prob[, i] <- predict(mod, newdata = test, type = "response")   # P(cliente = "malo")
+}
+
+# Combinar: promedio de probabilidades y corte fijo en 0.5
+pred <- ifelse(rowMeans(prob) > 0.5, "malo", "bueno")
+eval(test$cliente, pred)
+```
+
+
+### Comparación por validación cruzada: modelos simples vs. bagging
+
+```{r}
+library(rpart)
+library(caret)
+
+part <- createFolds(base2$cliente, k = 10)
+nmod <- 100
+K    <- length(part)
+
+metodos <- c("Árbol simple", "Bagging árboles", "Logística simple", "Bagging logística")
+ERR <- array(NA, dim = c(K, 3, length(metodos)),
+             dimnames = list(paste0("Fold", 1:K), c("e", "FP", "FN"), metodos))
+
+clasificar <- function(p) factor(ifelse(p > 0.5, "malo", "bueno"), levels = c("bueno", "malo"))
+
+for (k in 1:K) {
+  test   <- base2[part[[k]], ]
+  train  <- base2[-part[[k]], ]
+  ntrain <- nrow(train)
+
+  # --- Modelos simples (referencia) ---
+  arbol <- rpart(cliente ~ ., data = train, method = "class")
+  logit <- glm(cliente ~ ., data = train, family = binomial)
+  p_arbol <- predict(arbol, test, type = "prob")[, "malo"]
+  p_logit <- predict(logit, test, type = "response")
+
+  # --- Bagging: mismas muestras bootstrap para ambos métodos ---
+  prob_arb <- matrix(NA, nrow(test), nmod)
+  prob_log <- matrix(NA, nrow(test), nmod)
+  for (i in 1:nmod) {
+    train_b <- train[sample(ntrain, replace = TRUE), ]
+
+    m_arb <- rpart(cliente ~ ., data = train_b, method = "class",
+                   control = rpart.control(cp = 0, minsplit = 5, xval = 0))
+    m_log <- glm(cliente ~ ., data = train_b, family = binomial)
+
+    prob_arb[, i] <- predict(m_arb, test, type = "prob")[, "malo"]
+    prob_log[, i] <- predict(m_log, test, type = "response")
+  }
+
+  # --- Errores: todos con corte 0.5 ---
+  y <- test$cliente
+  ERR[k, , "Árbol simple"]      <- eval(y, clasificar(p_arbol))$Error
+  ERR[k, , "Bagging árboles"]   <- eval(y, clasificar(rowMeans(prob_arb)))$Error
+  ERR[k, , "Logística simple"]  <- eval(y, clasificar(p_logit))$Error
+  ERR[k, , "Bagging logística"] <- eval(y, clasificar(rowMeans(prob_log)))$Error
+}
+
+# Error promedio de cada método
+RESUMEN <- t(apply(ERR, 3, colMeans))
+round(RESUMEN, 2)
+```
+
+
+\newpage
+
+# Resumen: calibración de parámetros por método
+
+Para cada método de clasificación se establecen reglas duras que son parámetros que se eligen de forma arbitraria, mientras que hay otros parámetros que se deben calibrar detenidamente.
+
+## Árboles de decisión
+
+**Reglas duras:**
+
++ Mínimo número de observaciones para que un nodo se pueda dividir: $minsplit = 1\% \cdot 10000 = 100$.
++ Mínimo número de observaciones que debe tener un nodo para ser considerado como terminal: $minbucket = 0.5\% \cdot 10000 = 50$.
+
+**Parámetros a calibrar:**
+
++ Profundidad máxima ($maxdepth$).
++ Parámetro de complejidad ($cp$).
+
+**Pasos:**
+
++ Se comienza a calibrar el cp. Se inicia con un rango de cp a probar (mín = 0.0005). Se prueba con diferentes valores de cp hasta que se estabiliza el Error, el AUC o el KS.
++ Seguimos con el parámetro de profundidad. Se prueba con un rango de profundidad entre 1 y 15, manteniendo el cp en el valor escogido en el paso anterior.
+
+
+## K-NN
+
+**Parámetros a calibrar:**
+
++ Función de kernel ($kernel$).
++ Medida de distancia ($distance$).
++ Cantidad de vecinos ($k$).
+
+**Pasos:**
+
++ Se comienza a calibrar la función de kernel. Se hace un gráfico del AUC contra el número de vecinos para cada kernel.
++ Se elige la distancia partiendo de la cantidad de vecinos encontrados por el método de R.
++ Se encuentra la cantidad de vecinos usando el ROC.
+
+
+## SVM
+
+**Parámetros a calibrar:**
+
++ Función de kernel ($kernel$).
+
+
+## Bagging
+
+**Reglas duras:**
+
++ Se va a usar como reglas duras las definidas en el árbol de decisión: `control = rpart.control(minsplit = 100, minbucket = 50, cp = 0.003, maxdepth = 12)`.
+
+**Parámetros a calibrar:**
+
++ Número de árboles ($mfinal$).
+
+
+## Random Forest
+
+**Reglas duras:**
+
++ Tamaño del nodo terminal ($nodesize = 50$).
++ Máximo número de nodos ($maxnodes = NULL$).
+
+**Parámetros a calibrar:**
+
++ Número de árboles ($ntree$).
++ Número de variables aleatorias ($mtry$).
+
+**Pasos:**
+
++ Se comienza calibrando la cantidad de variables aleatorias usando el AUC (dejar ntree = 500).
++ Se calibra el número de árboles fijando el número de variables en el valor elegido previamente.
+
+
+## Boosting
+
+**Parámetros a calibrar:**
+
++ Número de árboles ($iter$).
++ Parámetro de contracción ($nu$).
+
+**Pasos:**
+
++ Se comienza calibrando el parámetro de contracción.
++ Se calibra el número de árboles.
