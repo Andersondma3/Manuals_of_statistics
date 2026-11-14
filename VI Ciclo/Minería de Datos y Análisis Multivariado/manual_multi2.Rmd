@@ -2492,6 +2492,47 @@ train = base2[-part[[1]],]
 ```
 
 
+Sea `train` con $n_{train}$ observaciones y `test` con $n_{test}$ observaciones. Se construyen $m$ modelos (en el código `narbol = 5`; en la pizarra $m = 500$), cada uno ajustado sobre una **muestra bootstrap** distinta de `train` (muestreo con reemplazo de tamaño $n_{train}$):
+
+$$
+D_1, D_2, \ldots, D_m \qquad \text{con} \qquad D_j = \text{train}[\text{boot}_j,\,], \quad \text{boot}_j \sim \text{muestra con reemplazo de } \{1, \ldots, n_{train}\}
+$$
+
+Con cada $D_j$ se ajusta un árbol $C_j$ y se predice la clase de **todas** las observaciones de `test`. Las predicciones se guardan en la matriz `res`, de dimensión $n_{test} \times m$: cada **fila** es un individuo de prueba y cada **columna** es un modelo bootstrap.
+
+$$
+\text{res} =
+\begin{array}{c|cccccc}
+ & C_1 & C_2 & C_3 & \cdots & C_m & \\
+\hline
+1 & \text{malo} & \text{malo} & \text{bueno} & \cdots & \text{malo} & \rightarrow \text{moda} = \hat{y}_1 \\
+2 & \text{bueno} & \text{bueno} & \text{bueno} & \cdots & \text{malo} & \rightarrow \text{moda} = \hat{y}_2 \\
+3 & \text{malo} & \text{bueno} & \text{malo} & \cdots & \text{malo} & \rightarrow \text{moda} = \hat{y}_3 \\
+\vdots & \vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
+n_{test} & \text{bueno} & \text{bueno} & \text{bueno} & \cdots & \text{bueno} & \rightarrow \text{moda} = \hat{y}_{n_{test}}
+\end{array}_{\;n_{test} \times m}
+$$
+
+**Voto mayoritario.** La predicción final de cada individuo $i$ es la **moda de su fila**, es decir, la clase que más veces aparece entre los $m$ modelos:
+
+$$
+\hat{y}_i = \underset{c}{\arg\max} \sum_{j=1}^{m} \delta\left( C_j(\mathbf{x}_i) = c \right), \qquad i = 1, \ldots, n_{test}
+$$
+
+donde $\delta(\cdot) = 1$ si el modelo $j$ clasificó al individuo $i$ en la clase $c$ y 0 en otro caso. Por ejemplo, si para el individuo 1 de los $m = 5$ árboles 3 dicen "malo" y 2 dicen "bueno", entonces $\hat{y}_1 = \text{malo}$ (3 votos contra 2).
+
+Al aplicar la moda a las $n_{test}$ filas se obtiene el vector de predicciones del ensamble:
+
+$$
+\hat{\mathbf{y}}_{te} = \left( \hat{y}_1,\ \hat{y}_2,\ \ldots,\ \hat{y}_{n_{test}} \right)^\top
+$$
+
+que es lo que se compara contra `test$cliente` con la función `eval()`.
+
+*Correspondencia con el código:* el `for (i in 1:narbol)` llena la matriz **columna por columna** (`res[, i]`), y `apply(res, 1, ...)` recorre las **filas** calculando la moda con `which.max(table(fila))`.
+
+*Nota:* se recomienda usar un $m$ impar para evitar empates en la votación, igual que con el $k$ de K-vecinos.
+
 ### Bagging con árboles de decisión
 
 ```{r}
