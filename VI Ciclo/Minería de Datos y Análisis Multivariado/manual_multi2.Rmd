@@ -1793,6 +1793,7 @@ knn_errores(xtrain, train$cliente, xtest, test$cliente, k = 3)
 ```
 
 
+
 ## Validación cruzada con k-vecinos
 
 ### Para un número de k-vecinos en específico
@@ -2720,3 +2721,45 @@ Para cada método de clasificación se establecen reglas duras que son parámetr
 
 + Se comienza calibrando el parámetro de contracción.
 + Se calibra el número de árboles.
+
+
+
+```{r}
+library(DescTools)
+```
+
+```{r}
+ytrain = train$cliente
+```
+
+
+```{r}
+knn_errores = function(xtrain, ytrain, xtest, ytest, k) {
+  n1 = nrow(xtrain)
+  n2 = nrow(xtest)
+
+
+  # Distancias de todos contra todos y nos quedamos con train vs. validación
+  D  = rbind(xtrain, xtest)
+  d  = as.matrix(dist(D))
+  d1 = d[1:n1, (n1 + 1):(n1 + n2), drop = FALSE]
+
+  vecinos = apply(d1, 2, function(col) order(col)[1:k])
+  vecinos = matrix(vecinos, nrow = k)
+
+
+  pred = c()
+  pred = c()
+  for (i in 1:n2) {
+    pred[i] = as.character(Mode(ytrain[vecinos[, i]]))[1]
+  }
+
+  pred = factor(pred, levels = levels(ytrain))     # mismos niveles para la tabla 2x2
+  return(eval(ytest, pred))
+}
+```
+
+```{r}
+knn_errores(xtrain, train$cliente, xtest, test$cliente, k = 3)
+```
+
